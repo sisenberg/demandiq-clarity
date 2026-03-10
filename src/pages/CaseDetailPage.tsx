@@ -142,8 +142,8 @@ const CaseDetailPage = () => {
         <WorkflowPanel caseStatus={caseData.case_status} />
       </div>
 
-      {/* Action Bar — state + role-gated */}
-      {(availableActions.length > 0 || hasPermission(role, "upload_document") || hasPermission(role, "assign_case")) && (
+      {/* Action Bar */}
+      {(hasPermission(role, "upload_document") || hasPermission(role, "assign_case")) && (
         <div className="flex flex-wrap gap-2 mb-6">
           {hasPermission(role, "upload_document") && (
             <button className="flex items-center gap-1.5 text-xs font-medium px-3 py-1.5 rounded-md border border-border bg-card text-foreground hover:bg-accent transition-colors">
@@ -155,24 +155,6 @@ const CaseDetailPage = () => {
               <UserPlus className="h-3.5 w-3.5" /> Assign
             </button>
           )}
-          {availableActions.map((action) => {
-            const Icon = iconMap[action.icon] ?? Play;
-            const cls =
-              action.variant === "primary"
-                ? "bg-primary text-primary-foreground hover:bg-primary/90"
-                : action.variant === "destructive"
-                ? "bg-destructive/10 text-destructive border border-destructive/20 hover:bg-destructive/20"
-                : "border border-border bg-card text-foreground hover:bg-accent";
-            return (
-              <button
-                key={action.targetStatus}
-                className={`flex items-center gap-1.5 text-xs font-medium px-3 py-1.5 rounded-md transition-colors ${cls}`}
-              >
-                <Icon className="h-3.5 w-3.5" />
-                {action.label}
-              </button>
-            );
-          })}
         </div>
       )}
 
