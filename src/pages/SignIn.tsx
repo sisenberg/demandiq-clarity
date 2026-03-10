@@ -16,6 +16,13 @@ const SignIn = () => {
     setError(null);
     setLoading(true);
 
+    if (!supabase) {
+      // Dev mode — just navigate through
+      navigate("/");
+      setLoading(false);
+      return;
+    }
+
     try {
       if (mode === "signin") {
         const { error } = await supabase.auth.signInWithPassword({ email, password });
@@ -39,23 +46,17 @@ const SignIn = () => {
   return (
     <div className="min-h-screen flex items-center justify-center bg-background px-4">
       <div className="w-full max-w-sm">
-        {/* Brand */}
         <div className="flex flex-col items-center mb-8">
           <div className="h-12 w-12 rounded-lg bg-primary flex items-center justify-center mb-4">
             <Shield className="h-6 w-6 text-primary-foreground" />
           </div>
           <h1 className="text-xl font-semibold text-foreground">DemandIQ</h1>
-          <p className="text-sm text-muted-foreground mt-1">
-            Claims Intelligence Platform
-          </p>
+          <p className="text-sm text-muted-foreground mt-1">Claims Intelligence Platform</p>
         </div>
 
-        {/* Form */}
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
-            <label htmlFor="email" className="block text-xs font-medium text-muted-foreground mb-1.5">
-              Email
-            </label>
+            <label htmlFor="email" className="block text-xs font-medium text-muted-foreground mb-1.5">Email</label>
             <input
               id="email"
               type="email"
@@ -66,11 +67,8 @@ const SignIn = () => {
               placeholder="you@company.com"
             />
           </div>
-
           <div>
-            <label htmlFor="password" className="block text-xs font-medium text-muted-foreground mb-1.5">
-              Password
-            </label>
+            <label htmlFor="password" className="block text-xs font-medium text-muted-foreground mb-1.5">Password</label>
             <input
               id="password"
               type="password"
@@ -84,9 +82,7 @@ const SignIn = () => {
           </div>
 
           {error && (
-            <div className="text-xs text-destructive bg-destructive/10 rounded-md px-3 py-2">
-              {error}
-            </div>
+            <div className="text-xs text-destructive bg-destructive/10 rounded-md px-3 py-2">{error}</div>
           )}
 
           <button
@@ -104,9 +100,7 @@ const SignIn = () => {
             onClick={() => setMode(mode === "signin" ? "signup" : "signin")}
             className="text-xs text-muted-foreground hover:text-foreground transition-colors"
           >
-            {mode === "signin"
-              ? "Don't have an account? Sign up"
-              : "Already have an account? Sign in"}
+            {mode === "signin" ? "Don't have an account? Sign up" : "Already have an account? Sign in"}
           </button>
         </div>
       </div>
