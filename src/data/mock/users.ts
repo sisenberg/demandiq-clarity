@@ -23,7 +23,7 @@ export const mockUsers: User[] = [
     tenant_id: "tenant-001",
     email: "maria.santos@burkelaw.com",
     display_name: "Maria Santos",
-    role: UserRole.Analyst,
+    role: UserRole.Adjuster,
     created_at: "2024-03-01T00:00:00Z",
   },
 ];

@@ -114,9 +114,10 @@ export enum PackageStatus {
 
 export enum UserRole {
   Admin = "admin",
+  Manager = "manager",
   Reviewer = "reviewer",
-  Analyst = "analyst",
-  Viewer = "viewer",
+  Adjuster = "adjuster",
+  ReadOnly = "readonly",
 }
 
 export enum ActionType {
