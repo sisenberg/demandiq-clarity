@@ -111,7 +111,7 @@ export function useUpdateCaseStatus() {
     mutationFn: async ({ caseId, status }: { caseId: string; status: string }) => {
       const { error } = await supabase
         .from("cases")
-        .update({ case_status: status })
+        .update({ case_status: status as any })
         .eq("id", caseId);
       if (error) throw error;
     },

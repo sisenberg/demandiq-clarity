@@ -124,7 +124,7 @@ export function useUpdateDocumentType() {
     mutationFn: async ({ docId, documentType }: { docId: string; documentType: string }) => {
       const { error } = await supabase
         .from("case_documents")
-        .update({ document_type: documentType })
+        .update({ document_type: documentType as any })
         .eq("id", docId);
       if (error) throw error;
     },
