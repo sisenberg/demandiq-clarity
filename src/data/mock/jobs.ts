@@ -1,0 +1,88 @@
+import type { ExtractionJob } from "@/types";
+import { JobStatus } from "@/types";
+
+export const mockJobs: ExtractionJob[] = [
+  // --- case-001 (Review) — completed jobs ---
+  {
+    id: "job-001",
+    caseId: "case-001",
+    documentId: "doc-001",
+    tenantId: "tenant-001",
+    status: JobStatus.Completed,
+    eventsExtracted: 1,
+    issuesFlagged: 0,
+    startedAt: "2024-06-02T11:55:00Z",
+    completedAt: "2024-06-02T12:00:00Z",
+    errorMessage: null,
+    createdAt: "2024-06-02T11:50:00Z",
+  },
+  {
+    id: "job-002",
+    caseId: "case-001",
+    documentId: "doc-002",
+    tenantId: "tenant-001",
+    status: JobStatus.Completed,
+    eventsExtracted: 1,
+    issuesFlagged: 1,
+    startedAt: "2024-06-02T12:25:00Z",
+    completedAt: "2024-06-02T12:30:00Z",
+    errorMessage: null,
+    createdAt: "2024-06-02T12:20:00Z",
+  },
+
+  // --- case-002 (Extraction) — running + failed ---
+  {
+    id: "job-003",
+    caseId: "case-002",
+    documentId: "doc-007",
+    tenantId: "tenant-001",
+    status: JobStatus.Running,
+    eventsExtracted: 0,
+    issuesFlagged: 0,
+    startedAt: "2024-09-12T10:02:00Z",
+    completedAt: null,
+    errorMessage: null,
+    createdAt: "2024-09-12T10:00:00Z",
+  },
+  {
+    id: "job-004",
+    caseId: "case-002",
+    documentId: "doc-008",
+    tenantId: "tenant-001",
+    status: JobStatus.Failed,
+    eventsExtracted: 0,
+    issuesFlagged: 0,
+    startedAt: "2024-09-12T10:06:00Z",
+    completedAt: "2024-09-12T10:07:00Z",
+    errorMessage: "PDF parsing failed: encrypted document, password required.",
+    createdAt: "2024-09-12T10:05:00Z",
+  },
+
+  // --- case-004 (Approved) — completed jobs ---
+  {
+    id: "job-005",
+    caseId: "case-004",
+    documentId: "doc-009",
+    tenantId: "tenant-001",
+    status: JobStatus.Completed,
+    eventsExtracted: 1,
+    issuesFlagged: 0,
+    startedAt: "2024-05-16T10:55:00Z",
+    completedAt: "2024-05-16T11:00:00Z",
+    errorMessage: null,
+    createdAt: "2024-05-16T10:50:00Z",
+  },
+  {
+    id: "job-006",
+    caseId: "case-004",
+    documentId: "doc-010",
+    tenantId: "tenant-001",
+    status: JobStatus.Completed,
+    eventsExtracted: 1,
+    issuesFlagged: 0,
+    startedAt: "2024-05-16T11:25:00Z",
+    completedAt: "2024-05-16T11:30:00Z",
+    errorMessage: null,
+    createdAt: "2024-05-16T11:20:00Z",
+  },
+];
