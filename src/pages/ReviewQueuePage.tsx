@@ -1,22 +1,7 @@
 import { mockReviewItems, mockChronologyEvents, mockIssueFlags, mockUsers } from "@/data/mock/index";
 import { ReviewStatus, ReviewItemType } from "@/types";
+import { REVIEW_STATUS_LABEL, REVIEW_STATUS_BADGE } from "@/lib/workflow";
 import { ClipboardCheck } from "lucide-react";
-
-const reviewStatusLabel: Record<ReviewStatus, string> = {
-  [ReviewStatus.Pending]: "Pending",
-  [ReviewStatus.InProgress]: "In Progress",
-  [ReviewStatus.Approved]: "Approved",
-  [ReviewStatus.Rejected]: "Rejected",
-  [ReviewStatus.Deferred]: "Deferred",
-};
-
-const reviewStatusClass: Record<ReviewStatus, string> = {
-  [ReviewStatus.Pending]: "status-badge-review",
-  [ReviewStatus.InProgress]: "bg-primary/10 text-primary text-xs font-medium px-2 py-0.5 rounded",
-  [ReviewStatus.Approved]: "status-badge-approved",
-  [ReviewStatus.Rejected]: "bg-destructive/10 text-destructive text-xs font-medium px-2 py-0.5 rounded",
-  [ReviewStatus.Deferred]: "status-badge-draft",
-};
 
 function getLinkedSummary(item: typeof mockReviewItems[number]): string {
   if (item.item_type === ReviewItemType.ChronologyEvent) {
@@ -32,7 +17,10 @@ function getLinkedSummary(item: typeof mockReviewItems[number]): string {
 
 const ReviewQueuePage = () => {
   const pending = mockReviewItems.filter(
-    (r) => r.review_status === ReviewStatus.Pending || r.review_status === ReviewStatus.InProgress
+    (r) =>
+      r.review_status === ReviewStatus.Pending ||
+      r.review_status === ReviewStatus.InReview ||
+      r.review_status === ReviewStatus.ChangesRequested
   );
 
   return (
@@ -64,7 +52,9 @@ const ReviewQueuePage = () => {
                       <p className="text-xs text-muted-foreground mt-1">Assigned to {assignee.display_name}</p>
                     )}
                   </div>
-                  <span className={reviewStatusClass[item.review_status]}>{reviewStatusLabel[item.review_status]}</span>
+                  <span className={REVIEW_STATUS_BADGE[item.review_status]}>
+                    {REVIEW_STATUS_LABEL[item.review_status]}
+                  </span>
                 </div>
               </div>
             );

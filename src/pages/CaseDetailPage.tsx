@@ -10,24 +10,31 @@ import {
   mockJobs,
   mockCasePackages,
   mockUsers,
+  mockActivityEvents,
 } from "@/data/mock/index";
 import { useAuth } from "@/contexts/AuthContext";
 import { hasPermission } from "@/lib/permissions";
 import {
-  CaseStatus,
-  DocumentStatus,
+  CASE_STATUS_LABEL,
+  CASE_STATUS_BADGE,
+  CASE_ACTIONS,
+  DOC_STATUS_LABEL,
+  DOC_STATUS_BADGE,
+  REVIEW_STATUS_LABEL,
+  REVIEW_STATUS_BADGE,
+  PKG_STATUS_LABEL,
+  PKG_STATUS_BADGE,
+} from "@/lib/workflow";
+import {
   ReviewState,
-  EventType,
   Severity,
-  FlagStatus,
   ReviewStatus,
-  ReviewItemType,
-  JobStatus,
-  JobType,
-  PackageStatus,
   ExtractionStatus,
+  JobStatus,
   RelevanceType,
 } from "@/types";
+import WorkflowPanel from "@/components/case/WorkflowPanel";
+import ActivityTimeline from "@/components/case/ActivityTimeline";
 import {
   ArrowLeft,
   FileText,
@@ -35,54 +42,30 @@ import {
   AlertTriangle,
   ClipboardCheck,
   Cog,
-  Package,
   Link2,
-  Upload,
-  Play,
   CheckCircle,
   XCircle,
+  Play,
   Send,
-  UserPlus,
+  Package,
   Download,
+  RotateCcw,
+  Archive,
+  UserPlus,
 } from "lucide-react";
-
-const caseStatusLabel: Record<CaseStatus, string> = {
-  [CaseStatus.Intake]: "Intake",
-  [CaseStatus.Extraction]: "Extracting",
-  [CaseStatus.Review]: "In Review",
-  [CaseStatus.Approved]: "Approved",
-  [CaseStatus.Exported]: "Exported",
-  [CaseStatus.Archived]: "Archived",
-};
-
-const caseStatusColor: Record<CaseStatus, string> = {
-  [CaseStatus.Intake]: "bg-muted text-muted-foreground",
-  [CaseStatus.Extraction]: "bg-primary/10 text-primary",
-  [CaseStatus.Review]: "status-badge-review",
-  [CaseStatus.Approved]: "status-badge-approved",
-  [CaseStatus.Exported]: "bg-muted text-muted-foreground",
-  [CaseStatus.Archived]: "bg-muted text-muted-foreground",
-};
-
-const docStatusConfig: Record<DocumentStatus, { label: string; className: string }> = {
-  [DocumentStatus.Pending]: { label: "Pending", className: "bg-muted text-muted-foreground" },
-  [DocumentStatus.Processing]: { label: "Processing", className: "bg-primary/10 text-primary" },
-  [DocumentStatus.Extracted]: { label: "Extracted", className: "status-badge-approved" },
-  [DocumentStatus.Failed]: { label: "Failed", className: "bg-destructive/10 text-destructive" },
-};
 
 const reviewStateConfig: Record<ReviewState, { label: string; className: string }> = {
   [ReviewState.Pending]: { label: "Pending", className: "status-badge-review" },
   [ReviewState.Approved]: { label: "Approved", className: "status-badge-approved" },
-  [ReviewState.Rejected]: { label: "Rejected", className: "bg-destructive/10 text-destructive text-xs font-medium px-2 py-0.5 rounded" },
+  [ReviewState.Rejected]: { label: "Rejected", className: "status-badge-failed" },
   [ReviewState.Edited]: { label: "Edited", className: "status-badge-draft" },
 };
 
 const severityConfig: Record<Severity, { label: string; className: string }> = {
-  [Severity.Critical]: { label: "Critical", className: "bg-destructive/10 text-destructive" },
-  [Severity.High]: { label: "High", className: "bg-destructive/10 text-destructive" },
+  [Severity.Critical]: { label: "Critical", className: "status-badge-failed" },
+  [Severity.High]: { label: "High", className: "status-badge-failed" },
   [Severity.Medium]: { label: "Medium", className: "status-badge-review" },
-  [Severity.Low]: { label: "Low", className: "bg-muted text-muted-foreground" },
+  [Severity.Low]: { label: "Low", className: "status-badge-draft" },
 };
 
 const relevanceLabel: Record<RelevanceType, string> = {
@@ -90,6 +73,10 @@ const relevanceLabel: Record<RelevanceType, string> = {
   [RelevanceType.Corroborating]: "Corroborating",
   [RelevanceType.Contradicting]: "Contradicting",
   [RelevanceType.Contextual]: "Contextual",
+};
+
+const iconMap: Record<string, React.ElementType> = {
+  Play, CheckCircle, XCircle, Send, Package, Download, RotateCcw, Archive, ClipboardCheck, UserPlus,
 };
 
 function formatBytes(bytes: number): string {
@@ -123,9 +110,14 @@ const CaseDetailPage = () => {
   const jobs = mockJobs.filter((j) => j.case_id === caseId);
   const packages = mockCasePackages.filter((p) => p.case_id === caseId);
   const assignee = mockUsers.find((u) => u.id === caseData.assigned_to);
+  const activityEvents = mockActivityEvents.filter((a) => a.case_id === caseId);
 
   const sortedEvents = [...events].sort(
     (a, b) => new Date(a.event_date).getTime() - new Date(b.event_date).getTime()
+  );
+
+  const availableActions = CASE_ACTIONS[caseData.case_status].filter((a) =>
+    hasPermission(role, a.permission)
   );
 
   return (
@@ -135,7 +127,7 @@ const CaseDetailPage = () => {
         <ArrowLeft className="h-4 w-4" /> Back to Cases
       </Link>
 
-      <div className="flex items-start justify-between mb-6">
+      <div className="flex items-start justify-between mb-4">
         <div>
           <h1 className="text-lg font-semibold text-foreground">{caseData.title}</h1>
           <div className="flex items-center gap-3 mt-1 text-xs text-muted-foreground">
@@ -152,44 +144,49 @@ const CaseDetailPage = () => {
             )}
           </div>
         </div>
-        <span className={`text-xs font-medium px-2 py-0.5 rounded ${caseStatusColor[caseData.case_status]}`}>
-          {caseStatusLabel[caseData.case_status]}
+        <span className={CASE_STATUS_BADGE[caseData.case_status]}>
+          {CASE_STATUS_LABEL[caseData.case_status]}
         </span>
       </div>
 
-      {/* Action Bar — role-gated */}
-      <div className="flex flex-wrap gap-2 mb-6">
-        {hasPermission(role, "upload_document") && (
-          <button className="flex items-center gap-1.5 text-xs font-medium px-3 py-1.5 rounded-md border border-border bg-card text-foreground hover:bg-accent transition-colors">
-            <Upload className="h-3.5 w-3.5" /> Upload Document
-          </button>
-        )}
-        {hasPermission(role, "trigger_processing") && (
-          <button className="flex items-center gap-1.5 text-xs font-medium px-3 py-1.5 rounded-md border border-border bg-card text-foreground hover:bg-accent transition-colors">
-            <Play className="h-3.5 w-3.5" /> Run Extraction
-          </button>
-        )}
-        {hasPermission(role, "assign_case") && (
-          <button className="flex items-center gap-1.5 text-xs font-medium px-3 py-1.5 rounded-md border border-border bg-card text-foreground hover:bg-accent transition-colors">
-            <UserPlus className="h-3.5 w-3.5" /> Assign
-          </button>
-        )}
-        {hasPermission(role, "submit_for_review") && (
-          <button className="flex items-center gap-1.5 text-xs font-medium px-3 py-1.5 rounded-md border border-border bg-card text-foreground hover:bg-accent transition-colors">
-            <Send className="h-3.5 w-3.5" /> Submit for Review
-          </button>
-        )}
-        {hasPermission(role, "approve_package") && (
-          <button className="flex items-center gap-1.5 text-xs font-medium px-3 py-1.5 rounded-md bg-primary text-primary-foreground hover:bg-primary/90 transition-colors">
-            <CheckCircle className="h-3.5 w-3.5" /> Approve Package
-          </button>
-        )}
-        {hasPermission(role, "export_package") && (
-          <button className="flex items-center gap-1.5 text-xs font-medium px-3 py-1.5 rounded-md border border-border bg-card text-foreground hover:bg-accent transition-colors">
-            <Download className="h-3.5 w-3.5" /> Export
-          </button>
-        )}
+      {/* Workflow Panel */}
+      <div className="mb-6">
+        <WorkflowPanel caseStatus={caseData.case_status} />
       </div>
+
+      {/* Action Bar — state + role-gated */}
+      {availableActions.length > 0 && (
+        <div className="flex flex-wrap gap-2 mb-6">
+          {hasPermission(role, "upload_document") && (
+            <button className="flex items-center gap-1.5 text-xs font-medium px-3 py-1.5 rounded-md border border-border bg-card text-foreground hover:bg-accent transition-colors">
+              <FileText className="h-3.5 w-3.5" /> Upload Document
+            </button>
+          )}
+          {hasPermission(role, "assign_case") && (
+            <button className="flex items-center gap-1.5 text-xs font-medium px-3 py-1.5 rounded-md border border-border bg-card text-foreground hover:bg-accent transition-colors">
+              <UserPlus className="h-3.5 w-3.5" /> Assign
+            </button>
+          )}
+          {availableActions.map((action) => {
+            const Icon = iconMap[action.icon] ?? Play;
+            const cls =
+              action.variant === "primary"
+                ? "bg-primary text-primary-foreground hover:bg-primary/90"
+                : action.variant === "destructive"
+                ? "bg-destructive/10 text-destructive border border-destructive/20 hover:bg-destructive/20"
+                : "border border-border bg-card text-foreground hover:bg-accent";
+            return (
+              <button
+                key={action.targetStatus}
+                className={`flex items-center gap-1.5 text-xs font-medium px-3 py-1.5 rounded-md transition-colors ${cls}`}
+              >
+                <Icon className="h-3.5 w-3.5" />
+                {action.label}
+              </button>
+            );
+          })}
+        </div>
+      )}
 
       {/* Stats row */}
       <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-6 gap-3 mb-8">
@@ -214,19 +211,18 @@ const CaseDetailPage = () => {
               </tr>
             </thead>
             <tbody className="divide-y divide-border">
-              {documents.map((doc) => {
-                const cfg = docStatusConfig[doc.document_status];
-                return (
-                  <tr key={doc.id} className="hover:bg-accent/50 transition-colors">
-                    <td className="px-4 py-2.5 font-medium text-foreground">{doc.file_name}</td>
-                    <td className="px-4 py-2.5 text-muted-foreground">{doc.page_count ?? "—"}</td>
-                    <td className="px-4 py-2.5 text-muted-foreground">{formatBytes(doc.file_size_bytes)}</td>
-                    <td className="px-4 py-2.5">
-                      <span className={`text-xs font-medium px-2 py-0.5 rounded ${cfg.className}`}>{cfg.label}</span>
-                    </td>
-                  </tr>
-                );
-              })}
+              {documents.map((doc) => (
+                <tr key={doc.id} className="hover:bg-accent/50 transition-colors">
+                  <td className="px-4 py-2.5 font-medium text-foreground">{doc.file_name}</td>
+                  <td className="px-4 py-2.5 text-muted-foreground">{doc.page_count ?? "—"}</td>
+                  <td className="px-4 py-2.5 text-muted-foreground">{formatBytes(doc.file_size_bytes)}</td>
+                  <td className="px-4 py-2.5">
+                    <span className={DOC_STATUS_BADGE[doc.document_status]}>
+                      {DOC_STATUS_LABEL[doc.document_status]}
+                    </span>
+                  </td>
+                </tr>
+              ))}
             </tbody>
           </table>
         )}
@@ -326,7 +322,7 @@ const CaseDetailPage = () => {
                   <div className="min-w-0 flex-1">
                     <div className="flex items-center gap-2 mb-1">
                       <code className="text-[10px] bg-muted px-1.5 py-0.5 rounded text-foreground">{flag.flag_type}</code>
-                      <span className={`text-[10px] font-medium px-1.5 py-0.5 rounded ${sev.className}`}>{sev.label}</span>
+                      <span className={sev.className}>{sev.label}</span>
                     </div>
                     <p className="text-sm text-foreground">{flag.description}</p>
                     {flagEvLinks.length > 0 && (
@@ -359,13 +355,6 @@ const CaseDetailPage = () => {
           <tbody className="divide-y divide-border">
             {reviewItems.map((ri) => {
               const user = mockUsers.find((u) => u.id === ri.assigned_to);
-              const rsClass: Record<ReviewStatus, string> = {
-                [ReviewStatus.Pending]: "status-badge-review",
-                [ReviewStatus.InProgress]: "bg-primary/10 text-primary text-xs font-medium px-2 py-0.5 rounded",
-                [ReviewStatus.Approved]: "status-badge-approved",
-                [ReviewStatus.Rejected]: "bg-destructive/10 text-destructive text-xs font-medium px-2 py-0.5 rounded",
-                [ReviewStatus.Deferred]: "status-badge-draft",
-              };
               return (
                 <tr key={ri.id} className="hover:bg-accent/50 transition-colors">
                   <td className="px-4 py-2.5">
@@ -374,7 +363,9 @@ const CaseDetailPage = () => {
                   <td className="px-4 py-2.5 text-xs text-muted-foreground">{ri.linked_record_type}:{ri.linked_record_id}</td>
                   <td className="px-4 py-2.5 text-foreground">{user?.display_name ?? "—"}</td>
                   <td className="px-4 py-2.5">
-                    <span className={rsClass[ri.review_status]}>{ri.review_status}</span>
+                    <span className={REVIEW_STATUS_BADGE[ri.review_status]}>
+                      {REVIEW_STATUS_LABEL[ri.review_status]}
+                    </span>
                   </td>
                   <td className="px-4 py-2.5 text-xs text-muted-foreground">{ri.resolution_notes ?? "—"}</td>
                 </tr>
@@ -400,18 +391,16 @@ const CaseDetailPage = () => {
             {extractions.map((ext) => {
               const doc = documents.find((d) => d.id === ext.document_id);
               const extStatusClass: Record<ExtractionStatus, string> = {
-                [ExtractionStatus.Queued]: "bg-muted text-muted-foreground",
-                [ExtractionStatus.Running]: "bg-primary/10 text-primary",
+                [ExtractionStatus.Queued]: "status-badge-draft",
+                [ExtractionStatus.Running]: "status-badge-processing",
                 [ExtractionStatus.Completed]: "status-badge-approved",
-                [ExtractionStatus.Failed]: "bg-destructive/10 text-destructive",
+                [ExtractionStatus.Failed]: "status-badge-failed",
               };
               return (
                 <tr key={ext.id} className="hover:bg-accent/50 transition-colors">
                   <td className="px-4 py-2.5 text-foreground">{doc?.file_name ?? ext.document_id}</td>
                   <td className="px-4 py-2.5">
-                    <span className={`text-xs font-medium px-2 py-0.5 rounded ${extStatusClass[ext.extraction_status]}`}>
-                      {ext.extraction_status}
-                    </span>
+                    <span className={extStatusClass[ext.extraction_status]}>{ext.extraction_status}</span>
                   </td>
                   <td className="px-4 py-2.5 text-muted-foreground">{ext.events_extracted}</td>
                   <td className="px-4 py-2.5 text-muted-foreground">{ext.issues_flagged}</td>
@@ -438,10 +427,10 @@ const CaseDetailPage = () => {
           <tbody className="divide-y divide-border">
             {jobs.map((job) => {
               const jobStatusClass: Record<JobStatus, string> = {
-                [JobStatus.Queued]: "bg-muted text-muted-foreground",
-                [JobStatus.Running]: "bg-primary/10 text-primary",
+                [JobStatus.Queued]: "status-badge-draft",
+                [JobStatus.Running]: "status-badge-processing",
                 [JobStatus.Completed]: "status-badge-approved",
-                [JobStatus.Failed]: "bg-destructive/10 text-destructive",
+                [JobStatus.Failed]: "status-badge-failed",
               };
               return (
                 <tr key={job.id} className="hover:bg-accent/50 transition-colors">
@@ -449,9 +438,7 @@ const CaseDetailPage = () => {
                     <code className="text-[10px] bg-muted px-1.5 py-0.5 rounded text-foreground">{job.job_type}</code>
                   </td>
                   <td className="px-4 py-2.5">
-                    <span className={`text-xs font-medium px-2 py-0.5 rounded ${jobStatusClass[job.job_status]}`}>
-                      {job.job_status}
-                    </span>
+                    <span className={jobStatusClass[job.job_status]}>{job.job_status}</span>
                   </td>
                   <td className="px-4 py-2.5 text-xs text-muted-foreground">{job.started_at ?? "—"}</td>
                   <td className="px-4 py-2.5 text-xs text-muted-foreground">{job.completed_at ?? "—"}</td>
@@ -475,12 +462,19 @@ const CaseDetailPage = () => {
                   <p className="text-sm font-medium text-foreground">Version {pkg.package_version}</p>
                   <p className="text-xs text-muted-foreground">Schema {pkg.schema_version} · Created {pkg.created_at}</p>
                 </div>
-                <span className="status-badge-approved">{pkg.package_status}</span>
+                <span className={PKG_STATUS_BADGE[pkg.package_status]}>
+                  {PKG_STATUS_LABEL[pkg.package_status]}
+                </span>
               </div>
             ))}
           </div>
         )}
       </Section>
+
+      {/* Activity Timeline */}
+      <div className="mb-8">
+        <ActivityTimeline events={activityEvents} />
+      </div>
     </div>
   );
 };

@@ -1,16 +1,14 @@
 import { mockCases, mockCasePackages } from "@/data/mock/index";
-import { CaseStatus, PackageStatus } from "@/types";
+import { CaseStatus } from "@/types";
+import { CASE_STATUS_LABEL, PKG_STATUS_LABEL, PKG_STATUS_BADGE } from "@/lib/workflow";
 import { Download, Package } from "lucide-react";
-
-const packageStatusLabel: Record<PackageStatus, string> = {
-  [PackageStatus.Draft]: "Draft",
-  [PackageStatus.Approved]: "Ready",
-  [PackageStatus.Exported]: "Exported",
-};
 
 const ExportsPage = () => {
   const exportable = mockCases.filter(
-    (c) => c.case_status === CaseStatus.Approved || c.case_status === CaseStatus.Exported
+    (c) =>
+      c.case_status === CaseStatus.ApprovedForPackage ||
+      c.case_status === CaseStatus.PackageReady ||
+      c.case_status === CaseStatus.Exported
   );
 
   return (
@@ -41,9 +39,13 @@ const ExportsPage = () => {
                     </p>
                   </div>
                 </div>
-                <span className="status-badge-approved">
-                  {pkg ? packageStatusLabel[pkg.package_status] : "Ready"}
-                </span>
+                {pkg ? (
+                  <span className={PKG_STATUS_BADGE[pkg.package_status]}>
+                    {PKG_STATUS_LABEL[pkg.package_status]}
+                  </span>
+                ) : (
+                  <span className="status-badge-draft">{CASE_STATUS_LABEL[c.case_status]}</span>
+                )}
               </div>
             );
           })}
