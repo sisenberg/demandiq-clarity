@@ -7,7 +7,7 @@ import ChronologyView from "@/components/case/ChronologyView";
 import DocumentsView from "@/components/case/DocumentsView";
 import IssuesView from "@/components/case/IssuesView";
 import EvidencePanel from "@/components/case/EvidencePanel";
-import { mockCases, mockDocuments, mockEvents, mockIssues, mockTenant } from "@/data/mock";
+import { mockCases, mockDocuments, mockEvents, mockIssues, mockTenant } from "@/data/mock/index";
 import type { TimelineEvent } from "@/types";
 import { EventStatus } from "@/types";
 

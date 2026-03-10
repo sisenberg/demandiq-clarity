@@ -1,11 +1,11 @@
-import type { TimelineEvent } from "@/types";
-import { mockDocuments } from "@/data/mock";
+import type { TimelineEvent, CaseDocument } from "@/types";
 
 interface EvidencePanelProps {
   event: TimelineEvent | null;
+  documents: CaseDocument[];
 }
 
-const EvidencePanel = ({ event }: EvidencePanelProps) => {
+const EvidencePanel = ({ event, documents }: EvidencePanelProps) => {
   if (!event) {
     return (
       <div className="flex flex-col h-full">
@@ -37,13 +37,12 @@ const EvidencePanel = ({ event }: EvidencePanelProps) => {
 
       <div className="flex-1 overflow-y-auto px-4 py-4 flex flex-col gap-3">
         {event.evidenceRefs.map((ref, idx) => {
-          const doc = mockDocuments.find((d) => d.id === ref.documentId);
+          const doc = documents.find((d) => d.id === ref.documentId);
           return (
             <div
               key={`${ref.documentId}-${ref.pageNumber}-${idx}`}
               className="border border-border rounded-md overflow-hidden"
             >
-              {/* Source header */}
               <div className="px-3 py-2 bg-muted/50 border-b border-border">
                 <p className="text-xs font-medium text-foreground">
                   {doc?.fileName ?? ref.documentId}
@@ -53,7 +52,6 @@ const EvidencePanel = ({ event }: EvidencePanelProps) => {
                 </p>
               </div>
 
-              {/* Excerpt */}
               {ref.excerpt && (
                 <div className="px-3 py-2.5">
                   <p className="text-xs leading-relaxed text-foreground font-mono">
@@ -72,7 +70,6 @@ const EvidencePanel = ({ event }: EvidencePanelProps) => {
         )}
       </div>
 
-      {/* Metadata footer */}
       <div className="px-4 py-2 border-t border-border shrink-0 text-[10px] text-muted-foreground space-y-0.5">
         <p>Source: {event.source === "ai_extracted" ? "AI Extracted" : "Manual"}</p>
         <p>Version: {event.version}</p>
