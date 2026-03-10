@@ -127,7 +127,7 @@ const Index = () => {
   // --- Evidence ---
   const evidence =
     selectedCase && activeTab === "chronology" ? (
-      <EvidencePanel event={selectedEvent} />
+      <EvidencePanel event={selectedEvent} documents={caseDocuments} />
     ) : undefined;
 
   return <AppLayout sidebar={sidebar} workspace={workspace} evidence={evidence} />;
