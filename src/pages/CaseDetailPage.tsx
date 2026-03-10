@@ -11,6 +11,8 @@ import {
   mockCasePackages,
   mockUsers,
 } from "@/data/mock/index";
+import { useAuth } from "@/contexts/AuthContext";
+import { hasPermission } from "@/lib/permissions";
 import {
   CaseStatus,
   DocumentStatus,
