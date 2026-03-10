@@ -100,6 +100,7 @@ function formatBytes(bytes: number): string {
 
 const CaseDetailPage = () => {
   const { caseId } = useParams<{ caseId: string }>();
+  const { role } = useAuth();
   const caseData = mockCases.find((c) => c.id === caseId);
 
   if (!caseData) {
