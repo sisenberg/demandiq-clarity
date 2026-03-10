@@ -10,7 +10,6 @@ import Dashboard from "@/pages/Dashboard";
 import CasesPage from "@/pages/CasesPage";
 import CaseDetailPage from "@/pages/CaseDetailPage";
 import DocumentsPage from "@/pages/DocumentsPage";
-import ReviewQueuePage from "@/pages/ReviewQueuePage";
 import ExportsPage from "@/pages/ExportsPage";
 import AdminPage from "@/pages/AdminPage";
 import AuditLogPage from "@/pages/AuditLogPage";
@@ -34,14 +33,6 @@ const App = () => (
             <Route path="/cases" element={<CasesPage />} />
             <Route path="/cases/:caseId" element={<CaseDetailPage />} />
             <Route path="/documents" element={<DocumentsPage />} />
-            <Route
-              path="/review"
-              element={
-                <RoleGuard permission="approve_review">
-                  <ReviewQueuePage />
-                </RoleGuard>
-              }
-            />
             <Route
               path="/exports"
               element={
