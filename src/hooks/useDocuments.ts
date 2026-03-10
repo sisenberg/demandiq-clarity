@@ -86,17 +86,17 @@ export function useUploadDocuments() {
         if (uploadError) throw uploadError;
 
         // Create document record
-        const { data, error } = await supabase
-          .from("case_documents")
+        const { data, error } = await (supabase
+          .from("case_documents") as any)
           .insert({
             case_id: caseId,
             file_name: file.name,
             file_type: file.type || "application/octet-stream",
             file_size_bytes: file.size,
             storage_path: storagePath,
-            document_status: "uploaded" as const,
-            document_type: documentType as any,
-            pipeline_stage: "upload_received" as const,
+            document_status: "uploaded",
+            document_type: documentType,
+            pipeline_stage: "upload_received",
             uploaded_by: user.id,
           })
           .select()
