@@ -1,5 +1,5 @@
-import { mockCases, mockDocuments, mockEvents, mockIssues, mockJobs } from "@/data/mock/index";
-import { CaseStatus, EventStatus, DocumentStatus, JobStatus, IssueStatus } from "@/types";
+import { mockCases, mockDocuments, mockChronologyEvents, mockIssueFlags, mockJobs, mockReviewItems } from "@/data/mock/index";
+import { CaseStatus, ReviewState, DocumentStatus, JobStatus, FlagStatus, ReviewStatus } from "@/types";
 import {
   Briefcase,
   ClipboardCheck,
@@ -11,31 +11,31 @@ import {
 
 const Dashboard = () => {
   const openCases = mockCases.filter(
-    (c) => c.status !== CaseStatus.Archived && c.status !== CaseStatus.Exported
+    (c) => c.case_status !== CaseStatus.Archived && c.case_status !== CaseStatus.Exported
   ).length;
 
   const awaitingReview = mockCases.filter(
-    (c) => c.status === CaseStatus.Review
+    (c) => c.case_status === CaseStatus.Review
   ).length;
 
   const docsProcessing = mockDocuments.filter(
-    (d) => d.status === DocumentStatus.Processing
+    (d) => d.document_status === DocumentStatus.Processing
   ).length;
 
   const readyForExport = mockCases.filter(
-    (c) => c.status === CaseStatus.Approved
+    (c) => c.case_status === CaseStatus.Approved
   ).length;
 
-  const pendingEvents = mockEvents.filter(
-    (e) => e.status === EventStatus.PendingReview
+  const pendingReviewItems = mockReviewItems.filter(
+    (r) => r.review_status === ReviewStatus.Pending
   ).length;
 
-  const openIssues = mockIssues.filter(
-    (i) => i.status === IssueStatus.Open
+  const openIssues = mockIssueFlags.filter(
+    (i) => i.status === FlagStatus.Open
   ).length;
 
   const failedJobs = mockJobs.filter(
-    (j) => j.status === JobStatus.Failed
+    (j) => j.job_status === JobStatus.Failed
   ).length;
 
   const stats = [
@@ -46,9 +46,9 @@ const Dashboard = () => {
   ];
 
   const workQueue = [
-    { label: "Events pending review", value: pendingEvents },
-    { label: "Open issues", value: openIssues },
-    { label: "Failed extraction jobs", value: failedJobs },
+    { label: "Review items pending", value: pendingReviewItems },
+    { label: "Open issue flags", value: openIssues },
+    { label: "Failed jobs", value: failedJobs },
   ];
 
   const recentActivity = [
@@ -62,22 +62,14 @@ const Dashboard = () => {
     <div className="p-6 max-w-6xl">
       <div className="mb-6">
         <h1 className="text-lg font-semibold text-foreground">Dashboard</h1>
-        <p className="text-sm text-muted-foreground mt-0.5">
-          Claims intelligence overview
-        </p>
+        <p className="text-sm text-muted-foreground mt-0.5">Claims intelligence overview</p>
       </div>
 
-      {/* Stat cards */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
         {stats.map((stat) => (
-          <div
-            key={stat.label}
-            className="border border-border rounded-lg px-4 py-4 bg-card"
-          >
+          <div key={stat.label} className="border border-border rounded-lg px-4 py-4 bg-card">
             <div className="flex items-center justify-between mb-2">
-              <span className="text-xs font-medium text-muted-foreground uppercase tracking-wider">
-                {stat.label}
-              </span>
+              <span className="text-xs font-medium text-muted-foreground uppercase tracking-wider">{stat.label}</span>
               <stat.icon className={`h-4 w-4 ${stat.accent}`} />
             </div>
             <p className="text-2xl font-semibold text-card-foreground">{stat.value}</p>
@@ -86,7 +78,6 @@ const Dashboard = () => {
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* Work queue */}
         <div className="border border-border rounded-lg bg-card">
           <div className="px-4 py-3 border-b border-border">
             <h2 className="text-sm font-semibold text-card-foreground flex items-center gap-2">
@@ -96,20 +87,14 @@ const Dashboard = () => {
           </div>
           <div className="divide-y divide-border">
             {workQueue.map((item) => (
-              <div
-                key={item.label}
-                className="px-4 py-3 flex items-center justify-between"
-              >
+              <div key={item.label} className="px-4 py-3 flex items-center justify-between">
                 <span className="text-sm text-card-foreground">{item.label}</span>
-                <span className="text-sm font-semibold text-card-foreground">
-                  {item.value}
-                </span>
+                <span className="text-sm font-semibold text-card-foreground">{item.value}</span>
               </div>
             ))}
           </div>
         </div>
 
-        {/* Recent activity */}
         <div className="border border-border rounded-lg bg-card">
           <div className="px-4 py-3 border-b border-border">
             <h2 className="text-sm font-semibold text-card-foreground flex items-center gap-2">

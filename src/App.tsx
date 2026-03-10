@@ -7,6 +7,7 @@ import MainLayout from "@/components/layout/MainLayout";
 import SignIn from "@/pages/SignIn";
 import Dashboard from "@/pages/Dashboard";
 import CasesPage from "@/pages/CasesPage";
+import CaseDetailPage from "@/pages/CaseDetailPage";
 import DocumentsPage from "@/pages/DocumentsPage";
 import ReviewQueuePage from "@/pages/ReviewQueuePage";
 import ExportsPage from "@/pages/ExportsPage";
@@ -30,6 +31,7 @@ const App = () => (
           >
             <Route path="/" element={<Dashboard />} />
             <Route path="/cases" element={<CasesPage />} />
+            <Route path="/cases/:caseId" element={<CaseDetailPage />} />
             <Route path="/documents" element={<DocumentsPage />} />
             <Route path="/review" element={<ReviewQueuePage />} />
             <Route path="/exports" element={<ExportsPage />} />
