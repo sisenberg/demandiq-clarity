@@ -94,11 +94,11 @@ export enum ReviewItemType {
 }
 
 export enum ReviewStatus {
+  NotStarted = "not_started",
   Pending = "pending",
-  InProgress = "in_progress",
+  InReview = "in_review",
+  ChangesRequested = "changes_requested",
   Approved = "approved",
-  Rejected = "rejected",
-  Deferred = "deferred",
 }
 
 export enum JobType {
