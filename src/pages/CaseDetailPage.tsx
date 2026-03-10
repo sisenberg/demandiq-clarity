@@ -11,6 +11,8 @@ import {
   mockCasePackages,
   mockUsers,
 } from "@/data/mock/index";
+import { useAuth } from "@/contexts/AuthContext";
+import { hasPermission } from "@/lib/permissions";
 import {
   CaseStatus,
   DocumentStatus,
@@ -35,6 +37,13 @@ import {
   Cog,
   Package,
   Link2,
+  Upload,
+  Play,
+  CheckCircle,
+  XCircle,
+  Send,
+  UserPlus,
+  Download,
 } from "lucide-react";
 
 const caseStatusLabel: Record<CaseStatus, string> = {
@@ -91,6 +100,7 @@ function formatBytes(bytes: number): string {
 
 const CaseDetailPage = () => {
   const { caseId } = useParams<{ caseId: string }>();
+  const { role } = useAuth();
   const caseData = mockCases.find((c) => c.id === caseId);
 
   if (!caseData) {
@@ -145,6 +155,40 @@ const CaseDetailPage = () => {
         <span className={`text-xs font-medium px-2 py-0.5 rounded ${caseStatusColor[caseData.case_status]}`}>
           {caseStatusLabel[caseData.case_status]}
         </span>
+      </div>
+
+      {/* Action Bar — role-gated */}
+      <div className="flex flex-wrap gap-2 mb-6">
+        {hasPermission(role, "upload_document") && (
+          <button className="flex items-center gap-1.5 text-xs font-medium px-3 py-1.5 rounded-md border border-border bg-card text-foreground hover:bg-accent transition-colors">
+            <Upload className="h-3.5 w-3.5" /> Upload Document
+          </button>
+        )}
+        {hasPermission(role, "trigger_processing") && (
+          <button className="flex items-center gap-1.5 text-xs font-medium px-3 py-1.5 rounded-md border border-border bg-card text-foreground hover:bg-accent transition-colors">
+            <Play className="h-3.5 w-3.5" /> Run Extraction
+          </button>
+        )}
+        {hasPermission(role, "assign_case") && (
+          <button className="flex items-center gap-1.5 text-xs font-medium px-3 py-1.5 rounded-md border border-border bg-card text-foreground hover:bg-accent transition-colors">
+            <UserPlus className="h-3.5 w-3.5" /> Assign
+          </button>
+        )}
+        {hasPermission(role, "submit_for_review") && (
+          <button className="flex items-center gap-1.5 text-xs font-medium px-3 py-1.5 rounded-md border border-border bg-card text-foreground hover:bg-accent transition-colors">
+            <Send className="h-3.5 w-3.5" /> Submit for Review
+          </button>
+        )}
+        {hasPermission(role, "approve_package") && (
+          <button className="flex items-center gap-1.5 text-xs font-medium px-3 py-1.5 rounded-md bg-primary text-primary-foreground hover:bg-primary/90 transition-colors">
+            <CheckCircle className="h-3.5 w-3.5" /> Approve Package
+          </button>
+        )}
+        {hasPermission(role, "export_package") && (
+          <button className="flex items-center gap-1.5 text-xs font-medium px-3 py-1.5 rounded-md border border-border bg-card text-foreground hover:bg-accent transition-colors">
+            <Download className="h-3.5 w-3.5" /> Export
+          </button>
+        )}
       </div>
 
       {/* Stats row */}
@@ -221,7 +265,19 @@ const CaseDetailPage = () => {
                         </p>
                       )}
                     </div>
-                    <span className={rs.className}>{rs.label}</span>
+                    <div className="flex items-center gap-1.5 shrink-0">
+                      <span className={rs.className}>{rs.label}</span>
+                      {hasPermission(role, "approve_review") && event.review_state === ReviewState.Pending && (
+                        <>
+                          <button className="p-1 rounded hover:bg-accent" title="Approve">
+                            <CheckCircle className="h-3.5 w-3.5 text-[hsl(var(--status-approved))]" />
+                          </button>
+                          <button className="p-1 rounded hover:bg-accent" title="Reject">
+                            <XCircle className="h-3.5 w-3.5 text-destructive" />
+                          </button>
+                        </>
+                      )}
+                    </div>
                   </div>
                 </div>
               );

@@ -9,6 +9,8 @@ import {
   ScrollText,
   Shield,
 } from "lucide-react";
+import { useAuth } from "@/contexts/AuthContext";
+import { canAccessRoute } from "@/lib/permissions";
 
 const navItems = [
   { label: "Dashboard", path: "/", icon: LayoutDashboard },
@@ -22,11 +24,14 @@ const navItems = [
 
 const AppSidebar = () => {
   const location = useLocation();
+  const { role, profile } = useAuth();
 
   const isActive = (path: string) => {
     if (path === "/") return location.pathname === "/";
     return location.pathname.startsWith(path);
   };
+
+  const visibleItems = navItems.filter((item) => canAccessRoute(role, item.path));
 
   return (
     <aside className="w-[var(--sidebar-width)] h-screen bg-sidebar border-r border-sidebar-border flex flex-col shrink-0">
@@ -37,13 +42,15 @@ const AppSidebar = () => {
         </div>
         <div className="min-w-0">
           <p className="text-sm font-semibold text-sidebar-foreground truncate">DemandIQ</p>
-          <p className="text-[10px] text-muted-foreground truncate">Burke & Associates</p>
+          <p className="text-[10px] text-muted-foreground truncate">
+            {profile?.display_name || "—"}
+          </p>
         </div>
       </div>
 
       {/* Navigation */}
       <nav className="flex-1 overflow-y-auto px-2 py-3 flex flex-col gap-0.5">
-        {navItems.map((item) => (
+        {visibleItems.map((item) => (
           <NavLink
             key={item.path}
             to={item.path}

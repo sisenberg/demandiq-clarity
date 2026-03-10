@@ -3,6 +3,7 @@ import { TooltipProvider } from "@radix-ui/react-tooltip";
 import { BrowserRouter, Route, Routes } from "react-router-dom";
 import { AuthProvider } from "@/contexts/AuthContext";
 import ProtectedRoute from "@/components/auth/ProtectedRoute";
+import RoleGuard from "@/components/auth/RoleGuard";
 import MainLayout from "@/components/layout/MainLayout";
 import SignIn from "@/pages/SignIn";
 import Dashboard from "@/pages/Dashboard";
@@ -33,10 +34,38 @@ const App = () => (
             <Route path="/cases" element={<CasesPage />} />
             <Route path="/cases/:caseId" element={<CaseDetailPage />} />
             <Route path="/documents" element={<DocumentsPage />} />
-            <Route path="/review" element={<ReviewQueuePage />} />
-            <Route path="/exports" element={<ExportsPage />} />
-            <Route path="/admin" element={<AdminPage />} />
-            <Route path="/audit" element={<AuditLogPage />} />
+            <Route
+              path="/review"
+              element={
+                <RoleGuard permission="approve_review">
+                  <ReviewQueuePage />
+                </RoleGuard>
+              }
+            />
+            <Route
+              path="/exports"
+              element={
+                <RoleGuard permission="export_package">
+                  <ExportsPage />
+                </RoleGuard>
+              }
+            />
+            <Route
+              path="/admin"
+              element={
+                <RoleGuard permission="view_admin">
+                  <AdminPage />
+                </RoleGuard>
+              }
+            />
+            <Route
+              path="/audit"
+              element={
+                <RoleGuard permission="view_audit_log">
+                  <AuditLogPage />
+                </RoleGuard>
+              }
+            />
           </Route>
           <Route path="*" element={<NotFound />} />
         </Routes>
