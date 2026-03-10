@@ -37,6 +37,13 @@ import {
   Cog,
   Package,
   Link2,
+  Upload,
+  Play,
+  CheckCircle,
+  XCircle,
+  Send,
+  UserPlus,
+  Download,
 } from "lucide-react";
 
 const caseStatusLabel: Record<CaseStatus, string> = {
