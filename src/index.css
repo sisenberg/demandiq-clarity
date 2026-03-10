@@ -46,6 +46,15 @@
     --status-draft: 214 24% 70%;
     --status-draft-bg: 214 24% 95%;
     --status-draft-foreground: 214 24% 35%;
+    --status-processing: 214 100% 50%;
+    --status-processing-bg: 214 100% 96%;
+    --status-processing-foreground: 214 80% 30%;
+    --status-failed: 0 84% 60%;
+    --status-failed-bg: 0 84% 96%;
+    --status-failed-foreground: 0 70% 30%;
+    --status-attention: 28 100% 55%;
+    --status-attention-bg: 28 100% 95%;
+    --status-attention-foreground: 28 80% 25%;
 
     /* Layout */
     --sidebar-width: 280px;
