@@ -27,8 +27,8 @@ export function useCaseDocuments(caseId: string | undefined) {
     queryKey: ["case-documents", caseId],
     enabled: !!caseId,
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from("case_documents")
+      const { data, error } = await (supabase
+        .from("case_documents") as any)
         .select("*")
         .eq("case_id", caseId!)
         .order("created_at", { ascending: false });
