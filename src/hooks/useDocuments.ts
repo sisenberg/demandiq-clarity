@@ -58,8 +58,8 @@ export function useAllDocuments() {
   return useQuery({
     queryKey: ["case-documents", "all"],
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from("case_documents")
+      const { data, error } = await (supabase
+        .from("case_documents") as any)
         .select("*")
         .order("created_at", { ascending: false });
       if (error) throw error;
