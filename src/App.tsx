@@ -1,5 +1,6 @@
 import { Toaster } from "sonner";
 import { TooltipProvider } from "@radix-ui/react-tooltip";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Route, Routes } from "react-router-dom";
 import { AuthProvider } from "@/contexts/AuthContext";
 import ProtectedRoute from "@/components/auth/ProtectedRoute";
@@ -10,10 +11,13 @@ import Dashboard from "@/pages/Dashboard";
 import CasesPage from "@/pages/CasesPage";
 import CaseDetailPage from "@/pages/CaseDetailPage";
 import DocumentsPage from "@/pages/DocumentsPage";
+import DocumentDetailPage from "@/pages/DocumentDetailPage";
 import ExportsPage from "@/pages/ExportsPage";
 import AdminPage from "@/pages/AdminPage";
 import AuditLogPage from "@/pages/AuditLogPage";
 import NotFound from "@/pages/NotFound";
+
+const queryClient = new QueryClient();
 
 const App = () => (
   <AuthProvider>
