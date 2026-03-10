@@ -111,6 +111,27 @@
     border: 1px solid hsl(var(--status-draft) / 0.3);
   }
 
+  .status-badge-processing {
+    @apply text-xs font-medium px-2 py-0.5 rounded;
+    background-color: hsl(var(--status-processing-bg));
+    color: hsl(var(--status-processing-foreground));
+    border: 1px solid hsl(var(--status-processing) / 0.3);
+  }
+
+  .status-badge-failed {
+    @apply text-xs font-medium px-2 py-0.5 rounded;
+    background-color: hsl(var(--status-failed-bg));
+    color: hsl(var(--status-failed-foreground));
+    border: 1px solid hsl(var(--status-failed) / 0.3);
+  }
+
+  .status-badge-attention {
+    @apply text-xs font-medium px-2 py-0.5 rounded;
+    background-color: hsl(var(--status-attention-bg));
+    color: hsl(var(--status-attention-foreground));
+    border: 1px solid hsl(var(--status-attention) / 0.3);
+  }
+
   .evidence-link-line {
     stroke: hsl(var(--primary));
     stroke-width: 1px;

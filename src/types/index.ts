@@ -116,9 +116,12 @@ export enum JobStatus {
 }
 
 export enum PackageStatus {
-  Draft = "draft",
+  NotReady = "not_ready",
+  Assembling = "assembling",
+  Ready = "ready",
   Approved = "approved",
   Exported = "exported",
+  Failed = "failed",
 }
 
 export enum UserRole {
