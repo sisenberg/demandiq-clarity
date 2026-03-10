@@ -23,8 +23,7 @@ export function useCaseJobs(caseId: string | undefined) {
     queryKey: ["jobs", caseId],
     enabled: !!caseId,
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from("jobs")
+      const { data, error } = await (supabase.from("jobs") as any)
         .select("*")
         .eq("case_id", caseId!)
         .order("created_at", { ascending: false });
@@ -39,8 +38,7 @@ export function useDocumentJobs(docId: string | undefined) {
     queryKey: ["jobs", "document", docId],
     enabled: !!docId,
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from("jobs")
+      const { data, error } = await (supabase.from("jobs") as any)
         .select("*")
         .eq("document_id", docId!)
         .order("created_at", { ascending: false });
@@ -64,17 +62,16 @@ export function useTriggerProcessing() {
         case_id: caseId,
         document_id: documentId || null,
         job_type: jt,
-        job_status: "queued" as const,
+        job_status: "queued",
       }));
 
-      const { data, error } = await supabase.from("jobs").insert(jobs).select();
+      const { data, error } = await (supabase.from("jobs") as any).insert(jobs).select();
       if (error) throw error;
 
       // Simulate: mark first job as running after a brief delay
       if (data && data.length > 0) {
         setTimeout(async () => {
-          await supabase
-            .from("jobs")
+          await (supabase.from("jobs") as any)
             .update({ job_status: "running", started_at: new Date().toISOString() })
             .eq("id", data[0].id);
           queryClient.invalidateQueries({ queryKey: ["jobs"] });
@@ -98,8 +95,7 @@ export function useRetryJob() {
 
   return useMutation({
     mutationFn: async (jobId: string) => {
-      const { error } = await supabase
-        .from("jobs")
+      const { error } = await (supabase.from("jobs") as any)
         .update({
           job_status: "queued",
           error_message: null,

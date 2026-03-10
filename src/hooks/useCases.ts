@@ -27,8 +27,7 @@ export function useCases() {
   return useQuery({
     queryKey: ["cases"],
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from("cases")
+      const { data, error } = await (supabase.from("cases") as any)
         .select("*")
         .order("created_at", { ascending: false });
       if (error) throw error;
@@ -42,8 +41,7 @@ export function useCase(caseId: string | undefined) {
     queryKey: ["cases", caseId],
     enabled: !!caseId,
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from("cases")
+      const { data, error } = await (supabase.from("cases") as any)
         .select("*")
         .eq("id", caseId!)
         .single();
@@ -72,8 +70,7 @@ export function useCreateCase() {
     mutationFn: async (input: CreateCaseInput) => {
       if (!tenantId || !user) throw new Error("Not authenticated");
       const title = `${input.claimant} v. ${input.insured}`;
-      const { data, error } = await supabase
-        .from("cases")
+      const { data, error } = await (supabase.from("cases") as any)
         .insert({
           tenant_id: tenantId,
           title,
@@ -109,9 +106,8 @@ export function useUpdateCaseStatus() {
 
   return useMutation({
     mutationFn: async ({ caseId, status }: { caseId: string; status: string }) => {
-      const { error } = await supabase
-        .from("cases")
-        .update({ case_status: status as any })
+      const { error } = await (supabase.from("cases") as any)
+        .update({ case_status: status })
         .eq("id", caseId);
       if (error) throw error;
     },
