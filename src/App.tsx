@@ -20,53 +20,56 @@ import NotFound from "@/pages/NotFound";
 const queryClient = new QueryClient();
 
 const App = () => (
-  <AuthProvider>
-    <TooltipProvider>
-      <Toaster />
-      <BrowserRouter>
-        <Routes>
-          <Route path="/sign-in" element={<SignIn />} />
-          <Route
-            element={
-              <ProtectedRoute>
-                <MainLayout />
-              </ProtectedRoute>
-            }
-          >
-            <Route path="/" element={<Dashboard />} />
-            <Route path="/cases" element={<CasesPage />} />
-            <Route path="/cases/:caseId" element={<CaseDetailPage />} />
-            <Route path="/documents" element={<DocumentsPage />} />
+  <QueryClientProvider client={queryClient}>
+    <AuthProvider>
+      <TooltipProvider>
+        <Toaster />
+        <BrowserRouter>
+          <Routes>
+            <Route path="/sign-in" element={<SignIn />} />
             <Route
-              path="/exports"
               element={
-                <RoleGuard permission="export_package">
-                  <ExportsPage />
-                </RoleGuard>
+                <ProtectedRoute>
+                  <MainLayout />
+                </ProtectedRoute>
               }
-            />
-            <Route
-              path="/admin"
-              element={
-                <RoleGuard permission="view_admin">
-                  <AdminPage />
-                </RoleGuard>
-              }
-            />
-            <Route
-              path="/audit"
-              element={
-                <RoleGuard permission="view_audit_log">
-                  <AuditLogPage />
-                </RoleGuard>
-              }
-            />
-          </Route>
-          <Route path="*" element={<NotFound />} />
-        </Routes>
-      </BrowserRouter>
-    </TooltipProvider>
-  </AuthProvider>
+            >
+              <Route path="/" element={<Dashboard />} />
+              <Route path="/cases" element={<CasesPage />} />
+              <Route path="/cases/:caseId" element={<CaseDetailPage />} />
+              <Route path="/documents" element={<DocumentsPage />} />
+              <Route path="/documents/:docId" element={<DocumentDetailPage />} />
+              <Route
+                path="/exports"
+                element={
+                  <RoleGuard permission="export_package">
+                    <ExportsPage />
+                  </RoleGuard>
+                }
+              />
+              <Route
+                path="/admin"
+                element={
+                  <RoleGuard permission="view_admin">
+                    <AdminPage />
+                  </RoleGuard>
+                }
+              />
+              <Route
+                path="/audit"
+                element={
+                  <RoleGuard permission="view_audit_log">
+                    <AuditLogPage />
+                  </RoleGuard>
+                }
+              />
+            </Route>
+            <Route path="*" element={<NotFound />} />
+          </Routes>
+        </BrowserRouter>
+      </TooltipProvider>
+    </AuthProvider>
+  </QueryClientProvider>
 );
 
 export default App;
