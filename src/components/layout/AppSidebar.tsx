@@ -3,7 +3,6 @@ import {
   LayoutDashboard,
   Briefcase,
   FileText,
-  ClipboardCheck,
   Download,
   Settings,
   ScrollText,
@@ -16,7 +15,6 @@ const navItems = [
   { label: "Dashboard", path: "/", icon: LayoutDashboard },
   { label: "Cases", path: "/cases", icon: Briefcase },
   { label: "Documents", path: "/documents", icon: FileText },
-  { label: "Review Queue", path: "/review", icon: ClipboardCheck },
   { label: "Exports", path: "/exports", icon: Download },
   { label: "Admin", path: "/admin", icon: Settings },
   { label: "Audit Log", path: "/audit", icon: ScrollText },
@@ -35,7 +33,6 @@ const AppSidebar = () => {
 
   return (
     <aside className="w-[var(--sidebar-width)] h-screen bg-sidebar border-r border-sidebar-border flex flex-col shrink-0">
-      {/* Brand */}
       <div className="px-4 py-4 border-b border-sidebar-border flex items-center gap-3">
         <div className="h-8 w-8 rounded-md bg-sidebar-primary flex items-center justify-center shrink-0">
           <Shield className="h-4 w-4 text-sidebar-primary-foreground" />
@@ -48,7 +45,6 @@ const AppSidebar = () => {
         </div>
       </div>
 
-      {/* Navigation */}
       <nav className="flex-1 overflow-y-auto px-2 py-3 flex flex-col gap-0.5">
         {visibleItems.map((item) => (
           <NavLink
@@ -67,7 +63,6 @@ const AppSidebar = () => {
         ))}
       </nav>
 
-      {/* Footer */}
       <div className="px-4 py-3 border-t border-sidebar-border">
         <p className="text-[10px] text-muted-foreground">DemandIQ v1.0 · Multi-Tenant</p>
       </div>

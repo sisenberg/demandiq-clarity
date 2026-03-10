@@ -1,8 +1,7 @@
-import { mockCases, mockDocuments, mockIssueFlags, mockJobs, mockReviewItems, mockActivityEvents } from "@/data/mock/index";
-import { CaseStatus, DocumentStatus, JobStatus, FlagStatus, ReviewStatus } from "@/types";
+import { mockCases, mockDocuments, mockIssueFlags, mockJobs, mockActivityEvents } from "@/data/mock/index";
+import { CaseStatus, DocumentStatus, JobStatus, FlagStatus } from "@/types";
 import {
   Briefcase,
-  ClipboardCheck,
   FileText,
   Download,
   AlertTriangle,
@@ -14,20 +13,12 @@ const Dashboard = () => {
     (c) => c.case_status !== CaseStatus.Closed && c.case_status !== CaseStatus.Exported
   ).length;
 
-  const awaitingReview = mockCases.filter(
-    (c) => c.case_status === CaseStatus.ReviewRequired || c.case_status === CaseStatus.InReview
-  ).length;
-
   const docsProcessing = mockDocuments.filter(
     (d) => d.document_status === DocumentStatus.OcrInProgress || d.document_status === DocumentStatus.Queued
   ).length;
 
   const readyForExport = mockCases.filter(
-    (c) => c.case_status === CaseStatus.ApprovedForPackage || c.case_status === CaseStatus.PackageReady
-  ).length;
-
-  const pendingReviewItems = mockReviewItems.filter(
-    (r) => r.review_status === ReviewStatus.Pending || r.review_status === ReviewStatus.InReview
+    (c) => c.case_status === CaseStatus.Complete
   ).length;
 
   const openIssues = mockIssueFlags.filter(
@@ -40,18 +31,16 @@ const Dashboard = () => {
 
   const stats = [
     { label: "Open Cases", value: openCases, icon: Briefcase, accent: "text-primary" },
-    { label: "Awaiting Review", value: awaitingReview, icon: ClipboardCheck, accent: "text-[hsl(var(--status-review))]" },
     { label: "Docs Processing", value: docsProcessing, icon: FileText, accent: "text-[hsl(var(--status-processing))]" },
-    { label: "Ready for Export", value: readyForExport, icon: Download, accent: "text-[hsl(var(--status-approved))]" },
+    { label: "Ready to Export", value: readyForExport, icon: Download, accent: "text-[hsl(var(--status-approved))]" },
+    { label: "Open Issues", value: openIssues, icon: AlertTriangle, accent: "text-[hsl(var(--status-attention))]" },
   ];
 
   const workQueue = [
-    { label: "Review items pending", value: pendingReviewItems },
     { label: "Open issue flags", value: openIssues },
     { label: "Failed jobs", value: failedJobs },
   ];
 
-  // Show most recent activity across all cases
   const recentActivity = [...mockActivityEvents]
     .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
     .slice(0, 6);
@@ -79,8 +68,8 @@ const Dashboard = () => {
         <div className="border border-border rounded-lg bg-card">
           <div className="px-4 py-3 border-b border-border">
             <h2 className="text-sm font-semibold text-card-foreground flex items-center gap-2">
-              <AlertTriangle className="h-4 w-4 text-[hsl(var(--status-review))]" />
-              Work Queue
+              <AlertTriangle className="h-4 w-4 text-[hsl(var(--status-attention))]" />
+              Attention Needed
             </h2>
           </div>
           <div className="divide-y divide-border">

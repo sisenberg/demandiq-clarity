@@ -1,13 +1,12 @@
-import { mockCases, mockCasePackages } from "@/data/mock/index";
+import { mockCases } from "@/data/mock/index";
 import { CaseStatus } from "@/types";
-import { CASE_STATUS_LABEL, PKG_STATUS_LABEL, PKG_STATUS_BADGE } from "@/lib/workflow";
-import { Download, Package } from "lucide-react";
+import { CASE_STATUS_LABEL, CASE_STATUS_BADGE } from "@/lib/workflow";
+import { Download } from "lucide-react";
 
 const ExportsPage = () => {
   const exportable = mockCases.filter(
     (c) =>
-      c.case_status === CaseStatus.ApprovedForPackage ||
-      c.case_status === CaseStatus.PackageReady ||
+      c.case_status === CaseStatus.Complete ||
       c.case_status === CaseStatus.Exported
   );
 
@@ -15,7 +14,7 @@ const ExportsPage = () => {
     <div className="p-6 max-w-6xl">
       <div className="mb-6">
         <h1 className="text-lg font-semibold text-foreground">Exports</h1>
-        <p className="text-sm text-muted-foreground mt-0.5">Case packages ready for export</p>
+        <p className="text-sm text-muted-foreground mt-0.5">Cases ready for export</p>
       </div>
 
       {exportable.length === 0 ? (
@@ -25,30 +24,19 @@ const ExportsPage = () => {
         </div>
       ) : (
         <div className="flex flex-col gap-2">
-          {exportable.map((c) => {
-            const pkg = mockCasePackages.find((p) => p.case_id === c.id);
-            return (
-              <div key={c.id} className="border border-border rounded-lg bg-card px-4 py-3 flex items-center justify-between">
-                <div className="flex items-center gap-3">
-                  <Package className="h-5 w-5 text-[hsl(var(--status-approved))]" />
-                  <div>
-                    <p className="text-sm font-medium text-foreground">{c.title}</p>
-                    <p className="text-xs text-muted-foreground">
-                      {c.case_number} · {c.claimant}
-                      {pkg && ` · v${pkg.package_version} (schema ${pkg.schema_version})`}
-                    </p>
-                  </div>
-                </div>
-                {pkg ? (
-                  <span className={PKG_STATUS_BADGE[pkg.package_status]}>
-                    {PKG_STATUS_LABEL[pkg.package_status]}
-                  </span>
-                ) : (
-                  <span className="status-badge-draft">{CASE_STATUS_LABEL[c.case_status]}</span>
-                )}
+          {exportable.map((c) => (
+            <div key={c.id} className="border border-border rounded-lg bg-card px-4 py-3 flex items-center justify-between">
+              <div>
+                <p className="text-sm font-medium text-foreground">{c.title}</p>
+                <p className="text-xs text-muted-foreground">
+                  {c.case_number} · {c.claimant}
+                </p>
               </div>
-            );
-          })}
+              <span className={CASE_STATUS_BADGE[c.case_status]}>
+                {CASE_STATUS_LABEL[c.case_status]}
+              </span>
+            </div>
+          ))}
         </div>
       )}
     </div>

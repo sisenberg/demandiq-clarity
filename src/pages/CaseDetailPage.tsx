@@ -5,10 +5,8 @@ import {
   mockChronologyEvents,
   mockEvidenceLinks,
   mockIssueFlags,
-  mockReviewItems,
   mockExtractions,
   mockJobs,
-  mockCasePackages,
   mockUsers,
   mockActivityEvents,
 } from "@/data/mock/index";
@@ -20,15 +18,10 @@ import {
   CASE_ACTIONS,
   DOC_STATUS_LABEL,
   DOC_STATUS_BADGE,
-  REVIEW_STATUS_LABEL,
-  REVIEW_STATUS_BADGE,
-  PKG_STATUS_LABEL,
-  PKG_STATUS_BADGE,
 } from "@/lib/workflow";
 import {
   ReviewState,
   Severity,
-  ReviewStatus,
   ExtractionStatus,
   JobStatus,
   RelevanceType,
@@ -40,14 +33,11 @@ import {
   FileText,
   Clock,
   AlertTriangle,
-  ClipboardCheck,
   Cog,
   Link2,
   CheckCircle,
   XCircle,
   Play,
-  Send,
-  Package,
   Download,
   RotateCcw,
   Archive,
@@ -76,7 +66,7 @@ const relevanceLabel: Record<RelevanceType, string> = {
 };
 
 const iconMap: Record<string, React.ElementType> = {
-  Play, CheckCircle, XCircle, Send, Package, Download, RotateCcw, Archive, ClipboardCheck, UserPlus,
+  Play, CheckCircle, XCircle, Download, RotateCcw, Archive, UserPlus,
 };
 
 function formatBytes(bytes: number): string {
@@ -105,10 +95,8 @@ const CaseDetailPage = () => {
   const events = mockChronologyEvents.filter((e) => e.case_id === caseId);
   const evidenceLinks = mockEvidenceLinks.filter((e) => e.case_id === caseId);
   const issueFlags = mockIssueFlags.filter((i) => i.case_id === caseId);
-  const reviewItems = mockReviewItems.filter((r) => r.case_id === caseId);
   const extractions = mockExtractions.filter((e) => e.case_id === caseId);
   const jobs = mockJobs.filter((j) => j.case_id === caseId);
-  const packages = mockCasePackages.filter((p) => p.case_id === caseId);
   const assignee = mockUsers.find((u) => u.id === caseData.assigned_to);
   const activityEvents = mockActivityEvents.filter((a) => a.case_id === caseId);
 
@@ -155,7 +143,7 @@ const CaseDetailPage = () => {
       </div>
 
       {/* Action Bar — state + role-gated */}
-      {availableActions.length > 0 && (
+      {(availableActions.length > 0 || hasPermission(role, "upload_document") || hasPermission(role, "assign_case")) && (
         <div className="flex flex-wrap gap-2 mb-6">
           {hasPermission(role, "upload_document") && (
             <button className="flex items-center gap-1.5 text-xs font-medium px-3 py-1.5 rounded-md border border-border bg-card text-foreground hover:bg-accent transition-colors">
@@ -189,12 +177,11 @@ const CaseDetailPage = () => {
       )}
 
       {/* Stats row */}
-      <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-6 gap-3 mb-8">
+      <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-5 gap-3 mb-8">
         <StatCard icon={FileText} label="Documents" value={documents.length} />
         <StatCard icon={Clock} label="Events" value={events.length} />
         <StatCard icon={Link2} label="Evidence Links" value={evidenceLinks.length} />
         <StatCard icon={AlertTriangle} label="Issues" value={issueFlags.length} />
-        <StatCard icon={ClipboardCheck} label="Reviews" value={reviewItems.length} />
         <StatCard icon={Cog} label="Jobs" value={jobs.length} />
       </div>
 
@@ -245,7 +232,7 @@ const CaseDetailPage = () => {
                       ? "border-[hsl(var(--status-approved))] bg-[hsl(var(--status-approved))]"
                       : event.review_state === ReviewState.Rejected
                       ? "border-destructive bg-background"
-                      : "border-[hsl(var(--status-review))] bg-background"
+                      : "border-[hsl(var(--status-processing))] bg-background"
                   }`} />
                   <div className="flex items-start justify-between gap-2">
                     <div className="min-w-0 flex-1">
@@ -261,19 +248,7 @@ const CaseDetailPage = () => {
                         </p>
                       )}
                     </div>
-                    <div className="flex items-center gap-1.5 shrink-0">
-                      <span className={rs.className}>{rs.label}</span>
-                      {hasPermission(role, "approve_review") && event.review_state === ReviewState.Pending && (
-                        <>
-                          <button className="p-1 rounded hover:bg-accent" title="Approve">
-                            <CheckCircle className="h-3.5 w-3.5 text-[hsl(var(--status-approved))]" />
-                          </button>
-                          <button className="p-1 rounded hover:bg-accent" title="Reject">
-                            <XCircle className="h-3.5 w-3.5 text-destructive" />
-                          </button>
-                        </>
-                      )}
-                    </div>
+                    <span className={rs.className}>{rs.label}</span>
                   </div>
                 </div>
               );
@@ -331,48 +306,12 @@ const CaseDetailPage = () => {
                   </div>
                   <div className="flex flex-col items-end gap-1 shrink-0 text-[10px] text-muted-foreground">
                     <span>{flag.status}</span>
-                    <span className={reviewStateConfig[flag.review_state].className}>{reviewStateConfig[flag.review_state].label}</span>
                   </div>
                 </div>
               </div>
             );
           })}
         </div>
-      </Section>
-
-      {/* Review Items */}
-      <Section title="Review Items" count={reviewItems.length}>
-        <table className="w-full text-sm">
-          <thead>
-            <tr className="border-b border-border text-left">
-              <th className="px-4 py-2 text-xs font-medium text-muted-foreground uppercase tracking-wider">Type</th>
-              <th className="px-4 py-2 text-xs font-medium text-muted-foreground uppercase tracking-wider">Linked Record</th>
-              <th className="px-4 py-2 text-xs font-medium text-muted-foreground uppercase tracking-wider">Assigned To</th>
-              <th className="px-4 py-2 text-xs font-medium text-muted-foreground uppercase tracking-wider">Status</th>
-              <th className="px-4 py-2 text-xs font-medium text-muted-foreground uppercase tracking-wider">Notes</th>
-            </tr>
-          </thead>
-          <tbody className="divide-y divide-border">
-            {reviewItems.map((ri) => {
-              const user = mockUsers.find((u) => u.id === ri.assigned_to);
-              return (
-                <tr key={ri.id} className="hover:bg-accent/50 transition-colors">
-                  <td className="px-4 py-2.5">
-                    <code className="text-[10px] bg-muted px-1.5 py-0.5 rounded text-foreground">{ri.item_type}</code>
-                  </td>
-                  <td className="px-4 py-2.5 text-xs text-muted-foreground">{ri.linked_record_type}:{ri.linked_record_id}</td>
-                  <td className="px-4 py-2.5 text-foreground">{user?.display_name ?? "—"}</td>
-                  <td className="px-4 py-2.5">
-                    <span className={REVIEW_STATUS_BADGE[ri.review_status]}>
-                      {REVIEW_STATUS_LABEL[ri.review_status]}
-                    </span>
-                  </td>
-                  <td className="px-4 py-2.5 text-xs text-muted-foreground">{ri.resolution_notes ?? "—"}</td>
-                </tr>
-              );
-            })}
-          </tbody>
-        </table>
       </Section>
 
       {/* Extractions */}
@@ -448,27 +387,6 @@ const CaseDetailPage = () => {
             })}
           </tbody>
         </table>
-      </Section>
-
-      {/* Case Packages */}
-      <Section title="Case Packages" count={packages.length}>
-        {packages.length === 0 ? (
-          <p className="text-sm text-muted-foreground px-4 py-3">No packages generated yet.</p>
-        ) : (
-          <div className="flex flex-col gap-2">
-            {packages.map((pkg) => (
-              <div key={pkg.id} className="border border-border rounded-md px-4 py-3 flex items-center justify-between">
-                <div>
-                  <p className="text-sm font-medium text-foreground">Version {pkg.package_version}</p>
-                  <p className="text-xs text-muted-foreground">Schema {pkg.schema_version} · Created {pkg.created_at}</p>
-                </div>
-                <span className={PKG_STATUS_BADGE[pkg.package_status]}>
-                  {PKG_STATUS_LABEL[pkg.package_status]}
-                </span>
-              </div>
-            ))}
-          </div>
-        )}
       </Section>
 
       {/* Activity Timeline */}

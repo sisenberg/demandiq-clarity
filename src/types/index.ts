@@ -9,10 +9,7 @@ export enum CaseStatus {
   IntakeInProgress = "intake_in_progress",
   IntakeComplete = "intake_complete",
   ProcessingInProgress = "processing_in_progress",
-  ReviewRequired = "review_required",
-  InReview = "in_review",
-  ApprovedForPackage = "approved_for_package",
-  PackageReady = "package_ready",
+  Complete = "complete",
   Exported = "exported",
   Closed = "closed",
   Failed = "failed",
@@ -86,21 +83,6 @@ export enum FlagStatus {
   Dismissed = "dismissed",
 }
 
-export enum ReviewItemType {
-  ChronologyEvent = "chronology_event",
-  IssueFlag = "issue_flag",
-  EvidenceLink = "evidence_link",
-  Document = "document",
-}
-
-export enum ReviewStatus {
-  NotStarted = "not_started",
-  Pending = "pending",
-  InReview = "in_review",
-  ChangesRequested = "changes_requested",
-  Approved = "approved",
-}
-
 export enum JobType {
   DocumentExtraction = "document_extraction",
   ChronologyGeneration = "chronology_generation",
@@ -112,15 +94,6 @@ export enum JobStatus {
   Queued = "queued",
   Running = "running",
   Completed = "completed",
-  Failed = "failed",
-}
-
-export enum PackageStatus {
-  NotReady = "not_ready",
-  Assembling = "assembling",
-  Ready = "ready",
-  Approved = "approved",
-  Exported = "exported",
   Failed = "failed",
 }
 
@@ -136,8 +109,6 @@ export enum ActionType {
   Created = "created",
   Updated = "updated",
   StatusChanged = "status_changed",
-  Approved = "approved",
-  Rejected = "rejected",
   Deleted = "deleted",
   Exported = "exported",
   Uploaded = "uploaded",
@@ -255,23 +226,7 @@ export interface IssueFlag {
   updated_at: string;
 }
 
-/** 9. Review Item */
-export interface ReviewItem {
-  id: string;
-  tenant_id: string;
-  case_id: string;
-  item_type: ReviewItemType;
-  linked_record_type: string;
-  linked_record_id: string;
-  assigned_to: string | null;
-  review_status: ReviewStatus;
-  resolution_notes: string | null;
-  resolved_at: string | null;
-  created_at: string;
-  updated_at: string;
-}
-
-/** 10. Job */
+/** 9. Job */
 export interface Job {
   id: string;
   tenant_id: string;
@@ -284,20 +239,7 @@ export interface Job {
   created_at: string;
 }
 
-/** 11. Case Package */
-export interface CasePackage {
-  id: string;
-  tenant_id: string;
-  case_id: string;
-  package_version: number;
-  schema_version: string;
-  package_status: PackageStatus;
-  approved_at: string | null;
-  exported_at: string | null;
-  created_at: string;
-}
-
-/** 12. Audit Event */
+/** 10. Audit Event */
 export interface AuditEvent {
   id: string;
   tenant_id: string;

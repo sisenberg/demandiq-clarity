@@ -5,7 +5,6 @@ import { CaseStatus } from "@/types";
 import { CASE_STATUS_LABEL, CASE_STATUS_BADGE } from "@/lib/workflow";
 import { Briefcase } from "lucide-react";
 
-// Group statuses into workflow stages for the work queue
 const STATUS_GROUPS = [
   {
     label: "Intake",
@@ -16,12 +15,8 @@ const STATUS_GROUPS = [
     statuses: [CaseStatus.ProcessingInProgress],
   },
   {
-    label: "Review",
-    statuses: [CaseStatus.ReviewRequired, CaseStatus.InReview],
-  },
-  {
-    label: "Package & Export",
-    statuses: [CaseStatus.ApprovedForPackage, CaseStatus.PackageReady],
+    label: "Ready to Export",
+    statuses: [CaseStatus.Complete],
   },
   {
     label: "Completed",
@@ -35,7 +30,6 @@ const STATUS_GROUPS = [
 
 const CasesPage = () => {
   const [view, setView] = useState<"table" | "queue">("queue");
-
   const allCases = mockCases;
 
   return (

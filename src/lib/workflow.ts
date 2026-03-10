@@ -3,7 +3,7 @@
 // Status labels, colors, transitions, allowed actions
 // ===================================================
 
-import { CaseStatus, DocumentStatus, ReviewStatus, PackageStatus } from "@/types";
+import { CaseStatus, DocumentStatus } from "@/types";
 import type { Permission } from "@/lib/permissions";
 
 // ─── Case Status ───────────────────────────────────
@@ -13,10 +13,7 @@ export const CASE_STATUS_LABEL: Record<CaseStatus, string> = {
   [CaseStatus.IntakeInProgress]: "Intake In Progress",
   [CaseStatus.IntakeComplete]: "Intake Complete",
   [CaseStatus.ProcessingInProgress]: "Processing",
-  [CaseStatus.ReviewRequired]: "Review Required",
-  [CaseStatus.InReview]: "In Review",
-  [CaseStatus.ApprovedForPackage]: "Approved for Package",
-  [CaseStatus.PackageReady]: "Package Ready",
+  [CaseStatus.Complete]: "Complete",
   [CaseStatus.Exported]: "Exported",
   [CaseStatus.Closed]: "Closed",
   [CaseStatus.Failed]: "Failed",
@@ -27,10 +24,7 @@ export const CASE_STATUS_BADGE: Record<CaseStatus, string> = {
   [CaseStatus.IntakeInProgress]: "status-badge-processing",
   [CaseStatus.IntakeComplete]: "status-badge-approved",
   [CaseStatus.ProcessingInProgress]: "status-badge-processing",
-  [CaseStatus.ReviewRequired]: "status-badge-attention",
-  [CaseStatus.InReview]: "status-badge-review",
-  [CaseStatus.ApprovedForPackage]: "status-badge-approved",
-  [CaseStatus.PackageReady]: "status-badge-approved",
+  [CaseStatus.Complete]: "status-badge-approved",
   [CaseStatus.Exported]: "status-badge-draft",
   [CaseStatus.Closed]: "status-badge-draft",
   [CaseStatus.Failed]: "status-badge-failed",
@@ -40,11 +34,8 @@ export const CASE_TRANSITIONS: Record<CaseStatus, CaseStatus[]> = {
   [CaseStatus.Draft]: [CaseStatus.IntakeInProgress],
   [CaseStatus.IntakeInProgress]: [CaseStatus.IntakeComplete, CaseStatus.Failed],
   [CaseStatus.IntakeComplete]: [CaseStatus.ProcessingInProgress],
-  [CaseStatus.ProcessingInProgress]: [CaseStatus.ReviewRequired, CaseStatus.Failed],
-  [CaseStatus.ReviewRequired]: [CaseStatus.InReview],
-  [CaseStatus.InReview]: [CaseStatus.ApprovedForPackage, CaseStatus.ReviewRequired],
-  [CaseStatus.ApprovedForPackage]: [CaseStatus.PackageReady],
-  [CaseStatus.PackageReady]: [CaseStatus.Exported],
+  [CaseStatus.ProcessingInProgress]: [CaseStatus.Complete, CaseStatus.Failed],
+  [CaseStatus.Complete]: [CaseStatus.Exported],
   [CaseStatus.Exported]: [CaseStatus.Closed],
   [CaseStatus.Closed]: [],
   [CaseStatus.Failed]: [CaseStatus.Draft],
@@ -70,21 +61,11 @@ export const CASE_ACTIONS: Record<CaseStatus, CaseAction[]> = {
     { label: "Start Processing", targetStatus: CaseStatus.ProcessingInProgress, permission: "trigger_processing", variant: "primary", icon: "Play" },
   ],
   [CaseStatus.ProcessingInProgress]: [
-    { label: "Send to Review", targetStatus: CaseStatus.ReviewRequired, permission: "trigger_processing", variant: "primary", icon: "Send" },
+    { label: "Mark Complete", targetStatus: CaseStatus.Complete, permission: "trigger_processing", variant: "primary", icon: "CheckCircle" },
     { label: "Mark Failed", targetStatus: CaseStatus.Failed, permission: "trigger_processing", variant: "destructive", icon: "XCircle" },
   ],
-  [CaseStatus.ReviewRequired]: [
-    { label: "Begin Review", targetStatus: CaseStatus.InReview, permission: "approve_review", variant: "primary", icon: "ClipboardCheck" },
-  ],
-  [CaseStatus.InReview]: [
-    { label: "Approve for Package", targetStatus: CaseStatus.ApprovedForPackage, permission: "approve_review", variant: "primary", icon: "CheckCircle" },
-    { label: "Request Changes", targetStatus: CaseStatus.ReviewRequired, permission: "approve_review", variant: "secondary", icon: "RotateCcw" },
-  ],
-  [CaseStatus.ApprovedForPackage]: [
-    { label: "Build Package", targetStatus: CaseStatus.PackageReady, permission: "approve_package", variant: "primary", icon: "Package" },
-  ],
-  [CaseStatus.PackageReady]: [
-    { label: "Export Package", targetStatus: CaseStatus.Exported, permission: "export_package", variant: "primary", icon: "Download" },
+  [CaseStatus.Complete]: [
+    { label: "Export", targetStatus: CaseStatus.Exported, permission: "export_package", variant: "primary", icon: "Download" },
   ],
   [CaseStatus.Exported]: [
     { label: "Close Case", targetStatus: CaseStatus.Closed, permission: "edit_case", variant: "secondary", icon: "Archive" },
@@ -113,68 +94,27 @@ export const DOC_STATUS_BADGE: Record<DocumentStatus, string> = {
   [DocumentStatus.Queued]: "status-badge-draft",
   [DocumentStatus.OcrInProgress]: "status-badge-processing",
   [DocumentStatus.Classified]: "status-badge-processing",
-  [DocumentStatus.Extracted]: "status-badge-review",
+  [DocumentStatus.Extracted]: "status-badge-approved",
   [DocumentStatus.NeedsAttention]: "status-badge-attention",
   [DocumentStatus.Complete]: "status-badge-approved",
   [DocumentStatus.Failed]: "status-badge-failed",
 };
 
-// ─── Review Status ────────────────────────────────
-
-export const REVIEW_STATUS_LABEL: Record<ReviewStatus, string> = {
-  [ReviewStatus.NotStarted]: "Not Started",
-  [ReviewStatus.Pending]: "Pending",
-  [ReviewStatus.InReview]: "In Review",
-  [ReviewStatus.ChangesRequested]: "Changes Requested",
-  [ReviewStatus.Approved]: "Approved",
-};
-
-export const REVIEW_STATUS_BADGE: Record<ReviewStatus, string> = {
-  [ReviewStatus.NotStarted]: "status-badge-draft",
-  [ReviewStatus.Pending]: "status-badge-review",
-  [ReviewStatus.InReview]: "status-badge-processing",
-  [ReviewStatus.ChangesRequested]: "status-badge-attention",
-  [ReviewStatus.Approved]: "status-badge-approved",
-};
-
-// ─── Package Status ───────────────────────────────
-
-export const PKG_STATUS_LABEL: Record<PackageStatus, string> = {
-  [PackageStatus.NotReady]: "Not Ready",
-  [PackageStatus.Assembling]: "Assembling",
-  [PackageStatus.Ready]: "Ready",
-  [PackageStatus.Approved]: "Approved",
-  [PackageStatus.Exported]: "Exported",
-  [PackageStatus.Failed]: "Failed",
-};
-
-export const PKG_STATUS_BADGE: Record<PackageStatus, string> = {
-  [PackageStatus.NotReady]: "status-badge-draft",
-  [PackageStatus.Assembling]: "status-badge-processing",
-  [PackageStatus.Ready]: "status-badge-review",
-  [PackageStatus.Approved]: "status-badge-approved",
-  [PackageStatus.Exported]: "status-badge-approved",
-  [PackageStatus.Failed]: "status-badge-failed",
-};
-
 // ─── Workflow Phase Computation ───────────────────
 
-export type WorkflowPhase = "intake" | "processing" | "review" | "package";
+export type WorkflowPhase = "intake" | "processing" | "export";
 export type PhaseState = "pending" | "active" | "complete" | "failed";
 
-const PHASE_ORDER: WorkflowPhase[] = ["intake", "processing", "review", "package"];
+const PHASE_ORDER: WorkflowPhase[] = ["intake", "processing", "export"];
 
 const STATUS_TO_PHASE: Record<CaseStatus, { phase: WorkflowPhase; state: PhaseState }> = {
   [CaseStatus.Draft]: { phase: "intake", state: "pending" },
   [CaseStatus.IntakeInProgress]: { phase: "intake", state: "active" },
   [CaseStatus.IntakeComplete]: { phase: "intake", state: "complete" },
   [CaseStatus.ProcessingInProgress]: { phase: "processing", state: "active" },
-  [CaseStatus.ReviewRequired]: { phase: "review", state: "pending" },
-  [CaseStatus.InReview]: { phase: "review", state: "active" },
-  [CaseStatus.ApprovedForPackage]: { phase: "review", state: "complete" },
-  [CaseStatus.PackageReady]: { phase: "package", state: "active" },
-  [CaseStatus.Exported]: { phase: "package", state: "complete" },
-  [CaseStatus.Closed]: { phase: "package", state: "complete" },
+  [CaseStatus.Complete]: { phase: "processing", state: "complete" },
+  [CaseStatus.Exported]: { phase: "export", state: "complete" },
+  [CaseStatus.Closed]: { phase: "export", state: "complete" },
   [CaseStatus.Failed]: { phase: "intake", state: "failed" },
 };
 
@@ -185,8 +125,7 @@ export function getPhaseStates(caseStatus: CaseStatus): Record<WorkflowPhase, Ph
   const result: Record<WorkflowPhase, PhaseState> = {
     intake: "pending",
     processing: "pending",
-    review: "pending",
-    package: "pending",
+    export: "pending",
   };
 
   if (caseStatus === CaseStatus.Failed) {
@@ -223,15 +162,4 @@ export interface CaseActivityEvent {
 
 export function canTransition(from: CaseStatus, to: CaseStatus): boolean {
   return CASE_TRANSITIONS[from].includes(to);
-}
-
-/** Check if review is complete enough for package approval */
-export function isReviewComplete(reviewStatuses: ReviewStatus[]): boolean {
-  if (reviewStatuses.length === 0) return false;
-  return reviewStatuses.every((s) => s === ReviewStatus.Approved);
-}
-
-/** Check if package is approved for export */
-export function isPackageApproved(packageStatus: PackageStatus | null): boolean {
-  return packageStatus === PackageStatus.Approved;
 }
