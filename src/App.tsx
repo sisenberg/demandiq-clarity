@@ -1,6 +1,6 @@
+import { Toaster } from "sonner";
+import { TooltipProvider } from "@radix-ui/react-tooltip";
 import { BrowserRouter, Route, Routes } from "react-router-dom";
-import { TooltipProvider } from "@/components/ui/tooltip";
-import { Toaster } from "@/components/ui/sonner";
 import Index from "./pages/Index";
 import NotFound from "./pages/NotFound";
 
