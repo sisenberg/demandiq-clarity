@@ -16,13 +16,6 @@ const SignIn = () => {
     setError(null);
     setLoading(true);
 
-    if (!supabase) {
-      // Dev mode — just navigate through
-      navigate("/");
-      setLoading(false);
-      return;
-    }
-
     try {
       if (mode === "signin") {
         const { error } = await supabase.auth.signInWithPassword({ email, password });
