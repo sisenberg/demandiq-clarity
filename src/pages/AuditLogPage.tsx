@@ -5,8 +5,6 @@ const actionLabel: Record<ActionType, string> = {
   [ActionType.Created]: "created",
   [ActionType.Updated]: "updated",
   [ActionType.StatusChanged]: "status_changed",
-  [ActionType.Approved]: "approved",
-  [ActionType.Rejected]: "rejected",
   [ActionType.Deleted]: "deleted",
   [ActionType.Exported]: "exported",
   [ActionType.Uploaded]: "uploaded",
