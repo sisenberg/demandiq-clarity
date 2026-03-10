@@ -265,8 +265,19 @@ const CaseDetailPage = () => {
                         </p>
                       )}
                     </div>
-                    <span className={rs.className}>{rs.label}</span>
-                  </div>
+                    <div className="flex items-center gap-1.5 shrink-0">
+                      <span className={rs.className}>{rs.label}</span>
+                      {hasPermission(role, "approve_review") && event.review_state === ReviewState.Pending && (
+                        <>
+                          <button className="p-1 rounded hover:bg-accent" title="Approve">
+                            <CheckCircle className="h-3.5 w-3.5 text-[hsl(var(--status-approved))]" />
+                          </button>
+                          <button className="p-1 rounded hover:bg-accent" title="Reject">
+                            <XCircle className="h-3.5 w-3.5 text-destructive" />
+                          </button>
+                        </>
+                      )}
+                    </div>
                 </div>
               );
             })}
