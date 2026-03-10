@@ -157,6 +157,40 @@ const CaseDetailPage = () => {
         </span>
       </div>
 
+      {/* Action Bar — role-gated */}
+      <div className="flex flex-wrap gap-2 mb-6">
+        {hasPermission(role, "upload_document") && (
+          <button className="flex items-center gap-1.5 text-xs font-medium px-3 py-1.5 rounded-md border border-border bg-card text-foreground hover:bg-accent transition-colors">
+            <Upload className="h-3.5 w-3.5" /> Upload Document
+          </button>
+        )}
+        {hasPermission(role, "trigger_processing") && (
+          <button className="flex items-center gap-1.5 text-xs font-medium px-3 py-1.5 rounded-md border border-border bg-card text-foreground hover:bg-accent transition-colors">
+            <Play className="h-3.5 w-3.5" /> Run Extraction
+          </button>
+        )}
+        {hasPermission(role, "assign_case") && (
+          <button className="flex items-center gap-1.5 text-xs font-medium px-3 py-1.5 rounded-md border border-border bg-card text-foreground hover:bg-accent transition-colors">
+            <UserPlus className="h-3.5 w-3.5" /> Assign
+          </button>
+        )}
+        {hasPermission(role, "submit_for_review") && (
+          <button className="flex items-center gap-1.5 text-xs font-medium px-3 py-1.5 rounded-md border border-border bg-card text-foreground hover:bg-accent transition-colors">
+            <Send className="h-3.5 w-3.5" /> Submit for Review
+          </button>
+        )}
+        {hasPermission(role, "approve_package") && (
+          <button className="flex items-center gap-1.5 text-xs font-medium px-3 py-1.5 rounded-md bg-primary text-primary-foreground hover:bg-primary/90 transition-colors">
+            <CheckCircle className="h-3.5 w-3.5" /> Approve Package
+          </button>
+        )}
+        {hasPermission(role, "export_package") && (
+          <button className="flex items-center gap-1.5 text-xs font-medium px-3 py-1.5 rounded-md border border-border bg-card text-foreground hover:bg-accent transition-colors">
+            <Download className="h-3.5 w-3.5" /> Export
+          </button>
+        )}
+      </div>
+
       {/* Stats row */}
       <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-6 gap-3 mb-8">
         <StatCard icon={FileText} label="Documents" value={documents.length} />
