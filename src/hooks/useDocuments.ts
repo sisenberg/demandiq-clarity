@@ -122,9 +122,9 @@ export function useUpdateDocumentType() {
 
   return useMutation({
     mutationFn: async ({ docId, documentType }: { docId: string; documentType: string }) => {
-      const { error } = await supabase
-        .from("case_documents")
-        .update({ document_type: documentType as any })
+      const { error } = await (supabase
+        .from("case_documents") as any)
+        .update({ document_type: documentType })
         .eq("id", docId);
       if (error) throw error;
     },
