@@ -5,18 +5,27 @@
 // ─── Status Enums ────────────────────────────────────
 
 export enum CaseStatus {
-  Intake = "intake",
-  Extraction = "extraction",
-  Review = "review",
-  Approved = "approved",
+  Draft = "draft",
+  IntakeInProgress = "intake_in_progress",
+  IntakeComplete = "intake_complete",
+  ProcessingInProgress = "processing_in_progress",
+  ReviewRequired = "review_required",
+  InReview = "in_review",
+  ApprovedForPackage = "approved_for_package",
+  PackageReady = "package_ready",
   Exported = "exported",
-  Archived = "archived",
+  Closed = "closed",
+  Failed = "failed",
 }
 
 export enum DocumentStatus {
-  Pending = "pending",
-  Processing = "processing",
+  Uploaded = "uploaded",
+  Queued = "queued",
+  OcrInProgress = "ocr_in_progress",
+  Classified = "classified",
   Extracted = "extracted",
+  NeedsAttention = "needs_attention",
+  Complete = "complete",
   Failed = "failed",
 }
 
@@ -85,11 +94,11 @@ export enum ReviewItemType {
 }
 
 export enum ReviewStatus {
+  NotStarted = "not_started",
   Pending = "pending",
-  InProgress = "in_progress",
+  InReview = "in_review",
+  ChangesRequested = "changes_requested",
   Approved = "approved",
-  Rejected = "rejected",
-  Deferred = "deferred",
 }
 
 export enum JobType {
@@ -107,9 +116,12 @@ export enum JobStatus {
 }
 
 export enum PackageStatus {
-  Draft = "draft",
+  NotReady = "not_ready",
+  Assembling = "assembling",
+  Ready = "ready",
   Approved = "approved",
   Exported = "exported",
+  Failed = "failed",
 }
 
 export enum UserRole {

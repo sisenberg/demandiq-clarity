@@ -1,5 +1,5 @@
-import { mockCases, mockDocuments, mockChronologyEvents, mockIssueFlags, mockJobs, mockReviewItems } from "@/data/mock/index";
-import { CaseStatus, ReviewState, DocumentStatus, JobStatus, FlagStatus, ReviewStatus } from "@/types";
+import { mockCases, mockDocuments, mockIssueFlags, mockJobs, mockReviewItems, mockActivityEvents } from "@/data/mock/index";
+import { CaseStatus, DocumentStatus, JobStatus, FlagStatus, ReviewStatus } from "@/types";
 import {
   Briefcase,
   ClipboardCheck,
@@ -11,23 +11,23 @@ import {
 
 const Dashboard = () => {
   const openCases = mockCases.filter(
-    (c) => c.case_status !== CaseStatus.Archived && c.case_status !== CaseStatus.Exported
+    (c) => c.case_status !== CaseStatus.Closed && c.case_status !== CaseStatus.Exported
   ).length;
 
   const awaitingReview = mockCases.filter(
-    (c) => c.case_status === CaseStatus.Review
+    (c) => c.case_status === CaseStatus.ReviewRequired || c.case_status === CaseStatus.InReview
   ).length;
 
   const docsProcessing = mockDocuments.filter(
-    (d) => d.document_status === DocumentStatus.Processing
+    (d) => d.document_status === DocumentStatus.OcrInProgress || d.document_status === DocumentStatus.Queued
   ).length;
 
   const readyForExport = mockCases.filter(
-    (c) => c.case_status === CaseStatus.Approved
+    (c) => c.case_status === CaseStatus.ApprovedForPackage || c.case_status === CaseStatus.PackageReady
   ).length;
 
   const pendingReviewItems = mockReviewItems.filter(
-    (r) => r.review_status === ReviewStatus.Pending
+    (r) => r.review_status === ReviewStatus.Pending || r.review_status === ReviewStatus.InReview
   ).length;
 
   const openIssues = mockIssueFlags.filter(
@@ -41,7 +41,7 @@ const Dashboard = () => {
   const stats = [
     { label: "Open Cases", value: openCases, icon: Briefcase, accent: "text-primary" },
     { label: "Awaiting Review", value: awaitingReview, icon: ClipboardCheck, accent: "text-[hsl(var(--status-review))]" },
-    { label: "Docs Processing", value: docsProcessing, icon: FileText, accent: "text-primary" },
+    { label: "Docs Processing", value: docsProcessing, icon: FileText, accent: "text-[hsl(var(--status-processing))]" },
     { label: "Ready for Export", value: readyForExport, icon: Download, accent: "text-[hsl(var(--status-approved))]" },
   ];
 
@@ -51,12 +51,10 @@ const Dashboard = () => {
     { label: "Failed jobs", value: failedJobs },
   ];
 
-  const recentActivity = [
-    { text: "Martinez v. Pacific Freight Lines — 2 events approved", time: "2 hours ago" },
-    { text: "Thompson v. Meridian Properties — extraction job failed", time: "5 hours ago" },
-    { text: "Park v. Summit Logistics — case approved for export", time: "1 day ago" },
-    { text: "Nguyen v. Coastal Health Systems — case created", time: "3 days ago" },
-  ];
+  // Show most recent activity across all cases
+  const recentActivity = [...mockActivityEvents]
+    .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
+    .slice(0, 6);
 
   return (
     <div className="p-6 max-w-6xl">
@@ -103,12 +101,19 @@ const Dashboard = () => {
             </h2>
           </div>
           <div className="divide-y divide-border">
-            {recentActivity.map((item, idx) => (
-              <div key={idx} className="px-4 py-3">
-                <p className="text-sm text-card-foreground">{item.text}</p>
-                <p className="text-xs text-muted-foreground mt-0.5">{item.time}</p>
-              </div>
-            ))}
+            {recentActivity.map((event) => {
+              const parentCase = mockCases.find((c) => c.id === event.case_id);
+              return (
+                <div key={event.id} className="px-4 py-3">
+                  <p className="text-sm text-card-foreground">
+                    {parentCase?.title ?? event.case_id} — {event.action.toLowerCase()}
+                  </p>
+                  <p className="text-xs text-muted-foreground mt-0.5">
+                    {event.actor_name} · {new Date(event.created_at).toLocaleDateString()}
+                  </p>
+                </div>
+              );
+            })}
           </div>
         </div>
       </div>

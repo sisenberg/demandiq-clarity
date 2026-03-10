@@ -10,3 +10,4 @@ export { mockReviewItems } from "./reviewItems";
 export { mockJobs } from "./jobs";
 export { mockCasePackages } from "./casePackages";
 export { mockAuditEvents } from "./auditEvents";
+export { mockActivityEvents } from "./activityEvents";

@@ -1,13 +1,6 @@
 import { mockDocuments, mockCases } from "@/data/mock/index";
-import { DocumentStatus } from "@/types";
+import { DOC_STATUS_LABEL, DOC_STATUS_BADGE } from "@/lib/workflow";
 import { FileText } from "lucide-react";
-
-const statusConfig: Record<DocumentStatus, { label: string; className: string }> = {
-  [DocumentStatus.Pending]: { label: "Pending", className: "bg-muted text-muted-foreground" },
-  [DocumentStatus.Processing]: { label: "Processing", className: "bg-primary/10 text-primary" },
-  [DocumentStatus.Extracted]: { label: "Extracted", className: "status-badge-approved" },
-  [DocumentStatus.Failed]: { label: "Failed", className: "bg-destructive/10 text-destructive" },
-};
 
 function formatBytes(bytes: number): string {
   if (bytes < 1024) return `${bytes} B`;
@@ -36,7 +29,6 @@ const DocumentsPage = () => {
           </thead>
           <tbody className="divide-y divide-border">
             {mockDocuments.map((doc) => {
-              const config = statusConfig[doc.document_status];
               const parentCase = mockCases.find((c) => c.id === doc.case_id);
               return (
                 <tr key={doc.id} className="hover:bg-accent/50 transition-colors">
@@ -50,7 +42,9 @@ const DocumentsPage = () => {
                   <td className="px-4 py-3 text-muted-foreground">{doc.page_count ?? "—"}</td>
                   <td className="px-4 py-3 text-muted-foreground">{formatBytes(doc.file_size_bytes)}</td>
                   <td className="px-4 py-3">
-                    <span className={`text-xs font-medium px-2 py-0.5 rounded ${config.className}`}>{config.label}</span>
+                    <span className={DOC_STATUS_BADGE[doc.document_status]}>
+                      {DOC_STATUS_LABEL[doc.document_status]}
+                    </span>
                   </td>
                 </tr>
               );
