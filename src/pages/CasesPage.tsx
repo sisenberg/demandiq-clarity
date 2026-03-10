@@ -1,3 +1,4 @@
+import { Link } from "react-router-dom";
 import { mockCases } from "@/data/mock/index";
 import { CaseStatus } from "@/types";
 import { Briefcase } from "lucide-react";
@@ -26,9 +27,7 @@ const CasesPage = () => {
       <div className="flex items-center justify-between mb-6">
         <div>
           <h1 className="text-lg font-semibold text-foreground">Cases</h1>
-          <p className="text-sm text-muted-foreground mt-0.5">
-            {mockCases.length} cases
-          </p>
+          <p className="text-sm text-muted-foreground mt-0.5">{mockCases.length} cases</p>
         </div>
       </div>
 
@@ -45,19 +44,19 @@ const CasesPage = () => {
           </thead>
           <tbody className="divide-y divide-border">
             {mockCases.map((c) => (
-              <tr key={c.id} className="hover:bg-accent/50 transition-colors cursor-pointer">
+              <tr key={c.id} className="hover:bg-accent/50 transition-colors">
                 <td className="px-4 py-3">
-                  <div className="flex items-center gap-2">
+                  <Link to={`/cases/${c.id}`} className="flex items-center gap-2 hover:text-primary transition-colors">
                     <Briefcase className="h-4 w-4 text-muted-foreground shrink-0" />
                     <span className="font-medium text-foreground">{c.title}</span>
-                  </div>
+                  </Link>
                 </td>
-                <td className="px-4 py-3 text-muted-foreground">{c.caseNumber}</td>
+                <td className="px-4 py-3 text-muted-foreground">{c.case_number}</td>
                 <td className="px-4 py-3 text-foreground">{c.claimant}</td>
-                <td className="px-4 py-3 text-muted-foreground">{c.dateOfLoss}</td>
+                <td className="px-4 py-3 text-muted-foreground">{c.date_of_loss}</td>
                 <td className="px-4 py-3">
-                  <span className={`text-xs font-medium px-2 py-0.5 rounded ${statusColor[c.status]}`}>
-                    {statusLabel[c.status]}
+                  <span className={`text-xs font-medium px-2 py-0.5 rounded ${statusColor[c.case_status]}`}>
+                    {statusLabel[c.case_status]}
                   </span>
                 </td>
               </tr>
