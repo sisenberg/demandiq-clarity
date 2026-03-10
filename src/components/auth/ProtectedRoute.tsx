@@ -1,8 +1,14 @@
 import { Navigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
+import { supabase } from "@/lib/supabase";
 
 const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
   const { user, loading } = useAuth();
+
+  // If supabase isn't configured, allow access (dev/preview mode)
+  if (!supabase) {
+    return <>{children}</>;
+  }
 
   if (loading) {
     return (
