@@ -43,8 +43,8 @@ export function useDocument(docId: string | undefined) {
     queryKey: ["case-documents", "detail", docId],
     enabled: !!docId,
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from("case_documents")
+      const { data, error } = await (supabase
+        .from("case_documents") as any)
         .select("*")
         .eq("id", docId!)
         .single();
