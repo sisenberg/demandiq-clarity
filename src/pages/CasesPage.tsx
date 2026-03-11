@@ -3,6 +3,7 @@ import { Link, useNavigate } from "react-router-dom";
 import { useCases, type CaseRow } from "@/hooks/useCases";
 import { useAuth } from "@/contexts/AuthContext";
 import { hasPermission } from "@/lib/permissions";
+import { maskName, maskClaimNumber } from "@/lib/phi-utils";
 import CreateCaseDialog from "@/components/case/CreateCaseDialog";
 import { PageLoading } from "@/components/ui/LoadingSkeleton";
 import EmptyState from "@/components/ui/EmptyState";
@@ -429,14 +430,14 @@ const CasesPage = () => {
                       </div>
                     </div>
 
-                    {/* Claimant */}
-                    <span className="text-[12px] text-foreground truncate">{c.claimant}</span>
+                    {/* Claimant — masked in list view */}
+                    <span className="text-[12px] text-foreground truncate" title="View case for full name">{maskName(c.claimant)}</span>
 
                     {/* DOI */}
                     <span className="text-[11px] text-muted-foreground">{formatDate(c.date_of_loss)}</span>
 
-                    {/* Claim # */}
-                    <span className="text-[11px] text-muted-foreground font-mono truncate">{c.claim_number || "—"}</span>
+                    {/* Claim # — masked in list view */}
+                    <span className="text-[11px] text-muted-foreground font-mono truncate">{c.claim_number ? maskClaimNumber(c.claim_number) : "—"}</span>
 
                     {/* Module status */}
                     <div className="flex items-center gap-1.5">
