@@ -417,6 +417,25 @@ Deno.serve(async (req: Request) => {
       status: "queued",
     });
 
+    // 13. Auto-trigger document classification
+    try {
+      const classifyUrl = `${supabaseUrl}/functions/v1/classify-document`;
+      const classifyResp = await fetch(classifyUrl, {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${serviceRoleKey}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ document_id: doc.id }),
+      });
+      if (!classifyResp.ok) {
+        console.warn("Auto-classification failed:", await classifyResp.text());
+      }
+    } catch (classifyErr) {
+      console.warn("Auto-classification error:", classifyErr);
+      // Non-fatal: classification can be triggered manually
+    }
+
     return new Response(
       JSON.stringify({
         success: true,
