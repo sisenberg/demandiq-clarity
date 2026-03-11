@@ -1,9 +1,9 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useCallback } from "react";
 import { format, parseISO, differenceInDays } from "date-fns";
 import {
   Activity, Calendar, Users, AlertTriangle, CheckCircle2, Edit3,
   HelpCircle, Copy, Link2, Unlink, FileText, ChevronDown, ChevronRight,
-  Filter, Clock, DollarSign, Stethoscope, Search, X,
+  Filter, Clock, DollarSign, Stethoscope, Search, X, ShieldAlert,
 } from "lucide-react";
 import {
   type ReviewerTreatmentRecord,
@@ -14,6 +14,8 @@ import {
 } from "@/hooks/useReviewerTreatments";
 import { MOCK_TREATMENT_RECORDS } from "@/data/mock/treatmentRecords";
 import { useSourceDrawer } from "@/components/case/SourceDrawer";
+import { assessReadiness, getRecordIdsWithFlags, getFlagsForRecord, type ReviewFlag } from "@/lib/reviewReadiness";
+import ReviewReadinessPanel from "@/components/case/ReviewReadinessPanel";
 
 // ─── Types ──────────────────────────────────────────────
 
@@ -104,7 +106,12 @@ export default function TreatmentTimeline({ caseId }: TreatmentTimelineProps) {
   const [expandedGroups, setExpandedGroups] = useState<Set<string>>(new Set(["__all__"]));
   const [expandedRecords, setExpandedRecords] = useState<Set<string>>(new Set());
   const [showFilters, setShowFilters] = useState(false);
+  const [flaggedOnly, setFlaggedOnly] = useState(false);
   const { openSource } = useSourceDrawer();
+
+  // Readiness assessment
+  const assessment = useMemo(() => assessReadiness(records), [records]);
+  const flaggedRecordIds = useMemo(() => getRecordIdsWithFlags(assessment.flags), [assessment.flags]);
 
   // Derive filter options
   const allProviders = useMemo(() => [...new Set(records.map((r) => r.provider_name_normalized || r.provider_name_raw))].sort(), [records]);
@@ -113,6 +120,7 @@ export default function TreatmentTimeline({ caseId }: TreatmentTimelineProps) {
   // Apply filters
   const filtered = useMemo(() => {
     return records.filter((r) => {
+      if (flaggedOnly && !flaggedRecordIds.has(r.id)) return false;
       if (filters.provider && (r.provider_name_normalized || r.provider_name_raw) !== filters.provider) return false;
       if (filters.bodyPart && !r.body_parts.includes(filters.bodyPart)) return false;
       if (filters.reviewState && r.review_state !== filters.reviewState) return false;
@@ -150,7 +158,19 @@ export default function TreatmentTimeline({ caseId }: TreatmentTimelineProps) {
   }, [filtered]);
 
   const metrics = useMemo(() => computeMetrics(records), [records]);
-  const activeFilterCount = Object.entries(filters).filter(([k, v]) => k !== "search" && v !== "" && v !== false).length;
+  const activeFilterCount = Object.entries(filters).filter(([k, v]) => k !== "search" && v !== "" && v !== false).length + (flaggedOnly ? 1 : 0);
+
+  const handleFilterByFlags = useCallback(() => {
+    setFlaggedOnly(true);
+  }, []);
+
+  const handleJumpToRecord = useCallback((recordId: string) => {
+    setExpandedRecords((prev) => new Set(prev).add(recordId));
+    // Scroll into view after a tick
+    setTimeout(() => {
+      document.getElementById(`tr-${recordId}`)?.scrollIntoView({ behavior: "smooth", block: "center" });
+    }, 100);
+  }, []);
 
   const toggleGroup = (key: string) => {
     setExpandedGroups((prev) => {
@@ -180,6 +200,13 @@ export default function TreatmentTimeline({ caseId }: TreatmentTimelineProps) {
 
   return (
     <div className="flex flex-col gap-4">
+      {/* ── Readiness Panel ────────────────────────── */}
+      <ReviewReadinessPanel
+        assessment={assessment}
+        onFilterByFlags={handleFilterByFlags}
+        onJumpToRecord={handleJumpToRecord}
+      />
+
       {/* ── Summary Metrics ──────────────────────────── */}
       <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-7 gap-2">
         <MetricCard icon={Users} label="Providers" value={metrics.totalProviders} />
@@ -239,12 +266,25 @@ export default function TreatmentTimeline({ caseId }: TreatmentTimelineProps) {
 
         {activeFilterCount > 0 && (
           <button
-            onClick={() => setFilters(EMPTY_FILTERS)}
+            onClick={() => { setFilters(EMPTY_FILTERS); setFlaggedOnly(false); }}
             className="text-[10px] text-muted-foreground hover:text-foreground underline"
           >
             Clear all
           </button>
         )}
+
+        {/* Needs Review queue toggle */}
+        <button
+          onClick={() => setFlaggedOnly(!flaggedOnly)}
+          className={`flex items-center gap-1.5 px-3 py-1.5 text-[11px] font-medium rounded-lg border transition-colors ${
+            flaggedOnly
+              ? "border-[hsl(var(--status-review))]/30 bg-[hsl(var(--status-review-bg))] text-[hsl(var(--status-review-foreground))]"
+              : "border-border bg-card text-muted-foreground hover:text-foreground"
+          }`}
+        >
+          <ShieldAlert className="h-3 w-3" />
+          Needs Review{flaggedRecordIds.size > 0 && ` (${flaggedRecordIds.size})`}
+        </button>
 
         <div className="ml-auto text-[10px] text-muted-foreground">
           {filtered.length} of {records.length} records
@@ -317,6 +357,7 @@ export default function TreatmentTimeline({ caseId }: TreatmentTimelineProps) {
                     <TreatmentRecordRow
                       key={record.id}
                       record={record}
+                      flags={getFlagsForRecord(assessment.flags, record.id)}
                       expanded={expandedRecords.has(record.id)}
                       onToggle={() => toggleRecord(record.id)}
                       onViewSource={() => handleViewSource(record)}
@@ -375,12 +416,17 @@ function FilterSelect({
 }
 
 function TreatmentRecordRow({
-  record: r, expanded, onToggle, onViewSource,
+  record: r, flags, expanded, onToggle, onViewSource,
 }: {
-  record: ReviewerTreatmentRecord; expanded: boolean; onToggle: () => void; onViewSource: () => void;
+  record: ReviewerTreatmentRecord; flags: ReviewFlag[]; expanded: boolean; onToggle: () => void; onViewSource: () => void;
 }) {
+  const hasFlags = flags.length > 0;
+  const hasErrors = flags.some((f) => f.severity === "error");
   return (
-    <div className={`border-b last:border-b-0 border-border/50 ${r.is_duplicate_suspect ? "bg-[hsl(var(--status-review-bg))]/40" : ""}`}>
+    <div
+      id={`tr-${r.id}`}
+      className={`border-b last:border-b-0 border-border/50 ${r.is_duplicate_suspect ? "bg-[hsl(var(--status-review-bg))]/40" : ""} ${hasErrors ? "border-l-2 border-l-[hsl(var(--status-failed))]/40" : hasFlags ? "border-l-2 border-l-[hsl(var(--status-review))]/40" : ""}`}
+    >
       {/* Compact row */}
       <div className="flex items-center gap-2 px-3 py-2 hover:bg-accent/30 transition-colors cursor-pointer" onClick={onToggle}>
         {/* Date */}
@@ -438,11 +484,23 @@ function TreatmentRecordRow({
         </span>
 
         {/* Duplicate flag */}
-      {r.is_duplicate_suspect && (
-        <span title="Possible duplicate">
-          <Copy className="h-3 w-3 text-[hsl(var(--status-review))] shrink-0" />
-        </span>
-      )}
+        {r.is_duplicate_suspect && (
+          <span title="Possible duplicate">
+            <Copy className="h-3 w-3 text-[hsl(var(--status-review))] shrink-0" />
+          </span>
+        )}
+
+        {/* Flag count indicator */}
+        {hasFlags && (
+          <span
+            className={`text-[8px] font-bold px-1 py-0.5 rounded-md shrink-0 ${
+              hasErrors ? "bg-[hsl(var(--status-failed-bg))] text-[hsl(var(--status-failed))]" : "bg-[hsl(var(--status-review-bg))] text-[hsl(var(--status-review))]"
+            }`}
+            title={`${flags.length} issue(s)`}
+          >
+            {flags.length} {flags.length === 1 ? "issue" : "issues"}
+          </span>
+        )}
 
         {/* Source link */}
         <button
@@ -556,7 +614,30 @@ function TreatmentRecordRow({
             </div>
           </div>
 
-          {/* Action bar */}
+          {/* Review flags for this record */}
+          {hasFlags && (
+            <div className="mt-2 pt-2 border-t border-border/30">
+              <p className="text-[9px] font-semibold text-muted-foreground uppercase tracking-wider mb-1">Review Issues ({flags.length})</p>
+              <div className="flex flex-col gap-1">
+                {flags.map((flag) => (
+                  <div key={flag.id} className={`rounded-md px-2.5 py-1.5 flex items-start gap-2 ${
+                    flag.severity === "error" ? "bg-[hsl(var(--status-failed-bg))]" :
+                    flag.severity === "warning" ? "bg-[hsl(var(--status-review-bg))]" : "bg-primary/5"
+                  }`}>
+                    <AlertTriangle className={`h-3 w-3 shrink-0 mt-0.5 ${
+                      flag.severity === "error" ? "text-[hsl(var(--status-failed))]" :
+                      flag.severity === "warning" ? "text-[hsl(var(--status-review))]" : "text-primary"
+                    }`} />
+                    <div className="min-w-0">
+                      <span className="text-[10px] font-semibold text-foreground">{flag.title}</span>
+                      <p className="text-[9px] text-muted-foreground">{flag.description}</p>
+                      <p className="text-[9px] text-foreground/70 italic">→ {flag.action}</p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
           <div className="flex items-center gap-1.5 mt-3 pt-2 border-t border-border/30">
             <ActionButton icon={CheckCircle2} label="Accept" variant="approved" />
             <ActionButton icon={Edit3} label="Correct" />
