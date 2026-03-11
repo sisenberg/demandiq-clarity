@@ -239,6 +239,11 @@ const CaseDetailPage = () => {
               {/* ── SOURCE PAGES ──────────────────── */}
               {activeSection === "sources" && <SourcePagesWorkstation />}
 
+              {/* ── ENTITIES ──────────────────────── */}
+              {activeSection === "entities" && (
+                <DetectedEntitiesPanel caseId={caseData.id} />
+              )}
+
               {/* ── CHAT ──────────────────────────── */}
               {activeSection === "chat" && (
                 <CaseChatView />

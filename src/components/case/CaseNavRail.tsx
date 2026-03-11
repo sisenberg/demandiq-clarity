@@ -30,6 +30,7 @@ const NAV_ITEMS: { key: CaseSection; label: string; icon: React.ElementType }[] 
   { key: "billing", label: "Billing", icon: DollarSign },
   { key: "chat", label: "Chat", icon: MessageSquare },
   { key: "documents", label: "Documents", icon: FileText },
+  { key: "entities", label: "Entities", icon: Users },
   { key: "sources", label: "Source Pages", icon: BookOpen },
 ];
 
