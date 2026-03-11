@@ -451,7 +451,8 @@ Deno.serve(async (req: Request) => {
         });
       } else {
         const classifyResult = await classifyResp.json();
-        console.log("[process-document] Classification result:", JSON.stringify(classifyResult));
+        // COMPLIANCE: Log only summary, not full payload which may contain PII/PHI snippets
+        console.log("[process-document] Classification completed:", classifyResult?.success ? "success" : "unknown");
       }
     } catch (classifyErr) {
       const errMsg = classifyErr instanceof Error ? classifyErr.message : String(classifyErr);
