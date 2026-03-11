@@ -10,6 +10,7 @@ import { CasePackageProvider } from "@/hooks/useCasePackage";
 import { isEntitlementActive } from "@/hooks/useModuleEntitlements";
 import { useModuleCompletion } from "@/hooks/useModuleCompletion";
 import { ModuleId, ModuleCompletionStatus } from "@/types";
+import CaseOverview from "@/components/case/CaseOverview";
 import DocumentUpload from "@/components/case/DocumentUpload";
 import JobsPanel from "@/components/case/JobsPanel";
 import DocumentTypeTag from "@/components/case/DocumentTypeTag";
