@@ -421,28 +421,7 @@ const CaseDetailPage = () => {
 
             {/* ── SOURCES ────────────────────────── */}
             {activeSection === "sources" && (
-              <WorkspaceCard
-                icon={BookOpen}
-                title="Source Citations"
-                count={MOCK_SOURCES.length}
-              >
-                <div className="divide-y divide-border">
-                  {MOCK_SOURCES.map((src, idx) => (
-                    <div key={idx} className="px-5 py-4">
-                      <div className="flex items-center gap-2 mb-2">
-                        <span className="text-[10px] font-semibold bg-primary/10 text-primary px-2 py-0.5 rounded-full">
-                          {src.page}
-                        </span>
-                        <span className="text-xs font-medium text-foreground">{src.doc}</span>
-                        <ExternalLink className="h-3 w-3 text-muted-foreground ml-auto cursor-pointer hover:text-primary transition-colors" />
-                      </div>
-                      <blockquote className="text-sm text-foreground leading-relaxed pl-3 border-l-2 border-primary/30 evidence-text">
-                        "{src.excerpt}"
-                      </blockquote>
-                    </div>
-                  ))}
-                </div>
-              </WorkspaceCard>
+              <SourcePagesPanel />
             )}
 
             {/* ── WORKFLOWS ────────────────────────── */}
