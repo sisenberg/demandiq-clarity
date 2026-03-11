@@ -35,6 +35,7 @@ import WorkspaceCard from "@/components/case/WorkspaceCard";
 import OverviewCards from "@/components/case/OverviewCards";
 import BodyMap from "@/components/case/BodyMap";
 import ChronologyPanel from "@/components/case/ChronologyPanel";
+import DraftChronologyPanel from "@/components/case/DraftChronologyPanel";
 import HorizontalTimeline from "@/components/case/HorizontalTimeline";
 import CaseNotesPanel from "@/components/case/CaseNotesPanel";
 import AnalysisCard from "@/components/case/AnalysisCard";
