@@ -17,9 +17,12 @@ import WorkspaceCard from "@/components/case/WorkspaceCard";
 import OverviewCards from "@/components/case/OverviewCards";
 import BodyMap from "@/components/case/BodyMap";
 import ChronologyPanel from "@/components/case/ChronologyPanel";
+import HorizontalTimeline from "@/components/case/HorizontalTimeline";
 import CaseNotesPanel from "@/components/case/CaseNotesPanel";
 import AnalysisCard from "@/components/case/AnalysisCard";
 import type { AnalysisSection } from "@/components/case/AnalysisCard";
+import SourcePagesPanel from "@/components/case/SourcePagesPanel";
+import { SourceDrawerProvider, SourceDrawer } from "@/components/case/SourceDrawer";
 import {
   ArrowLeft,
   FileText,
