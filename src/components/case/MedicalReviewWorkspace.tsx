@@ -135,6 +135,13 @@ export default function MedicalReviewWorkspace({ caseId }: MedicalReviewWorkspac
       {activeTab === "issues" && <ReviewerIssueWorkspace issues={reviewIssues} onDisposition={handleDisposition} />}
       {activeTab === "bills" && <BillLineReviewTable billLines={billLines} onDisposition={handleBillDisposition} />}
       {activeTab === "financial" && <FinancialReviewSummary billLines={billLines} issues={reviewIssues} />}
+      {activeTab === "specialty" && (
+        <SpecialtyReviewTab
+          episodes={specialtyResult.episodes}
+          recommendations={specialtyRecs}
+          onOverride={handleSpecialtyOverride}
+        />
+      )}
     </div>
   );
 }
