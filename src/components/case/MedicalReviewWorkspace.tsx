@@ -99,6 +99,7 @@ export default function MedicalReviewWorkspace({ caseId }: MedicalReviewWorkspac
 
   const pendingIssues = reviewIssues.filter(i => i.disposition === "pending").length;
   const pendingBills = billLines.filter(l => l.disposition === "pending").length;
+  const escalationCount = specialtyRecs.filter(r => r.escalation_required).length;
 
   return (
     <div className="flex flex-col gap-4">
