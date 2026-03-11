@@ -623,6 +623,131 @@ export type Database = {
           },
         ]
       }
+      entity_cluster_members: {
+        Row: {
+          cluster_id: string
+          created_at: string
+          document_id: string | null
+          extraction_id: string | null
+          id: string
+          match_score: number | null
+          raw_value: string
+          source_page: number | null
+          source_snippet: string
+          tenant_id: string
+        }
+        Insert: {
+          cluster_id: string
+          created_at?: string
+          document_id?: string | null
+          extraction_id?: string | null
+          id?: string
+          match_score?: number | null
+          raw_value: string
+          source_page?: number | null
+          source_snippet?: string
+          tenant_id: string
+        }
+        Update: {
+          cluster_id?: string
+          created_at?: string
+          document_id?: string | null
+          extraction_id?: string | null
+          id?: string
+          match_score?: number | null
+          raw_value?: string
+          source_page?: number | null
+          source_snippet?: string
+          tenant_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "entity_cluster_members_cluster_id_fkey"
+            columns: ["cluster_id"]
+            isOneToOne: false
+            referencedRelation: "entity_clusters"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "entity_cluster_members_document_id_fkey"
+            columns: ["document_id"]
+            isOneToOne: false
+            referencedRelation: "case_documents"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "entity_cluster_members_extraction_id_fkey"
+            columns: ["extraction_id"]
+            isOneToOne: false
+            referencedRelation: "document_metadata_extractions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "entity_cluster_members_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      entity_clusters: {
+        Row: {
+          canonical_value: string | null
+          case_id: string
+          confidence: number | null
+          created_at: string
+          display_value: string
+          entity_type: string
+          id: string
+          is_primary: boolean
+          source_count: number
+          tenant_id: string
+          updated_at: string
+        }
+        Insert: {
+          canonical_value?: string | null
+          case_id: string
+          confidence?: number | null
+          created_at?: string
+          display_value?: string
+          entity_type: string
+          id?: string
+          is_primary?: boolean
+          source_count?: number
+          tenant_id: string
+          updated_at?: string
+        }
+        Update: {
+          canonical_value?: string | null
+          case_id?: string
+          confidence?: number | null
+          created_at?: string
+          display_value?: string
+          entity_type?: string
+          id?: string
+          is_primary?: boolean
+          source_count?: number
+          tenant_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "entity_clusters_case_id_fkey"
+            columns: ["case_id"]
+            isOneToOne: false
+            referencedRelation: "cases"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "entity_clusters_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       extracted_facts: {
         Row: {
           case_id: string
