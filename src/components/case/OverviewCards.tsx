@@ -1,124 +1,60 @@
-import type { CaseRow } from "@/hooks/useCases";
-import type { DocumentRow } from "@/hooks/useDocuments";
+import { useCasePackage } from "@/hooks/useCasePackage";
 import { EvidenceStatement, type CitationSource } from "./EvidenceCitation";
 import WorkspaceCard from "./WorkspaceCard";
 import {
   Briefcase,
-  AlertTriangle,
   Stethoscope,
-  Scale,
   DollarSign,
   FileText,
   ShieldAlert,
   TrendingUp,
 } from "lucide-react";
+import type { CasePackage, EvidenceReference, Injury, IssueFlag } from "@/types";
+import { getBillingSummary, getTreatmentStats } from "@/data/mock/casePackage";
 
-// ─── Mock structured data ──────────────────────────────
-const CASE_SUMMARY_CITATIONS: CitationSource[] = [
-  { docName: "Police Report #PR-2024-8812", page: "pg. 3", relevance: "direct" },
-  { docName: "ER Records — Mercy General", page: "pg. 1", relevance: "direct" },
-];
-
-const INJURY_SUMMARY = [
-  {
-    region: "Cervical Spine",
-    diagnosis: "C5-C6 disc herniation with foraminal narrowing",
-    icdCode: "M50.12",
-    severity: "severe" as const,
-    treating: "Dr. Sarah Chen (Ortho), Dr. Patel (Pain Mgmt)",
-    citations: [
-      { docName: "MRI Report — Regional Radiology", page: "pg. 7", relevance: "direct" as const },
-    ],
-  },
-  {
-    region: "Right Shoulder",
-    diagnosis: "Rotator cuff strain with contusion",
-    icdCode: "S46.011A",
-    severity: "moderate" as const,
-    treating: "Dr. Chen (Ortho)",
-    citations: [
-      { docName: "ER Records — Mercy General", page: "pg. 1", relevance: "direct" as const },
-    ],
-  },
-  {
-    region: "Lumbar Spine",
-    diagnosis: "L4-L5 strain with possible pre-existing degenerative changes",
-    icdCode: "M54.5",
-    severity: "moderate" as const,
-    treating: "Dr. Chen (Ortho)",
-    citations: [
-      { docName: "Dr. Chen Ortho Eval", page: "pg. 3", relevance: "direct" as const },
-    ],
-  },
-  {
-    region: "Right Knee",
-    diagnosis: "Medial meniscus tear",
-    icdCode: "S83.211A",
-    severity: "moderate" as const,
-    treating: "Dr. Chen (Ortho)",
-    citations: [
-      { docName: "MRI Report — Regional Radiology", page: "pg. 12", relevance: "direct" as const },
-    ],
-  },
-];
-
-const TREATMENT_SUMMARY = {
-  totalVisits: 42,
-  providers: 5,
-  ptSessions: 24,
-  injections: 2,
-  totalBilled: 87450,
-  totalPaid: 62200,
-};
-
-const FLAGS = [
-  {
-    type: "warning" as const,
-    title: "Pre-existing Condition — Lumbar Region",
-    description: "Dr. Chen notes 'possible pre-existing degenerative changes' at L4-L5. Defense may argue contribution.",
-    citations: [{ docName: "Dr. Chen Ortho Eval", page: "pg. 3", relevance: "contradicting" as const }],
-  },
-  {
-    type: "alert" as const,
-    title: "3-Month Treatment Gap (Jan–Mar 2025)",
-    description: "No treatment records between Jan 15 and Apr 2, 2025. May weaken ongoing injury argument.",
-    citations: [],
-  },
-  {
-    type: "warning" as const,
-    title: "IME Disputes Surgical Necessity",
-    description: "Defense IME by Dr. Roberts concludes herniation is related but surgery is premature.",
-    citations: [{ docName: "IME Report — Dr. Roberts", page: "pg. 8", relevance: "contradicting" as const }],
-  },
-  {
-    type: "info" as const,
-    title: "Liability Favorable",
-    description: "Police report confirms defendant ran red light. Dash cam footage request pending.",
-    citations: [{ docName: "Police Report #PR-2024-8812", page: "pg. 3", relevance: "direct" as const }],
-  },
-];
+// ─── Helpers ────────────────────────────────────────
+function refsToCS(refs: EvidenceReference[]): CitationSource[] {
+  return refs.map((r) => ({
+    docName: r.doc_name,
+    page: r.page_label,
+    excerpt: r.quoted_text,
+    relevance: r.relevance as any,
+  }));
+}
 
 const SEVERITY_BADGE: Record<string, string> = {
   minor: "status-badge-review",
   moderate: "status-badge-attention",
   severe: "status-badge-failed",
+  catastrophic: "status-badge-failed",
+  fatal: "status-badge-failed",
 };
 
 const FLAG_DOT: Record<string, string> = {
-  alert: "bg-destructive",
-  warning: "bg-[hsl(var(--status-review))]",
-  info: "bg-primary",
+  pre_existing_condition: "bg-[hsl(var(--status-review))]",
+  treatment_gap: "bg-destructive",
+  incomplete_compliance: "bg-[hsl(var(--status-review))]",
+  documentation_missing: "bg-[hsl(var(--status-attention))]",
+  causation_risk: "bg-destructive",
+  inconsistency: "bg-[hsl(var(--status-attention))]",
 };
 
 interface OverviewCardsProps {
-  caseData: CaseRow;
-  documents: DocumentRow[];
+  caseData: { date_of_loss: string | null; claimant: string; insured: string };
+  documents: { document_status: string }[];
 }
 
 const OverviewCards = ({ caseData, documents }: OverviewCardsProps) => {
+  const { pkg } = useCasePackage();
+  const billing = getBillingSummary(pkg);
+  const stats = getTreatmentStats(pkg);
+
   const completeDocs = documents.filter(
     (d) => d.document_status === "complete" || d.document_status === "extracted"
   ).length;
+
+  // Get first two evidence refs for the case summary
+  const summaryRefs = pkg.evidence_refs.filter((r) => r.linked_entity_type === "timeline_event").slice(0, 2);
 
   return (
     <div className="flex flex-col gap-5">
@@ -128,15 +64,13 @@ const OverviewCards = ({ caseData, documents }: OverviewCardsProps) => {
           <p className="text-sm text-foreground leading-relaxed">
             <EvidenceStatement
               text={`On ${caseData.date_of_loss || "date pending"}, ${caseData.claimant} was involved in a rear-end motor vehicle collision caused by ${caseData.insured} who failed to stop at a red traffic signal.`}
-              citations={CASE_SUMMARY_CITATIONS}
+              citations={refsToCS(summaryRefs)}
             />
           </p>
           <p className="text-sm text-foreground leading-relaxed mt-2">
             <EvidenceStatement
-              text="Claimant sustained multiple injuries including cervical disc herniation (C5-C6), right shoulder contusion, lumbar strain, and right knee meniscus tear. Emergency treatment was rendered at Mercy General Hospital on the date of loss."
-              citations={[
-                { docName: "ER Records — Mercy General", page: "pg. 1", relevance: "direct" },
-              ]}
+              text={`Claimant sustained ${pkg.injuries.length} injuries including ${pkg.injuries.map((i) => `${i.body_part.toLowerCase()} (${i.diagnosis_code})`).join(", ")}. Emergency treatment was rendered at ${pkg.providers.find((p) => p.specialty === "Emergency Medicine")?.facility_name ?? "the hospital"} on the date of loss.`}
+              citations={refsToCS(pkg.injuries[0]?.evidence_refs.slice(0, 1) ?? [])}
             />
           </p>
 
@@ -144,8 +78,8 @@ const OverviewCards = ({ caseData, documents }: OverviewCardsProps) => {
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mt-4 pt-4 border-t border-border">
             <QuickStat label="Documents" value={`${documents.length}`} icon={FileText} />
             <QuickStat label="Processed" value={`${completeDocs}/${documents.length}`} icon={TrendingUp} />
-            <QuickStat label="Total Billed" value={`$${(TREATMENT_SUMMARY.totalBilled).toLocaleString()}`} icon={DollarSign} />
-            <QuickStat label="Providers" value={`${TREATMENT_SUMMARY.providers}`} icon={Stethoscope} />
+            <QuickStat label="Total Billed" value={`$${billing.totalBilled.toLocaleString()}`} icon={DollarSign} />
+            <QuickStat label="Providers" value={`${pkg.providers.length}`} icon={Stethoscope} />
           </div>
         </div>
       </WorkspaceCard>
@@ -154,7 +88,7 @@ const OverviewCards = ({ caseData, documents }: OverviewCardsProps) => {
       <WorkspaceCard
         icon={Stethoscope}
         title="Injury & Treatment Summary"
-        count={INJURY_SUMMARY.length}
+        count={pkg.injuries.length}
         tabs={[
           { key: "injuries", label: "Injuries" },
           { key: "treatment", label: "Treatment" },
@@ -163,37 +97,40 @@ const OverviewCards = ({ caseData, documents }: OverviewCardsProps) => {
         {(tab: string) =>
           tab === "injuries" ? (
             <div className="divide-y divide-border">
-              {INJURY_SUMMARY.map((inj, idx) => (
-                <div key={idx} className="px-5 py-3.5">
+              {pkg.injuries.map((inj) => (
+                <div key={inj.id} className="px-5 py-3.5">
                   <div className="flex items-center gap-2 mb-1">
                     <span className={SEVERITY_BADGE[inj.severity]}>{inj.severity}</span>
-                    <span className="text-sm font-medium text-foreground">{inj.region}</span>
+                    <span className="text-sm font-medium text-foreground">{inj.body_part}</span>
                     <code className="text-[10px] bg-accent px-1.5 py-0.5 rounded text-muted-foreground font-mono ml-auto">
-                      {inj.icdCode}
+                      {inj.diagnosis_code}
                     </code>
                   </div>
                   <p className="text-xs text-foreground leading-relaxed">
-                    <EvidenceStatement text={inj.diagnosis} citations={inj.citations} />
+                    <EvidenceStatement text={inj.diagnosis_description} citations={refsToCS(inj.evidence_refs)} />
                   </p>
-                  <p className="text-[11px] text-muted-foreground mt-1">
-                    Treating: {inj.treating}
-                  </p>
+                  {inj.is_pre_existing && (
+                    <span className="text-[10px] font-medium text-[hsl(var(--status-attention-foreground))] bg-[hsl(var(--status-attention-bg))] px-1.5 py-0.5 rounded mt-1 inline-block">
+                      Possible Pre-Existing
+                    </span>
+                  )}
                 </div>
               ))}
             </div>
           ) : (
             <div className="px-5 py-4">
               <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
-                <TreatmentStat label="Total Visits" value={TREATMENT_SUMMARY.totalVisits.toString()} />
-                <TreatmentStat label="PT Sessions" value={TREATMENT_SUMMARY.ptSessions.toString()} />
-                <TreatmentStat label="Injections" value={TREATMENT_SUMMARY.injections.toString()} />
-                <TreatmentStat label="Providers" value={TREATMENT_SUMMARY.providers.toString()} />
-                <TreatmentStat label="Total Billed" value={`$${TREATMENT_SUMMARY.totalBilled.toLocaleString()}`} />
-                <TreatmentStat label="Total Paid" value={`$${TREATMENT_SUMMARY.totalPaid.toLocaleString()}`} />
+                <TreatmentStat label="Total Visits" value={stats.totalVisits.toString()} />
+                <TreatmentStat label="PT Sessions" value={stats.ptSessions.toString()} />
+                <TreatmentStat label="Injections" value={stats.injections.toString()} />
+                <TreatmentStat label="Providers" value={stats.providers.toString()} />
+                <TreatmentStat label="Total Billed" value={`$${billing.totalBilled.toLocaleString()}`} />
+                <TreatmentStat label="Total Paid" value={`$${billing.totalPaid.toLocaleString()}`} />
               </div>
               <div className="mt-4 pt-3 border-t border-border">
                 <p className="text-xs text-muted-foreground leading-relaxed">
-                  Treatment included emergency care, orthopedic evaluation, cervical and knee MRIs, 24 physical therapy sessions, and 2 epidural steroid injections. Physical therapy was prescribed at 3x/week for 8 weeks with progressive functional restoration protocol.
+                  Treatment included {pkg.treatments.map((t) => t.treatment_type.replace(/_/g, " ")).filter((v, i, a) => a.indexOf(v) === i).join(", ")}.
+                  {pkg.demand_summary.medical_specials > 0 && ` Total medical specials: $${pkg.demand_summary.medical_specials.toLocaleString()}.`}
                 </p>
               </div>
             </div>
@@ -202,21 +139,24 @@ const OverviewCards = ({ caseData, documents }: OverviewCardsProps) => {
       </WorkspaceCard>
 
       {/* ── Issue Flags ──────────────────────── */}
-      <WorkspaceCard icon={ShieldAlert} title="Issue Flags" count={FLAGS.length}>
+      <WorkspaceCard icon={ShieldAlert} title="Issue Flags" count={pkg.issue_flags.length}>
         <div className="divide-y divide-border">
-          {FLAGS.map((flag, idx) => (
-            <div key={idx} className="px-5 py-3.5">
-              <div className="flex items-start gap-2.5">
-                <span className={`h-2 w-2 rounded-full mt-1.5 shrink-0 ${FLAG_DOT[flag.type]}`} />
-                <div className="flex-1 min-w-0">
-                  <p className="text-sm font-medium text-foreground">{flag.title}</p>
-                  <p className="text-xs text-muted-foreground leading-relaxed mt-0.5">
-                    <EvidenceStatement text={flag.description} citations={flag.citations} />
-                  </p>
+          {pkg.issue_flags.map((flag) => {
+            const flagRefs = pkg.evidence_refs.filter((r) => r.linked_entity_id === flag.id);
+            return (
+              <div key={flag.id} className="px-5 py-3.5">
+                <div className="flex items-start gap-2.5">
+                  <span className={`h-2 w-2 rounded-full mt-1.5 shrink-0 ${FLAG_DOT[flag.flag_type] ?? "bg-primary"}`} />
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-medium text-foreground">{flag.flag_type.replace(/_/g, " ").replace(/\b\w/g, (c) => c.toUpperCase())}</p>
+                    <p className="text-xs text-muted-foreground leading-relaxed mt-0.5">
+                      <EvidenceStatement text={flag.description} citations={refsToCS(flagRefs)} />
+                    </p>
+                  </div>
                 </div>
               </div>
-            </div>
-          ))}
+            );
+          })}
         </div>
       </WorkspaceCard>
     </div>
