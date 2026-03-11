@@ -478,7 +478,9 @@ const CaseDetailPage = () => {
       </div>
 
       <DocumentUpload caseId={caseData.id} open={showUpload} onClose={() => setShowUpload(false)} />
+      <SourceDrawer />
     </div>
+    </SourceDrawerProvider>
   );
 };
 
