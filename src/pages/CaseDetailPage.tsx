@@ -155,104 +155,80 @@ const CaseDetailPage = () => {
             {/* ── OVERVIEW ────────────────────────── */}
             {activeSection === "overview" && (
               <>
-                {/* Stats Row */}
-                <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-                  <StatCard icon={FileText} label="Documents" value={documents.length} />
-                  <StatCard icon={CheckCircle} label="Processed" value={completeDocs} color="text-[hsl(var(--status-approved))]" />
-                  <StatCard icon={AlertTriangle} label="Pending" value={pendingDocs} color="text-[hsl(var(--status-review))]" />
-                  <StatCard icon={Cog} label="Jobs" value={jobs.length} />
-                </div>
+                {/* DemandIQ Overview — Case Summary, Injuries, Flags */}
+                <OverviewCards caseData={caseData} documents={documents} />
 
-                {/* Actions */}
-                <div className="flex flex-wrap gap-2">
-                  {hasPermission(role, "upload_document") && (
-                    <button
-                      onClick={() => setShowUpload(true)}
-                      className="flex items-center gap-1.5 text-xs font-medium px-3.5 py-2 rounded-lg border border-border bg-card text-foreground hover:bg-accent transition-colors"
-                    >
-                      <Upload className="h-3.5 w-3.5" /> Upload Documents
-                    </button>
-                  )}
-                  {hasPermission(role, "trigger_processing") && pendingDocs > 0 && (
-                    <button
-                      onClick={() => triggerProcessing.mutate({ caseId: caseData.id })}
-                      disabled={triggerProcessing.isPending}
-                      className="flex items-center gap-1.5 text-xs font-medium px-3.5 py-2 rounded-lg bg-primary text-primary-foreground hover:bg-primary/90 transition-colors disabled:opacity-50 shadow-sm"
-                    >
-                      <Play className="h-3.5 w-3.5" /> Trigger Processing
-                    </button>
-                  )}
-                </div>
+                {/* Body Map */}
+                <BodyMap />
 
-                {/* Documents card */}
+                {/* Chronology */}
+                <ChronologyPanel />
+
+                {/* Documents preview */}
                 <WorkspaceCard
                   icon={FileText}
                   title="Documents"
                   count={documents.length}
-                  tabs={[
-                    { key: "all", label: "All" },
-                    { key: "medical", label: "Medical" },
-                    { key: "legal", label: "Legal" },
-                  ]}
+                  actions={
+                    <div className="flex gap-2">
+                      {hasPermission(role, "upload_document") && (
+                        <button
+                          onClick={() => setShowUpload(true)}
+                          className="flex items-center gap-1.5 text-[11px] font-medium px-2.5 py-1.5 rounded-lg border border-border bg-card text-foreground hover:bg-accent transition-colors"
+                        >
+                          <Upload className="h-3 w-3" /> Upload
+                        </button>
+                      )}
+                      {hasPermission(role, "trigger_processing") && pendingDocs > 0 && (
+                        <button
+                          onClick={() => triggerProcessing.mutate({ caseId: caseData.id })}
+                          disabled={triggerProcessing.isPending}
+                          className="flex items-center gap-1.5 text-[11px] font-medium px-2.5 py-1.5 rounded-lg bg-primary text-primary-foreground hover:bg-primary/90 transition-colors disabled:opacity-50"
+                        >
+                          <Play className="h-3 w-3" /> Process
+                        </button>
+                      )}
+                    </div>
+                  }
                 >
-                  {(tab: string) => {
-                    const filtered = tab === "all"
-                      ? documents
-                      : documents.filter((d) =>
-                          tab === "medical"
-                            ? d.document_type.includes("medical") || d.document_type.includes("imaging")
-                            : d.document_type.includes("legal") || d.document_type.includes("police")
-                        );
-                    if (filtered.length === 0) {
-                      return (
-                        <div className="px-5 py-10 text-center">
-                          <p className="text-xs text-muted-foreground">
-                            {documents.length === 0 ? "No documents uploaded yet." : "No matching documents."}
-                          </p>
-                        </div>
-                      );
-                    }
-                    return (
-                      <div className="divide-y divide-border">
-                        {filtered.map((doc) => (
-                          <div key={doc.id}>
-                            <div
-                              className="px-5 py-3 flex items-center gap-3 hover:bg-accent/30 transition-colors cursor-pointer"
-                              onClick={() => setExpandedDoc(expandedDoc === doc.id ? null : doc.id)}
+                  {documents.length === 0 ? (
+                    <div className="px-5 py-10 text-center">
+                      <p className="text-xs text-muted-foreground">No documents uploaded yet.</p>
+                    </div>
+                  ) : (
+                    <div className="divide-y divide-border">
+                      {documents.slice(0, 5).map((doc) => (
+                        <div key={doc.id} className="px-5 py-3 flex items-center gap-3 hover:bg-accent/30 transition-colors">
+                          <FileText className="h-4 w-4 text-muted-foreground shrink-0" />
+                          <div className="flex-1 min-w-0">
+                            <Link
+                              to={`/documents/${doc.id}`}
+                              className="text-sm font-medium text-foreground hover:text-primary transition-colors"
                             >
-                              <FileText className="h-4 w-4 text-muted-foreground shrink-0" />
-                              <div className="flex-1 min-w-0">
-                                <Link
-                                  to={`/documents/${doc.id}`}
-                                  onClick={(e) => e.stopPropagation()}
-                                  className="text-sm font-medium text-foreground hover:text-primary transition-colors"
-                                >
-                                  {doc.file_name}
-                                </Link>
-                                <p className="text-[11px] text-muted-foreground mt-0.5">
-                                  {formatBytes(doc.file_size_bytes)} · {doc.pipeline_stage.replace(/_/g, " ")}
-                                </p>
-                              </div>
-                              <DocumentTypeTag type={doc.document_type} />
-                              <span className={DOC_STATUS_BADGE[doc.document_status] ?? "status-badge-draft"}>
-                                {DOC_STATUS_LABEL[doc.document_status] ?? doc.document_status}
-                              </span>
-                            </div>
-                            {expandedDoc === doc.id && (
-                              <div className="px-5 py-4 bg-muted/20 border-t border-border">
-                                <div className="max-w-xs">
-                                  <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider mb-2">
-                                    Processing Pipeline
-                                  </p>
-                                  <ProcessingPipeline currentStage={doc.pipeline_stage} documentStatus={doc.document_status} />
-                                </div>
-                              </div>
-                            )}
+                              {doc.file_name}
+                            </Link>
+                            <p className="text-[11px] text-muted-foreground mt-0.5">
+                              {formatBytes(doc.file_size_bytes)} · {doc.pipeline_stage.replace(/_/g, " ")}
+                            </p>
                           </div>
-                        ))}
-                      </div>
-                    );
-                  }}
+                          <DocumentTypeTag type={doc.document_type} />
+                          <span className={DOC_STATUS_BADGE[doc.document_status] ?? "status-badge-draft"}>
+                            {DOC_STATUS_LABEL[doc.document_status] ?? doc.document_status}
+                          </span>
+                        </div>
+                      ))}
+                      {documents.length > 5 && (
+                        <div className="px-5 py-2.5 text-center">
+                          <button
+                            onClick={() => setActiveSection("documents")}
+                            className="text-xs text-primary font-medium hover:underline"
+                          >
+                            View all {documents.length} documents →
+                          </button>
+                        </div>
+                      )}
+                    </div>
+                  )}
                 </WorkspaceCard>
 
                 {/* Jobs */}
