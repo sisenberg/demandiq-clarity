@@ -17,6 +17,7 @@ import ChronologySummaryTab from "@/components/case/ChronologySummaryTab";
 import ClaimantBackgroundTab from "@/components/case/ClaimantBackgroundTab";
 import ClaimAssessmentTab from "@/components/case/ClaimAssessmentTab";
 import ProvidersTab from "@/components/case/ProvidersTab";
+import BillingView from "@/components/case/BillingView";
 import DocumentUpload from "@/components/case/DocumentUpload";
 import JobsPanel from "@/components/case/JobsPanel";
 import DocumentTypeTag from "@/components/case/DocumentTypeTag";
@@ -253,11 +254,7 @@ const CaseDetailPage = () => {
 
               {/* ── BILLING ────────────────────────── */}
               {activeSection === "billing" && (
-                <WorkspaceCard icon={FileText} title="Billing Summary">
-                  <div className="p-5">
-                    <EmptyState icon={FileText} title="Billing workspace" description="Billing analysis, UCR comparison, and reduction tracking will appear here." />
-                  </div>
-                </WorkspaceCard>
+                <BillingView />
               )}
 
               {/* ── DOCUMENTS ─────────────────────── */}
