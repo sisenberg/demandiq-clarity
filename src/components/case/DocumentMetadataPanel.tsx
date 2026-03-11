@@ -250,7 +250,7 @@ const DocumentMetadataPanel = ({
                                 autoFocus
                               />
                               <button
-                                onClick={() => handleSaveEdit(extraction.id)}
+                                onClick={() => handleSaveEdit(extraction)}
                                 className="p-1 rounded text-primary hover:bg-primary/10"
                               >
                                 <Check className="h-3 w-3" />
