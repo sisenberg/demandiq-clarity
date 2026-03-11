@@ -138,7 +138,7 @@ export function useCompleteModule() {
       }
 
       // 2. Create versioned snapshot
-      const { error: snapError } = await (supabase.from("module_completion_snapshots") as any)
+      const { data: snapData, error: snapError } = await (supabase.from("module_completion_snapshots") as any)
         .insert({
           tenant_id: tenantId,
           case_id: caseId,
@@ -147,10 +147,35 @@ export function useCompleteModule() {
           version: newVersion,
           snapshot_json: snapshotData,
           created_by: user.id,
-        });
+        })
+        .select("id")
+        .single();
       if (snapError) throw snapError;
 
-      // 3. Write audit event
+      // 3. Sync all downstream dependency states to "current" with this snapshot
+      const { data: deps } = await (supabase.from("module_dependencies") as any)
+        .select("downstream_module_id")
+        .eq("upstream_module_id", moduleId);
+      const downstreamIds = (deps ?? []).map((d: any) => d.downstream_module_id);
+      for (const dsId of downstreamIds) {
+        await (supabase.from("module_dependency_state") as any)
+          .upsert(
+            {
+              tenant_id: tenantId,
+              case_id: caseId,
+              downstream_module_id: dsId,
+              upstream_module_id: moduleId,
+              dependency_status: DependencyStatus.Current,
+              upstream_snapshot_id: snapData.id,
+              upstream_snapshot_version: newVersion,
+              last_synced_at: new Date().toISOString(),
+              stale_since: null,
+            },
+            { onConflict: "case_id,downstream_module_id,upstream_module_id" }
+          );
+      }
+
+      // 4. Write audit event
       const { error: auditError } = await (supabase.from("audit_events") as any)
         .insert({
           tenant_id: tenantId,
