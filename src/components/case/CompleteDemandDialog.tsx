@@ -61,7 +61,7 @@ const CompleteDemandDialog = ({
         case_status: caseStatus,
         document_count: documents.length,
         completed_documents: documents.filter(
-          (d) => d.document_status === "complete" || d.document_status === "extracted"
+          (d) => isDocumentReady(d.document_status)
         ).length,
         injury_count: 0,
         provider_count: 0,
