@@ -12,6 +12,7 @@ interface WorkspaceCardProps {
   tabs?: Tab[];
   actions?: React.ReactNode;
   children: React.ReactNode | ((activeTab: string) => React.ReactNode);
+  noPadding?: boolean;
 }
 
 const WorkspaceCard = ({
@@ -21,28 +22,29 @@ const WorkspaceCard = ({
   tabs,
   actions,
   children,
+  noPadding,
 }: WorkspaceCardProps) => {
   const [activeTab, setActiveTab] = useState(tabs?.[0]?.key ?? "default");
 
   return (
     <div className="card-elevated overflow-hidden">
       {/* Header */}
-      <div className="px-5 py-3.5 border-b border-border flex items-center gap-2 bg-card">
+      <div className="px-4 py-3 border-b border-border flex items-center gap-2 bg-card">
         <Icon className="h-4 w-4 text-primary shrink-0" />
-        <h2 className="text-sm font-semibold text-foreground">{title}</h2>
+        <h2 className="text-[13px] font-semibold text-foreground leading-none">{title}</h2>
         {count !== undefined && (
-          <span className="text-[10px] font-medium bg-accent text-muted-foreground px-2 py-0.5 rounded-full">
+          <span className="text-[10px] font-semibold bg-accent text-muted-foreground px-1.5 py-0.5 rounded-md min-w-[20px] text-center">
             {count}
           </span>
         )}
         {/* Tabs */}
         {tabs && tabs.length > 1 && (
-          <div className="ml-4 flex gap-0.5 bg-muted rounded-lg p-0.5">
+          <div className="ml-3 flex gap-px bg-accent rounded-lg p-0.5">
             {tabs.map((tab) => (
               <button
                 key={tab.key}
                 onClick={() => setActiveTab(tab.key)}
-                className={`px-2.5 py-1 text-[11px] font-medium rounded-md transition-all ${
+                className={`px-2.5 py-1 text-[11px] font-medium rounded-md transition-all duration-100 ${
                   activeTab === tab.key
                     ? "bg-card text-foreground shadow-sm"
                     : "text-muted-foreground hover:text-foreground"
@@ -53,13 +55,12 @@ const WorkspaceCard = ({
             ))}
           </div>
         )}
-        {/* Spacer + Actions */}
         <div className="flex-1" />
         {actions}
       </div>
 
       {/* Body */}
-      <div>
+      <div className={noPadding ? "" : ""}>
         {typeof children === "function" ? children(activeTab) : children}
       </div>
     </div>
