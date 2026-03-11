@@ -24,8 +24,10 @@ interface AuthContextValue {
   loading: boolean;
   role: AppRole | null;
   tenantId: string | null;
-  /** Module IDs the tenant has licensed (DemandIQ always included) */
+  /** Module IDs the tenant has active (enabled or valid trial) */
   tenantModules: string[];
+  /** Full entitlement records for richer status checks */
+  entitlements: TenantModuleEntitlement[];
   profile: Profile | null;
   needsOnboarding: boolean;
   completeSignup: (displayName: string, orgName: string, orgCode?: string) => Promise<void>;
