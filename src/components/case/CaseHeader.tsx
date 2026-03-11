@@ -33,6 +33,7 @@ const CASE_STATUS_BADGE: Record<string, string> = {
 
 interface CaseHeaderProps {
   caseData: CaseRow;
+  children?: React.ReactNode;
 }
 
 const CaseHeader = ({ caseData }: CaseHeaderProps) => {
