@@ -1,4 +1,4 @@
-import { createContext, useContext, type ReactNode } from "react";
+import React, { createContext, useContext, type ReactNode } from "react";
 import type { CasePackage, DemandIQOutput } from "@/types";
 import { MARTINEZ_CASE_PACKAGE, getDemandIQOutput } from "@/data/mock/casePackage";
 
