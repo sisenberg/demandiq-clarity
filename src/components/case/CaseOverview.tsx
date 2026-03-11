@@ -78,6 +78,7 @@ const FLAG_ICON_MAP: Record<string, string> = {
 interface CaseOverviewProps {
   caseData: CaseRow;
   documents: DocumentRow[];
+  onNavigate?: (section: string) => void;
 }
 
 const CaseOverview = ({ caseData, documents }: CaseOverviewProps) => {
