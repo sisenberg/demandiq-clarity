@@ -130,7 +130,7 @@ const CompleteDemandDialog = ({
                   { label: "At least one document uploaded", met: documents.length > 0 },
                   {
                     label: "At least one document fully processed",
-                    met: documents.some((d) => d.document_status === "complete" || d.document_status === "extracted"),
+                    met: documents.some((d) => isDocumentReady(d.document_status)),
                   },
                 ].map((req) => (
                   <div key={req.label} className="flex items-center gap-2 text-sm">
