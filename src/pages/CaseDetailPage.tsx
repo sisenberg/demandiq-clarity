@@ -445,6 +445,13 @@ const CaseDetailPage = () => {
       </div>
 
       <DocumentUpload caseId={caseData.id} open={showUpload} onClose={() => setShowUpload(false)} />
+      <CompleteDemandDialog
+        caseId={caseData.id}
+        caseStatus={caseData.case_status}
+        documents={documents}
+        open={showCompletionDialog}
+        onClose={() => setShowCompletionDialog(false)}
+      />
       <SourceDrawer />
     </div>
     </SourceDrawerProvider>

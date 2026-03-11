@@ -92,14 +92,17 @@ const CaseHeader = ({ caseData, children }: CaseHeaderProps) => {
           </div>
         </div>
 
-        {/* Search */}
-        <div className="hidden md:flex items-center gap-2 text-muted-foreground bg-background rounded-lg border border-border px-3 py-1.5 w-56 shrink-0 ml-6">
-          <Search className="h-3.5 w-3.5 shrink-0" />
-          <input
-            type="text"
-            placeholder="Search in case…"
-            className="bg-transparent text-xs text-foreground placeholder:text-muted-foreground outline-none w-full"
-          />
+        {/* Actions */}
+        <div className="flex items-center gap-3 shrink-0 ml-6">
+          {children}
+          <div className="hidden md:flex items-center gap-2 text-muted-foreground bg-background rounded-lg border border-border px-3 py-1.5 w-56">
+            <Search className="h-3.5 w-3.5 shrink-0" />
+            <input
+              type="text"
+              placeholder="Search in case…"
+              className="bg-transparent text-xs text-foreground placeholder:text-muted-foreground outline-none w-full"
+            />
+          </div>
         </div>
       </div>
     </header>
