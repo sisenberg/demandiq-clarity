@@ -9,6 +9,7 @@ import {
 import type { User, Session } from "@supabase/supabase-js";
 import { supabase } from "@/lib/supabase";
 import type { AppRole } from "@/lib/permissions";
+import { ModuleId } from "@/types";
 
 interface Profile {
   display_name: string;
@@ -22,6 +23,8 @@ interface AuthContextValue {
   loading: boolean;
   role: AppRole | null;
   tenantId: string | null;
+  /** Module IDs the tenant has licensed (DemandIQ always included) */
+  tenantModules: string[];
   profile: Profile | null;
   needsOnboarding: boolean;
   completeSignup: (displayName: string, orgName: string, orgCode?: string) => Promise<void>;
@@ -34,6 +37,7 @@ const AuthContext = createContext<AuthContextValue>({
   loading: true,
   role: null,
   tenantId: null,
+  tenantModules: [ModuleId.DemandIQ],
   profile: null,
   needsOnboarding: false,
   completeSignup: async () => {},
@@ -128,7 +132,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   }, []);
 
   return (
-    <AuthContext.Provider value={{ user, session, loading, role, tenantId, profile, needsOnboarding, completeSignup, signOut }}>
+    <AuthContext.Provider value={{ user, session, loading, role, tenantId, tenantModules: [ModuleId.DemandIQ], profile, needsOnboarding, completeSignup, signOut }}>
       {children}
     </AuthContext.Provider>
   );

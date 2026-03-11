@@ -220,6 +220,8 @@ export interface Tenant {
   id: string;
   name: string;
   slug: string;
+  /** Module IDs this tenant has licensed (DemandIQ is always included as base) */
+  enabled_modules: ModuleId[];
   created_at: string;
 }
 

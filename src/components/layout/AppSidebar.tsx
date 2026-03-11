@@ -20,7 +20,7 @@ import {
 } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { canAccessRoute } from "@/lib/permissions";
-import { MODULES } from "@/lib/modules";
+import { MODULES, getLockedModules } from "@/lib/modules";
 
 const MODULE_ICONS: Record<string, React.ElementType> = {
   Stethoscope,
@@ -44,7 +44,7 @@ const adminNavItems = [
 
 const AppSidebar = () => {
   const location = useLocation();
-  const { role, profile } = useAuth();
+  const { role, profile, tenantModules } = useAuth();
   const [collapsed, setCollapsed] = useState(false);
 
   const isActive = (path: string) => {
@@ -54,7 +54,7 @@ const AppSidebar = () => {
 
   const visibleCore = coreNavItems.filter((item) => canAccessRoute(role, item.path));
   const visibleAdmin = adminNavItems.filter((item) => canAccessRoute(role, item.path));
-  const comingSoonModules = MODULES.filter((m) => m.comingSoon);
+  const lockedModules = getLockedModules(tenantModules);
 
   return (
     <aside className={`h-screen bg-sidebar flex flex-col shrink-0 transition-all duration-200 ${collapsed ? "w-16" : "w-[var(--sidebar-width)]"}`}>
@@ -142,16 +142,16 @@ const AppSidebar = () => {
           </div>
         )}
 
-        {/* Coming soon modules */}
-        {comingSoonModules.length > 0 && (
+        {/* Locked add-on modules */}
+        {lockedModules.length > 0 && (
           <div>
             {!collapsed && (
               <p className="px-3 mb-2 text-[10px] font-semibold uppercase tracking-widest" style={{ color: "hsl(var(--sidebar-muted))" }}>
-                Modules
+                Add-on Modules
               </p>
             )}
             <div className="flex flex-col gap-0.5">
-              {comingSoonModules.map((mod) => {
+              {lockedModules.map((mod) => {
                 const Icon = MODULE_ICONS[mod.icon] ?? FileText;
                 return (
                   <div
@@ -160,7 +160,7 @@ const AppSidebar = () => {
                       collapsed ? "justify-center px-2 py-2.5" : "px-3 py-2"
                     }`}
                     style={{ color: "hsl(var(--sidebar-muted))" }}
-                    title={collapsed ? `${mod.label} — Coming Soon` : mod.description}
+                    title={collapsed ? `${mod.label} — Available Add-on` : mod.description}
                   >
                     <Icon className="h-4 w-4 shrink-0" />
                     {!collapsed && (
@@ -168,7 +168,7 @@ const AppSidebar = () => {
                         <span>{mod.label}</span>
                         <span className="ml-auto inline-flex items-center gap-1 text-[9px] font-semibold px-1.5 py-0.5 rounded-full bg-sidebar-accent uppercase tracking-wider" style={{ color: "hsl(var(--sidebar-muted))" }}>
                           <Lock className="h-2.5 w-2.5" />
-                          Soon
+                          Add-on
                         </span>
                       </>
                     )}
