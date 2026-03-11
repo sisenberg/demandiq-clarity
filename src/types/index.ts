@@ -256,6 +256,36 @@ export interface ModuleCompletionSnapshot {
   created_at: string;
 }
 
+export enum DependencyStatus {
+  Current = "current",
+  StaleDueToUpstreamChange = "stale_due_to_upstream_change",
+  RefreshNeeded = "refresh_needed",
+}
+
+/** Defines which modules depend on which (reference data) */
+export interface ModuleDependency {
+  id: string;
+  downstream_module_id: string;
+  upstream_module_id: string;
+  created_at: string;
+}
+
+/** Per-case dependency freshness state */
+export interface ModuleDependencyState {
+  id: string;
+  tenant_id: string;
+  case_id: string;
+  downstream_module_id: string;
+  upstream_module_id: string;
+  dependency_status: DependencyStatus;
+  upstream_snapshot_version: number | null;
+  upstream_snapshot_id: string | null;
+  last_synced_at: string | null;
+  stale_since: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
 /** Tenant module entitlement record */
 export interface TenantModuleEntitlement {
   id: string;

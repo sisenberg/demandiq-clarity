@@ -1,12 +1,13 @@
 import {
   CheckCircle2,
   Clock,
-  User,
   ArrowRight,
   Lock,
   ChevronDown,
   ChevronUp,
   Package,
+  AlertTriangle,
+  RefreshCw,
 } from "lucide-react";
 import { useState } from "react";
 import {
@@ -16,9 +17,14 @@ import {
   COMPLETION_STATUS_BADGE,
   MODULE_COMPLETION_LABELS,
 } from "@/hooks/useModuleCompletion";
+import {
+  useCaseDependencyStates,
+  getDependencyStatus,
+  DEPENDENCY_STATUS_LABEL,
+} from "@/hooks/useModuleDependencies";
 import { useAuth } from "@/contexts/AuthContext";
 import { isEntitlementActive } from "@/hooks/useModuleEntitlements";
-import { ModuleCompletionStatus } from "@/types";
+import { ModuleCompletionStatus, DependencyStatus } from "@/types";
 
 interface ModuleCompletionStatusPanelProps {
   caseId: string;
@@ -51,6 +57,7 @@ const ModuleCompletionStatusPanel = ({
   const { entitlements, profile } = useAuth();
   const { data: completion } = useModuleCompletion(caseId, moduleId);
   const { data: snapshots = [] } = useModuleSnapshots(caseId, moduleId);
+  const { data: depStates = [] } = useCaseDependencyStates(caseId);
   const [showHistory, setShowHistory] = useState(false);
 
   const labels = MODULE_COMPLETION_LABELS[moduleId] ?? { action: "Complete", noun: moduleId };
@@ -104,6 +111,19 @@ const ModuleCompletionStatusPanel = ({
           </div>
         )}
 
+        {/* Reopened warning with stale downstream notice */}
+        {isReopened && (
+          <div className="rounded-lg bg-[hsl(var(--status-attention))]/10 border border-[hsl(var(--status-attention))]/20 px-3 py-2.5 flex items-start gap-2">
+            <AlertTriangle className="h-3.5 w-3.5 text-[hsl(var(--status-attention))] shrink-0 mt-0.5" />
+            <div className="text-xs">
+              <p className="font-medium text-foreground">{labels.noun} has been reopened</p>
+              <p className="text-muted-foreground mt-0.5">
+                Downstream modules using the previous snapshot are now marked as stale. Re-complete to update them.
+              </p>
+            </div>
+          </div>
+        )}
+
         {/* Version history */}
         {snapshots.length > 1 && (
           <div>
@@ -130,7 +150,7 @@ const ModuleCompletionStatusPanel = ({
           </div>
         )}
 
-        {/* Downstream handoff */}
+        {/* Downstream handoff with dependency status */}
         <div className="border-t border-border pt-3">
           <p className="text-[10px] text-muted-foreground uppercase tracking-wider font-medium mb-2">
             Downstream Modules
@@ -139,37 +159,66 @@ const ModuleCompletionStatusPanel = ({
             {DOWNSTREAM_MODULES.map((mod) => {
               const isEntitled = isEntitlementActive(entitlements, mod.id);
               const isAvailable = isCompleted && isEntitled;
+              const depState = getDependencyStatus(depStates, mod.id, moduleId);
+              const isStale = depState?.dependency_status === DependencyStatus.StaleDueToUpstreamChange;
+              const needsRefresh = depState?.dependency_status === DependencyStatus.RefreshNeeded;
+              const isCurrent = depState?.dependency_status === DependencyStatus.Current;
+
               return (
                 <div
                   key={mod.id}
                   className={`flex items-center gap-2.5 px-3 py-2 rounded-lg text-xs ${
-                    isAvailable
-                      ? "bg-[hsl(var(--status-approved))]/8 border border-[hsl(var(--status-approved))]/15"
-                      : "bg-accent/30"
+                    isStale || needsRefresh
+                      ? "bg-[hsl(var(--status-attention))]/8 border border-[hsl(var(--status-attention))]/15"
+                      : isAvailable
+                        ? "bg-[hsl(var(--status-approved))]/8 border border-[hsl(var(--status-approved))]/15"
+                        : "bg-accent/30"
                   }`}
                 >
-                  {isAvailable ? (
+                  {/* Status icon */}
+                  {isStale ? (
+                    <AlertTriangle className="h-3.5 w-3.5 text-[hsl(var(--status-attention))] shrink-0" />
+                  ) : needsRefresh ? (
+                    <RefreshCw className="h-3.5 w-3.5 text-destructive shrink-0" />
+                  ) : isAvailable ? (
                     <CheckCircle2 className="h-3.5 w-3.5 text-[hsl(var(--status-approved))] shrink-0" />
                   ) : isEntitled ? (
                     <Clock className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
                   ) : (
                     <Lock className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
                   )}
+
+                  {/* Label + status text */}
                   <div className="flex-1 min-w-0">
-                    <span className={`font-medium ${isAvailable ? "text-foreground" : "text-muted-foreground"}`}>
+                    <span className={`font-medium ${isAvailable || isStale ? "text-foreground" : "text-muted-foreground"}`}>
                       {mod.label}
                     </span>
                     {!isEntitled && (
                       <span className="ml-1.5 text-[10px] text-muted-foreground">· Not licensed</span>
                     )}
-                    {isEntitled && !isCompleted && (
+                    {isEntitled && !isCompleted && !isReopened && (
                       <span className="ml-1.5 text-[10px] text-muted-foreground">· Awaiting {labels.noun} completion</span>
                     )}
-                    {isAvailable && (
+                    {isStale && (
+                      <span className="ml-1.5 text-[10px] text-[hsl(var(--status-attention))]">
+                        · Stale — upstream changed
+                        {depState?.upstream_snapshot_version && ` (using v${depState.upstream_snapshot_version})`}
+                      </span>
+                    )}
+                    {needsRefresh && (
+                      <span className="ml-1.5 text-[10px] text-destructive">· Refresh needed</span>
+                    )}
+                    {isCurrent && isAvailable && (
+                      <span className="ml-1.5 text-[10px] text-[hsl(var(--status-approved))]">
+                        · Current (v{depState?.upstream_snapshot_version})
+                      </span>
+                    )}
+                    {isAvailable && !depState && (
                       <span className="ml-1.5 text-[10px] text-[hsl(var(--status-approved))]">· Ready</span>
                     )}
                   </div>
-                  {isAvailable && <ArrowRight className="h-3 w-3 text-[hsl(var(--status-approved))] shrink-0" />}
+
+                  {isAvailable && isCurrent && <ArrowRight className="h-3 w-3 text-[hsl(var(--status-approved))] shrink-0" />}
                 </div>
               );
             })}
