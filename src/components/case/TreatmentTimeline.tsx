@@ -614,7 +614,30 @@ function TreatmentRecordRow({
             </div>
           </div>
 
-          {/* Action bar */}
+          {/* Review flags for this record */}
+          {hasFlags && (
+            <div className="mt-2 pt-2 border-t border-border/30">
+              <p className="text-[9px] font-semibold text-muted-foreground uppercase tracking-wider mb-1">Review Issues ({flags.length})</p>
+              <div className="flex flex-col gap-1">
+                {flags.map((flag) => (
+                  <div key={flag.id} className={`rounded-md px-2.5 py-1.5 flex items-start gap-2 ${
+                    flag.severity === "error" ? "bg-[hsl(var(--status-failed-bg))]" :
+                    flag.severity === "warning" ? "bg-[hsl(var(--status-review-bg))]" : "bg-primary/5"
+                  }`}>
+                    <AlertTriangle className={`h-3 w-3 shrink-0 mt-0.5 ${
+                      flag.severity === "error" ? "text-[hsl(var(--status-failed))]" :
+                      flag.severity === "warning" ? "text-[hsl(var(--status-review))]" : "text-primary"
+                    }`} />
+                    <div className="min-w-0">
+                      <span className="text-[10px] font-semibold text-foreground">{flag.title}</span>
+                      <p className="text-[9px] text-muted-foreground">{flag.description}</p>
+                      <p className="text-[9px] text-foreground/70 italic">→ {flag.action}</p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
           <div className="flex items-center gap-1.5 mt-3 pt-2 border-t border-border/30">
             <ActionButton icon={CheckCircle2} label="Accept" variant="approved" />
             <ActionButton icon={Edit3} label="Correct" />
