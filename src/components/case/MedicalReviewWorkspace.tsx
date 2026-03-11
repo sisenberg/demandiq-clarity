@@ -1,13 +1,14 @@
 /**
  * ReviewerIQ — Medical Review Workspace
  * Top-level container for the medical review section.
- * Integrates treatment timeline, issue workspace, financial summary, and bill review.
+ * Integrates treatment timeline, issue workspace, financial summary, bill review,
+ * specialty review, and completion workflow.
  */
 
 import { useState, useMemo, useCallback } from "react";
 import {
   Stethoscope, DollarSign, AlertTriangle, FileText, BarChart3,
-  CheckCircle2, ClipboardList, Microscope,
+  CheckCircle2, ClipboardList, Microscope, Package,
 } from "lucide-react";
 import TreatmentTimeline from "@/components/case/TreatmentTimeline";
 import ReviewerIssueWorkspace from "@/components/case/ReviewerIssueWorkspace";
@@ -20,6 +21,9 @@ import { MOCK_BILL_LINES, MOCK_BILL_HEADERS } from "@/data/mock/reviewerBillLine
 import { MOCK_TREATMENT_RECORDS } from "@/data/mock/treatmentRecords";
 import { runMedicalReviewRules } from "@/lib/medicalReviewRules";
 import { runSpecialtyReview } from "@/lib/specialtyReviewEngine";
+import { assessCompletionReadiness, generateReviewPackage, createHandoffEvent, createAuditEvent } from "@/lib/reviewerWorkflow";
+import type { ReviewPackageV1, PackageVersionEntry } from "@/lib/reviewerWorkflow";
+import { CompletionRail, CompleteReviewerModal, PackageVersionHistory } from "@/components/case/ReviewerCompletionUI";
 
 type MedicalReviewTab = "treatments" | "issues" | "bills" | "financial" | "specialty";
 
@@ -101,8 +105,73 @@ export default function MedicalReviewWorkspace({ caseId }: MedicalReviewWorkspac
   const pendingBills = billLines.filter(l => l.disposition === "pending").length;
   const escalationCount = specialtyRecs.filter(r => r.escalation_required).length;
 
+  // Completion workflow
+  const [showCompleteModal, setShowCompleteModal] = useState(false);
+  const [completedPackage, setCompletedPackage] = useState<ReviewPackageV1 | null>(null);
+  const [packageVersions, setPackageVersions] = useState<PackageVersionEntry[]>([]);
+
+  const readiness = useMemo(() => {
+    return assessCompletionReadiness(specialtyRecs, reviewIssues, billLines, specialtyResult.episodes);
+  }, [specialtyRecs, reviewIssues, billLines, specialtyResult.episodes]);
+
+  const handleComplete = useCallback(() => {
+    const pkg = generateReviewPackage(
+      caseId, "tenant-001", specialtyRecs, reviewIssues, billLines,
+      specialtyResult.episodes, "current-user",
+      completedPackage?.package_metadata.package_version ?? null,
+    );
+    const handoff = createHandoffEvent(caseId, pkg.package_metadata.package_id, pkg.package_metadata.package_version);
+    createAuditEvent("completion_succeeded", caseId, "reviewer_module", caseId, "current-user");
+
+    // Supersede prior version
+    if (completedPackage) {
+      setPackageVersions(prev => [...prev, {
+        version: completedPackage.package_metadata.package_version,
+        package_id: completedPackage.package_metadata.package_id,
+        status: "superseded",
+        completed_by: completedPackage.package_metadata.generated_by,
+        completed_at: completedPackage.package_metadata.generated_at,
+        reopen_reason: null,
+        is_current: false,
+      }]);
+    }
+
+    setCompletedPackage(pkg);
+    setShowCompleteModal(false);
+  }, [caseId, specialtyRecs, reviewIssues, billLines, specialtyResult.episodes, completedPackage]);
+
+  const handleReopen = useCallback(() => {
+    if (!completedPackage) return;
+    createAuditEvent("module_reopened", caseId, "reviewer_module", caseId, "current-user",
+      { version: completedPackage.package_metadata.package_version }, null, "Reviewer reopened for additional review");
+    setPackageVersions(prev => [...prev, {
+      version: completedPackage.package_metadata.package_version,
+      package_id: completedPackage.package_metadata.package_id,
+      status: "superseded",
+      completed_by: completedPackage.package_metadata.generated_by,
+      completed_at: completedPackage.package_metadata.generated_at,
+      reopen_reason: "Reviewer reopened for additional review",
+      is_current: false,
+    }]);
+    setCompletedPackage(null);
+  }, [caseId, completedPackage]);
+
+  // Adjust readiness state if completed
+  const effectiveReadiness = useMemo(() => {
+    if (completedPackage) return { ...readiness, module_state: "completed" as const };
+    return readiness;
+  }, [readiness, completedPackage]);
+
   return (
     <div className="flex flex-col gap-4">
+      {/* Completion rail */}
+      <CompletionRail
+        readiness={effectiveReadiness}
+        latestPackage={completedPackage}
+        onComplete={() => setShowCompleteModal(true)}
+        onReopen={handleReopen}
+      />
+
       {/* Tab navigation */}
       <div className="flex items-center gap-1 bg-accent/30 rounded-lg p-1">
         {TABS.map(tab => {
@@ -140,6 +209,25 @@ export default function MedicalReviewWorkspace({ caseId }: MedicalReviewWorkspac
           episodes={specialtyResult.episodes}
           recommendations={specialtyRecs}
           onOverride={handleSpecialtyOverride}
+        />
+      )}
+
+      {/* Package version history */}
+      {(completedPackage || packageVersions.length > 0) && (
+        <div className="rounded-lg border border-border bg-card p-3">
+          <p className="text-[10px] font-medium text-foreground mb-2 flex items-center gap-1.5">
+            <Package className="h-3.5 w-3.5" /> Package History
+          </p>
+          <PackageVersionHistory versions={packageVersions} currentPackage={completedPackage} />
+        </div>
+      )}
+
+      {/* Complete modal */}
+      {showCompleteModal && (
+        <CompleteReviewerModal
+          readiness={readiness}
+          onConfirm={handleComplete}
+          onCancel={() => setShowCompleteModal(false)}
         />
       )}
     </div>

@@ -337,19 +337,7 @@ function QADashboard({ run }: { run: CalibrationRun | null }) {
   const matchRate = run.total_cases > 0 ? Math.round((run.match_count / run.total_cases) * 100) : 0;
   const partialRate = run.total_cases > 0 ? Math.round((run.partial_match_count / run.total_cases) * 100) : 0;
 
-  // Specialty breakdown
-  const specialtyBreakdown = useMemo(() => {
-    const map = new Map<string, { total: number; matches: number; fp: number; fn: number }>();
-    for (const r of run.results) {
-      if (!map.has(r.specialty)) map.set(r.specialty, { total: 0, matches: 0, fp: 0, fn: 0 });
-      const entry = map.get(r.specialty)!;
-      entry.total++;
-      if (r.result_type === "match") entry.matches++;
-      if (r.result_type === "false_positive") entry.fp++;
-      if (r.result_type === "false_negative") entry.fn++;
-    }
-    return map;
-  }, [run.results]);
+
 
   return (
     <div className="space-y-3">
