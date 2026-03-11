@@ -193,6 +193,7 @@ export function useCompleteModule() {
     onSuccess: (_, { caseId, moduleId }) => {
       qc.invalidateQueries({ queryKey: ["module-completion", caseId, moduleId] });
       qc.invalidateQueries({ queryKey: ["module-snapshots", caseId, moduleId] });
+      qc.invalidateQueries({ queryKey: ["dependency-states", caseId] });
       qc.invalidateQueries({ queryKey: ["cases", caseId] });
       qc.invalidateQueries({ queryKey: ["cases"] });
       toast.success("Module completed successfully");
