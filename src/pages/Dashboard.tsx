@@ -6,7 +6,7 @@ import EmptyState from "@/components/ui/EmptyState";
 import {
   Briefcase,
   FileText,
-  Download,
+  CheckCircle2,
   TrendingUp,
   ChevronRight,
   Inbox,
