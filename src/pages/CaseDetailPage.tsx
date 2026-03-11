@@ -16,6 +16,7 @@ import ChecklistTab from "@/components/case/ChecklistTab";
 import ChronologySummaryTab from "@/components/case/ChronologySummaryTab";
 import ClaimantBackgroundTab from "@/components/case/ClaimantBackgroundTab";
 import ClaimAssessmentTab from "@/components/case/ClaimAssessmentTab";
+import ProvidersTab from "@/components/case/ProvidersTab";
 import DocumentUpload from "@/components/case/DocumentUpload";
 import JobsPanel from "@/components/case/JobsPanel";
 import DocumentTypeTag from "@/components/case/DocumentTypeTag";
