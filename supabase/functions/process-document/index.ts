@@ -165,6 +165,11 @@ function extractBornDigitalPages(pdfBytes: Uint8Array): string[] {
 }
 
 // ─── Main Handler ───────────────────────────────────────
+// COMPLIANCE NOTE: This function sends document content (L4 restricted_phi) to
+// the Lovable AI Gateway for OCR processing. This is a subprocessor data flow
+// documented in docs/compliance/data-flow-inventory.md and
+// docs/compliance/subprocessor-boundaries.md.
+// Do NOT log extracted text content or AI response payloads.
 Deno.serve(async (req: Request) => {
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
@@ -446,7 +451,8 @@ Deno.serve(async (req: Request) => {
         });
       } else {
         const classifyResult = await classifyResp.json();
-        console.log("[process-document] Classification result:", JSON.stringify(classifyResult));
+        // COMPLIANCE: Log only summary, not full payload which may contain PII/PHI snippets
+        console.log("[process-document] Classification completed:", classifyResult?.success ? "success" : "unknown");
       }
     } catch (classifyErr) {
       const errMsg = classifyErr instanceof Error ? classifyErr.message : String(classifyErr);

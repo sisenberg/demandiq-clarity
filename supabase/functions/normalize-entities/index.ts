@@ -29,6 +29,8 @@ const FIELD_TO_ENTITY: Record<string, string> = {
 
 const ENTITY_TYPES = ["claimant", "attorney", "law_firm", "provider", "facility", "claim_number", "insurer"];
 
+// COMPLIANCE NOTE: This function sends extracted PII (names, identifiers) to
+// the Lovable AI Gateway for entity clustering. See docs/compliance/subprocessor-boundaries.md.
 Deno.serve(async (req: Request) => {
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });

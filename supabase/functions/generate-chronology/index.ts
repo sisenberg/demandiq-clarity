@@ -12,6 +12,8 @@ const CATEGORIES = [
   "billing", "correspondence", "investigation", "representation", "other",
 ] as const;
 
+// COMPLIANCE NOTE: This function sends extracted text (L4 PHI — medical events)
+// to the Lovable AI Gateway. See docs/compliance/subprocessor-boundaries.md.
 Deno.serve(async (req: Request) => {
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });

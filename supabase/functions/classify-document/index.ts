@@ -37,6 +37,10 @@ const DOCUMENT_TYPES = [
   "other",
 ] as const;
 
+// COMPLIANCE NOTE: This function sends document text (L3–L4 PII/PHI) to the
+// Lovable AI Gateway for classification and metadata extraction. Subprocessor
+// data flow — see docs/compliance/subprocessor-boundaries.md.
+// Do NOT log extracted text, AI prompts, or full AI response payloads.
 Deno.serve(async (req: Request) => {
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
