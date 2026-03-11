@@ -2,7 +2,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
-
+import { isIntakeProcessing } from "@/lib/statuses";
 export interface DocumentRow {
   id: string;
   tenant_id: string;
@@ -31,8 +31,7 @@ export function useCaseDocuments(caseId: string | undefined) {
     refetchInterval: (query) => {
       // Poll every 4s if any documents are in a processing intake state
       const docs = query.state.data as DocumentRow[] | undefined;
-      const processingStatuses = ["queued_for_text_extraction", "extracting_text", "queued_for_parsing", "parsing"];
-      if (docs?.some((d) => processingStatuses.includes(d.intake_status))) {
+      if (docs?.some((d) => isIntakeProcessing(d.intake_status))) {
         return 4000;
       }
       return false;

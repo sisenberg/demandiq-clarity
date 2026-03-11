@@ -6,7 +6,14 @@ import { useInvokeExtraction, useTriggerCaseExtraction } from "@/hooks/useExtrac
 import { useCaseDuplicateFlags } from "@/hooks/useDuplicateFlags";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
-import { INTAKE_STATUS_LABEL } from "@/types/intake";
+import {
+  getIntakeBadge,
+  INTAKE_STATUS_LABEL,
+  INTAKE_PROCESSING_STATUSES,
+  isIntakeProcessing,
+  isIntakeComplete,
+  getPipelineStageLabel,
+} from "@/lib/statuses";
 import IntakeUploadZone from "./IntakeUploadZone";
 import IntakeSummaryPanel from "./IntakeSummaryPanel";
 import DocumentTypeTag from "./DocumentTypeTag";
@@ -29,30 +36,6 @@ import {
   Upload,
   Zap,
 } from "lucide-react";
-
-// ─── Status styles ───────────────────────────────────
-const STATUS_BADGE: Record<string, { class: string; label: string }> = {
-  uploaded: { class: "bg-accent text-muted-foreground", label: "Uploaded" },
-  queued: { class: "bg-accent text-muted-foreground", label: "Queued" },
-  ocr_in_progress: { class: "bg-[hsl(var(--status-processing-bg))] text-[hsl(var(--status-processing-foreground))]", label: "OCR" },
-  classified: { class: "bg-[hsl(var(--status-processing-bg))] text-[hsl(var(--status-processing-foreground))]", label: "Classified" },
-  extracted: { class: "bg-[hsl(var(--status-approved-bg))] text-[hsl(var(--status-approved-foreground))]", label: "Extracted" },
-  needs_attention: { class: "bg-[hsl(var(--status-attention-bg))] text-[hsl(var(--status-attention-foreground))]", label: "Attention" },
-  complete: { class: "bg-[hsl(var(--status-approved-bg))] text-[hsl(var(--status-approved-foreground))]", label: "Complete" },
-  failed: { class: "bg-destructive/10 text-destructive", label: "Failed" },
-};
-
-const INTAKE_BADGE: Record<string, { class: string; label: string }> = {
-  uploaded: { class: "bg-accent text-muted-foreground", label: "Uploaded" },
-  queued_for_text_extraction: { class: "bg-[hsl(var(--status-processing-bg))] text-[hsl(var(--status-processing-foreground))]", label: "OCR Queued" },
-  extracting_text: { class: "bg-[hsl(var(--status-processing-bg))] text-[hsl(var(--status-processing-foreground))]", label: "Extracting" },
-  text_extracted: { class: "bg-[hsl(var(--status-approved-bg))] text-[hsl(var(--status-approved-foreground))]", label: "Text Ready" },
-  queued_for_parsing: { class: "bg-[hsl(var(--status-processing-bg))] text-[hsl(var(--status-processing-foreground))]", label: "Parse Queued" },
-  parsing: { class: "bg-[hsl(var(--status-processing-bg))] text-[hsl(var(--status-processing-foreground))]", label: "Parsing" },
-  parsed: { class: "bg-[hsl(var(--status-approved-bg))] text-[hsl(var(--status-approved-foreground))]", label: "Parsed" },
-  needs_review: { class: "bg-[hsl(var(--status-attention-bg))] text-[hsl(var(--status-attention-foreground))]", label: "Review" },
-  failed: { class: "bg-destructive/10 text-destructive", label: "Failed" },
-};
 
 function formatBytes(bytes: number): string {
   if (bytes < 1024) return `${bytes} B`;
@@ -278,11 +261,11 @@ const IntakeDocumentsWorkstation = ({ documents, loading, caseId }: IntakeDocume
             ) : (
               <div className="divide-y divide-border/30">
                 {sorted.map((doc) => {
-                  const intakeBadge = INTAKE_BADGE[doc.intake_status] ?? INTAKE_BADGE.uploaded;
+                  const intakeBadge = getIntakeBadge(doc.intake_status);
                   const isSelected = selectedDocId === doc.id;
                   const isDuplicate = duplicateDocIds.has(doc.id);
                   const isFailed = doc.intake_status === "failed";
-                  const isProcessing = ["queued_for_text_extraction", "extracting_text", "queued_for_parsing", "parsing"].includes(doc.intake_status);
+                  const isProcessing = isIntakeProcessing(doc.intake_status);
 
                   return (
                     <button
@@ -297,7 +280,7 @@ const IntakeDocumentsWorkstation = ({ documents, loading, caseId }: IntakeDocume
                           <Loader2 className="h-4 w-4 text-primary animate-spin" />
                         ) : isFailed ? (
                           <AlertTriangle className="h-4 w-4 text-destructive" />
-                        ) : doc.intake_status === "parsed" || doc.intake_status === "text_extracted" ? (
+                        ) : isIntakeComplete(doc.intake_status) ? (
                           <CheckCircle2 className="h-4 w-4 text-[hsl(var(--status-approved))]" />
                         ) : (
                           <FileText className="h-4 w-4 text-muted-foreground" />
@@ -324,7 +307,7 @@ const IntakeDocumentsWorkstation = ({ documents, loading, caseId }: IntakeDocume
                           {doc.page_count && <span className="text-[10px] text-muted-foreground">{doc.page_count} pg</span>}
                         </div>
                         <div className="flex items-center gap-2 mt-1">
-                          <span className={`text-[8px] font-semibold uppercase tracking-wider px-1.5 py-0.5 rounded ${intakeBadge.class}`}>
+                          <span className={`text-[8px] font-semibold uppercase tracking-wider px-1.5 py-0.5 rounded ${intakeBadge.className}`}>
                             {intakeBadge.label}
                           </span>
                           <span className="text-[9px] text-muted-foreground">{formatDate(doc.created_at)}</span>
@@ -361,8 +344,8 @@ const IntakeDocumentsWorkstation = ({ documents, loading, caseId }: IntakeDocume
               <div className="flex-1 overflow-y-auto p-4 space-y-4">
                 {/* Metadata */}
                 <div className="grid grid-cols-2 gap-3">
-                  <MetaItem label="Intake Status" value={INTAKE_STATUS_LABEL[selectedDoc.intake_status as keyof typeof INTAKE_STATUS_LABEL] ?? selectedDoc.intake_status} />
-                  <MetaItem label="Pipeline" value={selectedDoc.pipeline_stage.replace(/_/g, " ")} />
+                  <MetaItem label="Intake Status" value={getIntakeBadge(selectedDoc.intake_status).label} />
+                  <MetaItem label="Pipeline" value={getPipelineStageLabel(selectedDoc.pipeline_stage)} />
                   <MetaItem label="Uploaded" value={formatDate(selectedDoc.created_at)} />
                   <MetaItem label="Pages" value={selectedDoc.page_count?.toString() ?? "—"} />
                 </div>

@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { CheckCircle2, AlertTriangle, RotateCcw, Package, X } from "lucide-react";
+import { isDocumentReady } from "@/lib/statuses";
 import {
   useModuleCompletion,
   useCompleteModule,
@@ -60,7 +61,7 @@ const CompleteDemandDialog = ({
         case_status: caseStatus,
         document_count: documents.length,
         completed_documents: documents.filter(
-          (d) => d.document_status === "complete" || d.document_status === "extracted"
+          (d) => isDocumentReady(d.document_status)
         ).length,
         injury_count: 0,
         provider_count: 0,
@@ -129,7 +130,7 @@ const CompleteDemandDialog = ({
                   { label: "At least one document uploaded", met: documents.length > 0 },
                   {
                     label: "At least one document fully processed",
-                    met: documents.some((d) => d.document_status === "complete" || d.document_status === "extracted"),
+                    met: documents.some((d) => isDocumentReady(d.document_status)),
                   },
                 ].map((req) => (
                   <div key={req.label} className="flex items-center gap-2 text-sm">

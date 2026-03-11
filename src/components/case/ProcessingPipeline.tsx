@@ -1,14 +1,7 @@
 import { CheckCircle, Circle, Loader2, XCircle } from "lucide-react";
+import { PIPELINE_STAGES_ORDERED } from "@/lib/statuses";
 
-const PIPELINE_STAGES = [
-  { key: "upload_received", label: "Upload Received" },
-  { key: "ocr_queued", label: "OCR Queued" },
-  { key: "ocr_complete", label: "OCR Complete" },
-  { key: "document_classified", label: "Classified" },
-  { key: "extraction_complete", label: "Extraction Complete" },
-  { key: "evidence_links_created", label: "Evidence Links Created" },
-  { key: "review_items_generated", label: "Review Items Generated" },
-];
+const PIPELINE_STAGES = PIPELINE_STAGES_ORDERED;
 
 interface ProcessingPipelineProps {
   currentStage: string;

@@ -5,6 +5,7 @@ import { CitationBadge, EvidenceStatement, type CitationSource } from "./Evidenc
 import { getBillingSummary, getTreatmentStats } from "@/data/mock/casePackage";
 import type { CaseRow } from "@/hooks/useCases";
 import type { DocumentRow } from "@/hooks/useDocuments";
+import { isDocumentReady } from "@/lib/statuses";
 import type { EvidenceReference, TimelineEvent } from "@/types";
 import {
   User,
@@ -85,7 +86,7 @@ const CaseOverview = ({ caseData, documents }: CaseOverviewProps) => {
   const [selectedTimelineEvent, setSelectedTimelineEvent] = useState<string | null>(null);
 
   const completeDocs = documents.filter(
-    (d) => d.document_status === "complete" || d.document_status === "extracted"
+    (d) => isDocumentReady(d.document_status)
   ).length;
 
   const claimant = pkg.parties.find((p) => p.party_role === "claimant");

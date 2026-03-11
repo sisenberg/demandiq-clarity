@@ -25,42 +25,18 @@ import {
   Eye,
 } from "lucide-react";
 
-// ─── Status styles ───────────────────────────────────
-const STATUS_BADGE: Record<string, { class: string; label: string }> = {
-  uploaded: { class: "bg-accent text-muted-foreground", label: "Uploaded" },
-  queued: { class: "bg-accent text-muted-foreground", label: "Queued" },
-  ocr_in_progress: { class: "bg-[hsl(var(--status-processing-bg))] text-[hsl(var(--status-processing-foreground))]", label: "OCR" },
-  classified: { class: "bg-[hsl(var(--status-processing-bg))] text-[hsl(var(--status-processing-foreground))]", label: "Classified" },
-  extracted: { class: "bg-[hsl(var(--status-approved-bg))] text-[hsl(var(--status-approved-foreground))]", label: "Extracted" },
-  needs_attention: { class: "bg-[hsl(var(--status-attention-bg))] text-[hsl(var(--status-attention-foreground))]", label: "Attention" },
-  complete: { class: "bg-[hsl(var(--status-approved-bg))] text-[hsl(var(--status-approved-foreground))]", label: "Complete" },
-  failed: { class: "bg-destructive/10 text-destructive", label: "Failed" },
-};
+import {
+  DOCUMENT_STATUS_BADGE,
+  PIPELINE_STAGE_LABEL,
+  DOCUMENT_TYPE_LABEL,
+  getDocumentStatusBadge,
+  getPipelineStageLabel,
+  isDocumentReady,
+} from "@/lib/statuses";
 
-const PIPELINE_LABELS: Record<string, string> = {
-  upload_received: "Upload Received",
-  ocr_queued: "OCR Queued",
-  ocr_complete: "OCR Complete",
-  document_classified: "Classified",
-  extraction_complete: "Extracted",
-  evidence_links_created: "Evidence Linked",
-  review_items_generated: "Review Ready",
-};
-
-// ─── Doc type labels ─────────────────────────────────
-const DOC_TYPE_LABEL: Record<string, string> = {
-  medical_record: "Medical Record",
-  police_report: "Police Report",
-  legal_filing: "Legal Filing",
-  correspondence: "Correspondence",
-  billing_record: "Billing Record",
-  imaging_report: "Imaging Report",
-  insurance_document: "Insurance",
-  employment_record: "Employment",
-  expert_report: "Expert Report",
-  photograph: "Photograph",
-  other: "Other",
-};
+const STATUS_BADGE = DOCUMENT_STATUS_BADGE;
+const PIPELINE_LABELS = PIPELINE_STAGE_LABEL;
+const DOC_TYPE_LABEL = DOCUMENT_TYPE_LABEL;
 
 function formatBytes(bytes: number): string {
   if (bytes < 1024) return `${bytes} B`;
@@ -124,7 +100,7 @@ const DocumentsWorkstation = ({ documents, loading, caseId }: DocumentsWorkstati
 
   // Stats
   const totalPages = documents.reduce((s, d) => s + (d.page_count ?? 0), 0);
-  const completeDocs = documents.filter((d) => d.document_status === "complete" || d.document_status === "extracted").length;
+  const completeDocs = documents.filter((d) => isDocumentReady(d.document_status)).length;
 
   return (
     <div className="flex h-[calc(100vh-180px)] -m-5 border-t border-border">
@@ -216,7 +192,7 @@ const DocumentsWorkstation = ({ documents, loading, caseId }: DocumentsWorkstati
           ) : (
             <div className="divide-y divide-border/30">
               {sorted.map((doc) => {
-                const status = STATUS_BADGE[doc.document_status] ?? STATUS_BADGE.uploaded;
+                const status = getDocumentStatusBadge(doc.document_status);
                 const isSelected = selectedDocId === doc.id;
                 return (
                   <button
@@ -239,7 +215,7 @@ const DocumentsWorkstation = ({ documents, loading, caseId }: DocumentsWorkstati
                         {doc.page_count && <span className="text-[10px] text-muted-foreground">{doc.page_count} pg</span>}
                       </div>
                       <div className="flex items-center gap-2 mt-1">
-                        <span className={`text-[8px] font-semibold uppercase tracking-wider px-1.5 py-0.5 rounded ${status.class}`}>
+                        <span className={`text-[8px] font-semibold uppercase tracking-wider px-1.5 py-0.5 rounded ${status.className}`}>
                           {status.label}
                         </span>
                         <span className="text-[9px] text-muted-foreground">
@@ -291,8 +267,8 @@ const DocumentsWorkstation = ({ documents, loading, caseId }: DocumentsWorkstati
           <div className="flex-1 overflow-y-auto p-4 space-y-4">
             {/* Metadata grid */}
             <div className="grid grid-cols-2 gap-3">
-              <MetaItem label="Status" value={STATUS_BADGE[selectedDoc.document_status]?.label ?? selectedDoc.document_status} />
-              <MetaItem label="Pipeline Stage" value={PIPELINE_LABELS[selectedDoc.pipeline_stage] ?? selectedDoc.pipeline_stage} />
+              <MetaItem label="Status" value={getDocumentStatusBadge(selectedDoc.document_status).label} />
+              <MetaItem label="Pipeline Stage" value={getPipelineStageLabel(selectedDoc.pipeline_stage)} />
               <MetaItem label="Uploaded" value={formatDate(selectedDoc.created_at)} />
               <MetaItem label="Extracted" value={selectedDoc.extracted_at ? formatDate(selectedDoc.extracted_at) : "Pending"} />
             </div>
