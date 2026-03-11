@@ -1,9 +1,9 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useCallback } from "react";
 import { format, parseISO, differenceInDays } from "date-fns";
 import {
   Activity, Calendar, Users, AlertTriangle, CheckCircle2, Edit3,
   HelpCircle, Copy, Link2, Unlink, FileText, ChevronDown, ChevronRight,
-  Filter, Clock, DollarSign, Stethoscope, Search, X,
+  Filter, Clock, DollarSign, Stethoscope, Search, X, ShieldAlert,
 } from "lucide-react";
 import {
   type ReviewerTreatmentRecord,
@@ -14,6 +14,8 @@ import {
 } from "@/hooks/useReviewerTreatments";
 import { MOCK_TREATMENT_RECORDS } from "@/data/mock/treatmentRecords";
 import { useSourceDrawer } from "@/components/case/SourceDrawer";
+import { assessReadiness, getRecordIdsWithFlags, getFlagsForRecord, type ReviewFlag } from "@/lib/reviewReadiness";
+import ReviewReadinessPanel from "@/components/case/ReviewReadinessPanel";
 
 // ─── Types ──────────────────────────────────────────────
 
