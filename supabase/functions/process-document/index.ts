@@ -251,6 +251,9 @@ Deno.serve(async (req: Request) => {
     }
 
     // 5. Download file from storage
+    // EVIDENCE ZONE: Raw file bytes (L4 restricted_phi) — held in memory only
+    // for the duration of this function invocation. Never logged, never cached,
+    // never written to any destination other than document_pages.extracted_text.
     const { data: fileData, error: dlErr } = await supabase.storage
       .from("case-documents")
       .download(doc.storage_path);
