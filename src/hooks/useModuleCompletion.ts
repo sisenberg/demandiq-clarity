@@ -3,7 +3,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
 import type { ModuleCompletion, ModuleCompletionSnapshot } from "@/types";
-import { ModuleCompletionStatus } from "@/types";
+import { ModuleCompletionStatus, DependencyStatus } from "@/types";
 
 // ─── Queries ─────────────────────────────────────
 
