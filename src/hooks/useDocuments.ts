@@ -3,6 +3,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
 import { isIntakeProcessing } from "@/lib/statuses";
+import { useAuditLog } from "@/hooks/useAuditLog";
 export interface DocumentRow {
   id: string;
   tenant_id: string;
