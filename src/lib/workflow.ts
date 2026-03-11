@@ -102,10 +102,10 @@ export const DOC_STATUS_BADGE: Record<DocumentStatus, string> = {
 
 // ─── Workflow Phase Computation ───────────────────
 
-export type WorkflowPhase = "intake" | "processing" | "export";
+export type WorkflowPhase = "intake" | "processing" | "completion";
 export type PhaseState = "pending" | "active" | "complete" | "failed";
 
-const PHASE_ORDER: WorkflowPhase[] = ["intake", "processing", "export"];
+const PHASE_ORDER: WorkflowPhase[] = ["intake", "processing", "completion"];
 
 const STATUS_TO_PHASE: Record<CaseStatus, { phase: WorkflowPhase; state: PhaseState }> = {
   [CaseStatus.Draft]: { phase: "intake", state: "pending" },
