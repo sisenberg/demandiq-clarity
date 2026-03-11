@@ -192,7 +192,7 @@ const DocumentsWorkstation = ({ documents, loading, caseId }: DocumentsWorkstati
           ) : (
             <div className="divide-y divide-border/30">
               {sorted.map((doc) => {
-                const status = STATUS_BADGE[doc.document_status] ?? STATUS_BADGE.uploaded;
+                const status = getDocumentStatusBadge(doc.document_status);
                 const isSelected = selectedDocId === doc.id;
                 return (
                   <button
