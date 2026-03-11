@@ -4,9 +4,9 @@ import AppTopHeader from "./AppTopHeader";
 
 const MainLayout = () => {
   return (
-    <div className="flex h-screen w-full bg-background overflow-hidden">
+    <div className="flex h-screen w-full overflow-hidden">
       <AppSidebar />
-      <div className="flex-1 flex flex-col min-w-0">
+      <div className="flex-1 flex flex-col min-w-0 bg-background">
         <AppTopHeader />
         <main className="flex-1 overflow-y-auto">
           <Outlet />

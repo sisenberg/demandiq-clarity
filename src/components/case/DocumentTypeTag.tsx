@@ -14,9 +14,9 @@ const TYPE_LABELS: Record<string, string> = {
 
 const DocumentTypeTag = ({ type }: { type: string }) => {
   return (
-    <code className="text-[10px] bg-muted px-1.5 py-0.5 rounded text-foreground">
+    <span className="text-[10px] font-medium bg-accent text-muted-foreground px-2 py-0.5 rounded-full">
       {TYPE_LABELS[type] ?? type}
-    </code>
+    </span>
   );
 };
 

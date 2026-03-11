@@ -39,20 +39,20 @@ const CreateCaseDialog = ({ open, onClose }: CreateCaseDialogProps) => {
     navigate(`/cases/${result.id}`);
   };
 
-  const inputClass = "w-full px-3 py-2 text-sm border border-input rounded-md bg-background text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring";
-  const labelClass = "block text-xs font-medium text-foreground mb-1";
+  const inputClass = "w-full px-3.5 py-2.5 text-sm border border-input rounded-lg bg-card text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring/40 focus:border-primary transition-colors";
+  const labelClass = "block text-xs font-medium text-foreground mb-1.5";
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center">
-      <div className="absolute inset-0 bg-foreground/20" onClick={onClose} />
-      <div className="relative bg-card border border-border rounded-lg shadow-lg w-full max-w-lg mx-4">
-        <div className="flex items-center justify-between px-5 py-4 border-b border-border">
+      <div className="absolute inset-0 bg-foreground/30 backdrop-blur-sm" onClick={onClose} />
+      <div className="relative bg-card border border-border rounded-xl shadow-xl w-full max-w-lg mx-4">
+        <div className="flex items-center justify-between px-6 py-5 border-b border-border">
           <h2 className="text-sm font-semibold text-foreground">Create New Case</h2>
-          <button onClick={onClose} className="text-muted-foreground hover:text-foreground">
+          <button onClick={onClose} className="text-muted-foreground hover:text-foreground transition-colors">
             <X className="h-4 w-4" />
           </button>
         </div>
-        <form onSubmit={handleSubmit} className="px-5 py-4 flex flex-col gap-4">
+        <form onSubmit={handleSubmit} className="px-6 py-5 flex flex-col gap-4">
           <div className="grid grid-cols-2 gap-4">
             <div>
               <label className={labelClass}>Claim Number</label>
@@ -95,11 +95,11 @@ const CreateCaseDialog = ({ open, onClose }: CreateCaseDialogProps) => {
               </select>
             </div>
           </div>
-          <div className="flex justify-end gap-2 pt-2 border-t border-border">
-            <button type="button" onClick={onClose} className="px-4 py-2 text-xs font-medium rounded-md border border-border bg-card text-foreground hover:bg-accent transition-colors">
+          <div className="flex justify-end gap-2.5 pt-4 border-t border-border">
+            <button type="button" onClick={onClose} className="px-4 py-2.5 text-xs font-medium rounded-lg border border-border bg-card text-foreground hover:bg-accent transition-colors">
               Cancel
             </button>
-            <button type="submit" disabled={createCase.isPending} className="px-4 py-2 text-xs font-medium rounded-md bg-primary text-primary-foreground hover:bg-primary/90 transition-colors disabled:opacity-50">
+            <button type="submit" disabled={createCase.isPending} className="px-4 py-2.5 text-xs font-medium rounded-lg bg-primary text-primary-foreground hover:bg-primary/90 transition-colors disabled:opacity-50 shadow-sm">
               {createCase.isPending ? "Creating…" : "Create Case"}
             </button>
           </div>

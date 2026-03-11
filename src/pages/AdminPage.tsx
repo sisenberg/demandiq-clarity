@@ -44,14 +44,12 @@ const AdminPage = () => {
 
   const loadUsers = async () => {
     setLoadingUsers(true);
-    // Fetch profiles in same tenant
     const { data: profiles } = await supabase
       .from("profiles")
       .select("id, email, display_name, tenant_id");
 
     if (!profiles) { setLoadingUsers(false); return; }
 
-    // Fetch roles
     const userIds = profiles.map((p) => p.id);
     const { data: roles } = await supabase
       .from("user_roles")
@@ -87,32 +85,32 @@ const AdminPage = () => {
 
   const tabs = [
     { key: "users" as const, label: "Users", icon: Users },
-    { key: "permissions" as const, label: "Permissions Matrix", icon: ShieldCheck },
+    { key: "permissions" as const, label: "Permissions", icon: ShieldCheck },
     { key: "settings" as const, label: "Settings", icon: Settings },
   ];
 
   return (
-    <div className="p-6 max-w-6xl">
+    <div className="p-8 max-w-7xl">
       <div className="mb-6">
-        <h1 className="text-lg font-semibold text-foreground">Admin</h1>
+        <h1 className="text-xl font-semibold text-foreground tracking-tight">Admin</h1>
         <p className="text-sm text-muted-foreground mt-0.5">
           CasualtyIQ platform administration
         </p>
       </div>
 
       {/* Tabs */}
-      <div className="flex gap-1 border-b border-border mb-6">
+      <div className="flex gap-1 mb-6 p-1 bg-muted rounded-lg w-fit">
         {tabs.map((t) => (
           <button
             key={t.key}
             onClick={() => setTab(t.key)}
-            className={`flex items-center gap-2 px-4 py-2.5 text-sm transition-colors border-b-2 -mb-px ${
+            className={`flex items-center gap-2 px-4 py-2 text-xs font-medium rounded-md transition-all ${
               tab === t.key
-                ? "border-primary text-foreground font-medium"
-                : "border-transparent text-muted-foreground hover:text-foreground"
+                ? "bg-card text-foreground shadow-sm"
+                : "text-muted-foreground hover:text-foreground"
             }`}
           >
-            <t.icon className="h-4 w-4" />
+            <t.icon className="h-3.5 w-3.5" />
             {t.label}
           </button>
         ))}
@@ -120,48 +118,48 @@ const AdminPage = () => {
 
       {/* Users Tab */}
       {tab === "users" && (
-        <div className="border border-border rounded-lg bg-card overflow-hidden">
+        <div className="card-elevated overflow-hidden">
           {tenant && (
-            <div className="px-4 py-3 border-b border-border bg-muted/50 flex items-center gap-2">
+            <div className="px-5 py-3.5 border-b border-border bg-muted/30 flex items-center gap-2">
               <Building2 className="h-4 w-4 text-muted-foreground" />
               <span className="text-sm font-medium text-foreground">{tenant.name}</span>
-              <code className="text-[10px] bg-muted px-1.5 py-0.5 rounded text-muted-foreground ml-2">
+              <code className="text-[10px] bg-accent px-2 py-0.5 rounded-full text-muted-foreground ml-2">
                 {tenant.slug}
               </code>
             </div>
           )}
           <table className="w-full text-sm">
             <thead>
-              <tr className="border-b border-border text-left">
-                <th className="px-4 py-3 text-xs font-medium text-muted-foreground uppercase tracking-wider">User</th>
-                <th className="px-4 py-3 text-xs font-medium text-muted-foreground uppercase tracking-wider">Email</th>
-                <th className="px-4 py-3 text-xs font-medium text-muted-foreground uppercase tracking-wider">Role</th>
+              <tr className="border-b border-border text-left bg-muted/30">
+                <th className="px-5 py-3 text-xs font-medium text-muted-foreground uppercase tracking-wider">User</th>
+                <th className="px-5 py-3 text-xs font-medium text-muted-foreground uppercase tracking-wider">Email</th>
+                <th className="px-5 py-3 text-xs font-medium text-muted-foreground uppercase tracking-wider">Role</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-border">
               {loadingUsers ? (
                 <tr>
-                  <td colSpan={3} className="px-4 py-8 text-center text-sm text-muted-foreground">
+                  <td colSpan={3} className="px-5 py-10 text-center text-sm text-muted-foreground">
                     Loading users…
                   </td>
                 </tr>
               ) : users.length === 0 ? (
                 <tr>
-                  <td colSpan={3} className="px-4 py-8 text-center text-sm text-muted-foreground">
+                  <td colSpan={3} className="px-5 py-10 text-center text-sm text-muted-foreground">
                     No users found.
                   </td>
                 </tr>
               ) : (
                 users.map((u) => (
-                  <tr key={u.id} className="hover:bg-accent/50 transition-colors">
-                    <td className="px-4 py-3 font-medium text-foreground">{u.display_name}</td>
-                    <td className="px-4 py-3 text-muted-foreground">{u.email}</td>
-                    <td className="px-4 py-3">
+                  <tr key={u.id} className="hover:bg-accent/30 transition-colors">
+                    <td className="px-5 py-3.5 font-medium text-foreground">{u.display_name}</td>
+                    <td className="px-5 py-3.5 text-muted-foreground">{u.email}</td>
+                    <td className="px-5 py-3.5">
                       {hasPermission(role, "manage_users") ? (
                         <select
                           value={u.role}
                           onChange={(e) => handleRoleChange(u.id, e.target.value as AppRole)}
-                          className="text-xs border border-input rounded-md bg-background text-foreground px-2 py-1 focus:outline-none focus:ring-2 focus:ring-ring"
+                          className="text-xs border border-input rounded-lg bg-card text-foreground px-2.5 py-1.5 focus:outline-none focus:ring-2 focus:ring-ring/40"
                         >
                           {ALL_ROLES.map((r) => (
                             <option key={r} value={r}>{ROLE_LABELS[r]}</option>
@@ -179,17 +177,17 @@ const AdminPage = () => {
         </div>
       )}
 
-      {/* Permissions Matrix Tab */}
+      {/* Permissions Matrix */}
       {tab === "permissions" && (
-        <div className="border border-border rounded-lg bg-card overflow-hidden overflow-x-auto">
+        <div className="card-elevated overflow-hidden overflow-x-auto">
           <table className="w-full text-sm">
             <thead>
-              <tr className="border-b border-border text-left">
-                <th className="px-4 py-3 text-xs font-medium text-muted-foreground uppercase tracking-wider sticky left-0 bg-card z-10">
+              <tr className="border-b border-border text-left bg-muted/30">
+                <th className="px-5 py-3 text-xs font-medium text-muted-foreground uppercase tracking-wider sticky left-0 bg-muted/30 z-10">
                   Permission
                 </th>
                 {ALL_ROLES.map((r) => (
-                  <th key={r} className="px-4 py-3 text-xs font-medium text-muted-foreground uppercase tracking-wider text-center whitespace-nowrap">
+                  <th key={r} className="px-5 py-3 text-xs font-medium text-muted-foreground uppercase tracking-wider text-center whitespace-nowrap">
                     {ROLE_LABELS[r]}
                   </th>
                 ))}
@@ -197,18 +195,18 @@ const AdminPage = () => {
             </thead>
             <tbody className="divide-y divide-border">
               {MATRIX_PERMISSIONS.map((perm) => (
-                <tr key={perm} className="hover:bg-accent/50 transition-colors">
-                  <td className="px-4 py-2.5 font-medium text-foreground sticky left-0 bg-card whitespace-nowrap">
+                <tr key={perm} className="hover:bg-accent/30 transition-colors">
+                  <td className="px-5 py-3 font-medium text-foreground sticky left-0 bg-card whitespace-nowrap">
                     {PERMISSION_LABELS[perm]}
                   </td>
                   {ALL_ROLES.map((r) => {
                     const allowed = ROLE_PERMISSIONS[r].has(perm);
                     return (
-                      <td key={r} className="px-4 py-2.5 text-center">
+                      <td key={r} className="px-5 py-3 text-center">
                         {allowed ? (
                           <Check className="h-4 w-4 text-[hsl(var(--status-approved))] mx-auto" />
                         ) : (
-                          <X className="h-4 w-4 text-muted-foreground/30 mx-auto" />
+                          <X className="h-4 w-4 text-muted-foreground/20 mx-auto" />
                         )}
                       </td>
                     );
@@ -220,19 +218,18 @@ const AdminPage = () => {
         </div>
       )}
 
-      {/* Settings Tab */}
+      {/* Settings */}
       {tab === "settings" && (
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           {[
             { label: "Tenant Settings", description: "Organization name, slug, and configuration", icon: Building2 },
             { label: "System Settings", description: "Extraction defaults, export formats, integrations", icon: Settings },
           ].map((section) => (
-            <div
-              key={section.label}
-              className="border border-border rounded-lg bg-card px-4 py-4 hover:bg-accent/50 transition-colors cursor-pointer"
-            >
-              <div className="flex items-start gap-3">
-                <section.icon className="h-5 w-5 text-primary mt-0.5 shrink-0" />
+            <div key={section.label} className="card-elevated-hover px-5 py-5 cursor-pointer">
+              <div className="flex items-start gap-3.5">
+                <div className="h-9 w-9 rounded-lg bg-accent flex items-center justify-center shrink-0">
+                  <section.icon className="h-4 w-4 text-primary" />
+                </div>
                 <div>
                   <p className="text-sm font-medium text-foreground">{section.label}</p>
                   <p className="text-xs text-muted-foreground mt-0.5">{section.description}</p>

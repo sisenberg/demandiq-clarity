@@ -14,8 +14,8 @@ export default {
     },
     extend: {
       fontFamily: {
-        sans: ["'Source Sans 3'", "system-ui", "sans-serif"],
-        mono: ["'Source Code Pro'", "monospace"],
+        sans: ["'Inter'", "system-ui", "-apple-system", "sans-serif"],
+        mono: ["'JetBrains Mono'", "monospace"],
       },
       colors: {
         border: "hsl(var(--border))",
@@ -61,6 +61,15 @@ export default {
           draft: "hsl(var(--status-draft))",
           "draft-bg": "hsl(var(--status-draft-bg))",
           "draft-foreground": "hsl(var(--status-draft-foreground))",
+          processing: "hsl(var(--status-processing))",
+          "processing-bg": "hsl(var(--status-processing-bg))",
+          "processing-foreground": "hsl(var(--status-processing-foreground))",
+          failed: "hsl(var(--status-failed))",
+          "failed-bg": "hsl(var(--status-failed-bg))",
+          "failed-foreground": "hsl(var(--status-failed-foreground))",
+          attention: "hsl(var(--status-attention))",
+          "attention-bg": "hsl(var(--status-attention-bg))",
+          "attention-foreground": "hsl(var(--status-attention-foreground))",
         },
         sidebar: {
           DEFAULT: "hsl(var(--sidebar-background))",
@@ -71,6 +80,7 @@ export default {
           "accent-foreground": "hsl(var(--sidebar-accent-foreground))",
           border: "hsl(var(--sidebar-border))",
           ring: "hsl(var(--sidebar-ring))",
+          muted: "hsl(var(--sidebar-muted))",
         },
       },
       borderRadius: {
