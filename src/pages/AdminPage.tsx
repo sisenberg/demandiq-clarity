@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Settings, Users, ShieldCheck, Check, X, Building2, Blocks } from "lucide-react";
+import { Settings, Users, ShieldCheck, Check, X, Building2, Blocks, ShieldAlert } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/lib/supabase";
 import RoleBadge from "@/components/ui/RoleBadge";
