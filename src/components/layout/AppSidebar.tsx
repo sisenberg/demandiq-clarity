@@ -44,7 +44,7 @@ const adminNavItems = [
 
 const AppSidebar = () => {
   const location = useLocation();
-  const { role, profile } = useAuth();
+  const { role, profile, tenantModules } = useAuth();
   const [collapsed, setCollapsed] = useState(false);
 
   const isActive = (path: string) => {
@@ -54,7 +54,7 @@ const AppSidebar = () => {
 
   const visibleCore = coreNavItems.filter((item) => canAccessRoute(role, item.path));
   const visibleAdmin = adminNavItems.filter((item) => canAccessRoute(role, item.path));
-  const comingSoonModules = MODULES.filter((m) => m.comingSoon);
+  const lockedModules = getLockedModules(tenantModules);
 
   return (
     <aside className={`h-screen bg-sidebar flex flex-col shrink-0 transition-all duration-200 ${collapsed ? "w-16" : "w-[var(--sidebar-width)]"}`}>
