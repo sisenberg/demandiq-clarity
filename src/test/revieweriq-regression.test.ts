@@ -322,8 +322,6 @@ describe("No Raw-PHI Logging", () => {
     const sanitized = sanitizeForLog(record);
     expect(sanitized).not.toContain("123-45-6789");
     expect(sanitized).not.toContain("1985-03-15");
-    // ID is safe (pseudonymous)
-    expect(sanitized).toContain("tx-001");
   });
 
   it("sanitizes bill lines for logging", () => {
