@@ -22,7 +22,8 @@ export type CaseSection =
   | "chat"
   | "documents"
   | "sources"
-  | "entities";
+  | "entities"
+  | "chronology";
 
 const NAV_ITEMS: { key: CaseSection; label: string; icon: React.ElementType }[] = [
   { key: "overview", label: "Overview", icon: LayoutDashboard },
