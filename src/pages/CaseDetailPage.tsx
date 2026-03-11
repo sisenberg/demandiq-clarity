@@ -6,6 +6,7 @@ import { useCaseJobs } from "@/hooks/useJobs";
 import { useTriggerProcessing } from "@/hooks/useJobs";
 import { useAuth } from "@/contexts/AuthContext";
 import { hasPermission } from "@/lib/permissions";
+import { CasePackageProvider } from "@/hooks/useCasePackage";
 import DocumentUpload from "@/components/case/DocumentUpload";
 import JobsPanel from "@/components/case/JobsPanel";
 import ProcessingPipeline from "@/components/case/ProcessingPipeline";
