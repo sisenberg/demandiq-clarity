@@ -346,7 +346,7 @@ function CandidateRow({
             <div className="flex items-center gap-0.5 ml-auto opacity-0 group-hover:opacity-100 transition-opacity">
               {candidate.status === "draft" && (
                 <button
-                  onClick={() => updateStatus.mutate({ candidateId: candidate.id, status: "accepted", caseId })}
+                  onClick={() => handleStatusChange("accepted")}
                   className="p-1 rounded text-muted-foreground/50 hover:text-[hsl(var(--status-approved))] hover:bg-accent transition-colors"
                   title="Accept"
                 >
@@ -355,7 +355,7 @@ function CandidateRow({
               )}
               {candidate.status === "accepted" && (
                 <button
-                  onClick={() => updateStatus.mutate({ candidateId: candidate.id, status: "draft", caseId })}
+                  onClick={() => handleStatusChange("draft")}
                   className="p-1 rounded text-muted-foreground/50 hover:text-foreground hover:bg-accent transition-colors"
                   title="Revert to draft"
                 >
@@ -373,11 +373,7 @@ function CandidateRow({
                 <Pencil className="h-3 w-3" />
               </button>
               <button
-                onClick={() => updateStatus.mutate({
-                  candidateId: candidate.id,
-                  status: candidate.status === "suppressed" ? "draft" : "suppressed",
-                  caseId,
-                })}
+                onClick={() => handleStatusChange(candidate.status === "suppressed" ? "draft" : "suppressed")}
                 className="p-1 rounded text-muted-foreground/50 hover:text-foreground hover:bg-accent transition-colors"
                 title={candidate.status === "suppressed" ? "Restore" : "Suppress"}
               >
