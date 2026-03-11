@@ -20,7 +20,9 @@ import {
 } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { canAccessRoute } from "@/lib/permissions";
-import { MODULES, getLockedModules } from "@/lib/modules";
+import { MODULES } from "@/lib/modules";
+import { EntitlementStatus } from "@/types";
+import { getEntitlementStatus } from "@/hooks/useModuleEntitlements";
 
 const MODULE_ICONS: Record<string, React.ElementType> = {
   Stethoscope,
