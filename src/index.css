@@ -316,7 +316,8 @@
     @apply bg-accent/25;
   }
   .interactive-row.selected {
-    @apply bg-primary/4 border-l-2 border-l-primary;
+    background-color: hsl(var(--primary) / 0.04);
+    @apply border-l-2 border-l-primary;
   }
 
   /* ─── Panel header ─────────────────────────── */
