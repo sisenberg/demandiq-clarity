@@ -35,7 +35,7 @@ const App = () => (
                 </ProtectedRoute>
               }
             >
-              <Route path="/" element={<Dashboard />} />
+              <Route path="/" element={<CasesPage />} />
               <Route path="/cases" element={<CasesPage />} />
               <Route path="/cases/new" element={<NewCasePage />} />
               <Route path="/cases/:caseId" element={<CaseDetailPage />} />
