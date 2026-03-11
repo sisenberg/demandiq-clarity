@@ -7,24 +7,28 @@
 import { useState, useMemo, useCallback } from "react";
 import {
   Stethoscope, DollarSign, AlertTriangle, FileText, BarChart3,
-  CheckCircle2, ClipboardList,
+  CheckCircle2, ClipboardList, Microscope,
 } from "lucide-react";
 import TreatmentTimeline from "@/components/case/TreatmentTimeline";
 import ReviewerIssueWorkspace from "@/components/case/ReviewerIssueWorkspace";
 import FinancialReviewSummary from "@/components/case/FinancialReviewSummary";
 import BillLineReviewTable from "@/components/case/BillLineReviewTable";
+import SpecialtyReviewTab from "@/components/case/SpecialtyReviewTab";
 import type { ReviewIssueDisposition } from "@/types/reviewer-issues";
+import type { ReviewerOverride } from "@/types/specialty-review";
 import { MOCK_BILL_LINES, MOCK_BILL_HEADERS } from "@/data/mock/reviewerBillLines";
 import { MOCK_TREATMENT_RECORDS } from "@/data/mock/treatmentRecords";
 import { runMedicalReviewRules } from "@/lib/medicalReviewRules";
+import { runSpecialtyReview } from "@/lib/specialtyReviewEngine";
 
-type MedicalReviewTab = "treatments" | "issues" | "bills" | "financial";
+type MedicalReviewTab = "treatments" | "issues" | "bills" | "financial" | "specialty";
 
 const TABS: { key: MedicalReviewTab; label: string; icon: React.ElementType }[] = [
   { key: "treatments", label: "Treatment Timeline", icon: Stethoscope },
   { key: "issues", label: "Review Issues", icon: AlertTriangle },
   { key: "bills", label: "Bill Lines", icon: ClipboardList },
   { key: "financial", label: "Financial Summary", icon: BarChart3 },
+  { key: "specialty", label: "Specialty Review", icon: Microscope },
 ];
 
 interface MedicalReviewWorkspaceProps {
@@ -39,6 +43,25 @@ export default function MedicalReviewWorkspace({ caseId }: MedicalReviewWorkspac
   const issues = useMemo(() => {
     return runMedicalReviewRules(MOCK_TREATMENT_RECORDS, billLines);
   }, [billLines]);
+
+  // Run specialty review
+  const specialtyResult = useMemo(() => {
+    return runSpecialtyReview(MOCK_TREATMENT_RECORDS, billLines);
+  }, [billLines]);
+
+  const [specialtyRecs, setSpecialtyRecs] = useState(specialtyResult.recommendations);
+
+  useMemo(() => {
+    setSpecialtyRecs(specialtyResult.recommendations);
+  }, [specialtyResult]);
+
+  const handleSpecialtyOverride = useCallback((recId: string, override: ReviewerOverride) => {
+    setSpecialtyRecs(prev => prev.map(r =>
+      r.id === recId
+        ? { ...r, reviewer_override: override, support_level: override.override_support_level, updated_at: new Date().toISOString() }
+        : r
+    ));
+  }, []);
 
   const [reviewIssues, setReviewIssues] = useState(issues);
 
@@ -76,6 +99,7 @@ export default function MedicalReviewWorkspace({ caseId }: MedicalReviewWorkspac
 
   const pendingIssues = reviewIssues.filter(i => i.disposition === "pending").length;
   const pendingBills = billLines.filter(l => l.disposition === "pending").length;
+  const escalationCount = specialtyRecs.filter(r => r.escalation_required).length;
 
   return (
     <div className="flex flex-col gap-4">
@@ -83,7 +107,7 @@ export default function MedicalReviewWorkspace({ caseId }: MedicalReviewWorkspac
       <div className="flex items-center gap-1 bg-accent/30 rounded-lg p-1">
         {TABS.map(tab => {
           const isActive = activeTab === tab.key;
-          const badge = tab.key === "issues" ? pendingIssues : tab.key === "bills" ? pendingBills : 0;
+          const badge = tab.key === "issues" ? pendingIssues : tab.key === "bills" ? pendingBills : tab.key === "specialty" ? escalationCount : 0;
           return (
             <button
               key={tab.key}
@@ -111,6 +135,13 @@ export default function MedicalReviewWorkspace({ caseId }: MedicalReviewWorkspac
       {activeTab === "issues" && <ReviewerIssueWorkspace issues={reviewIssues} onDisposition={handleDisposition} />}
       {activeTab === "bills" && <BillLineReviewTable billLines={billLines} onDisposition={handleBillDisposition} />}
       {activeTab === "financial" && <FinancialReviewSummary billLines={billLines} issues={reviewIssues} />}
+      {activeTab === "specialty" && (
+        <SpecialtyReviewTab
+          episodes={specialtyResult.episodes}
+          recommendations={specialtyRecs}
+          onOverride={handleSpecialtyOverride}
+        />
+      )}
     </div>
   );
 }
