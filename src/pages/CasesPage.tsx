@@ -436,8 +436,8 @@ const CasesPage = () => {
                     {/* DOI */}
                     <span className="text-[11px] text-muted-foreground">{formatDate(c.date_of_loss)}</span>
 
-                    {/* Claim # */}
-                    <span className="text-[11px] text-muted-foreground font-mono truncate">{c.claim_number || "—"}</span>
+                    {/* Claim # — masked in list view */}
+                    <span className="text-[11px] text-muted-foreground font-mono truncate">{c.claim_number ? maskClaimNumber(c.claim_number) : "—"}</span>
 
                     {/* Module status */}
                     <div className="flex items-center gap-1.5">
