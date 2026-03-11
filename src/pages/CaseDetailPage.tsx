@@ -40,6 +40,7 @@ import {
   ClipboardCheck,
   PanelRightClose,
   PanelRightOpen,
+  CheckCircle2,
   Inbox,
 } from "lucide-react";
 
