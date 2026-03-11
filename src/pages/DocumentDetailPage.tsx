@@ -82,9 +82,15 @@ const DocumentDetailPage = () => {
 
   return (
     <div className="p-8 max-w-6xl">
-      <Link to={`/cases/${doc.case_id}`} className="text-xs text-primary hover:text-primary/80 flex items-center gap-1 mb-5 font-medium transition-colors">
-        <ArrowLeft className="h-3.5 w-3.5" /> Back to Case
-      </Link>
+      <div className="flex items-center gap-3 mb-5">
+        <Link to={`/cases/${doc.case_id}`} className="text-xs text-primary hover:text-primary/80 flex items-center gap-1 font-medium transition-colors">
+          <ArrowLeft className="h-3.5 w-3.5" /> Back to Case
+        </Link>
+        <span className="text-border">|</span>
+        <Link to={`/cases/${doc.case_id}`} state={{ openReview: doc.id }} className="text-xs text-primary hover:text-primary/80 flex items-center gap-1 font-medium transition-colors">
+          <FileText className="h-3.5 w-3.5" /> Open in Review Workspace
+        </Link>
+      </div>
 
       {/* Header Card */}
       <div className="card-elevated px-6 py-5 mb-6">
