@@ -331,6 +331,11 @@ const AdminPage = () => {
         </div>
       )}
 
+      {/* Compliance Tab */}
+      {tab === "compliance" && (
+        <PhiReadinessPanel />
+      )}
+
       {/* Settings */}
       {tab === "settings" && (
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
