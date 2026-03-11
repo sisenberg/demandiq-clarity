@@ -51,7 +51,7 @@ const OverviewCards = ({ caseData, documents }: OverviewCardsProps) => {
   const stats = getTreatmentStats(pkg);
 
   const completeDocs = documents.filter(
-    (d) => d.document_status === "complete" || d.document_status === "extracted"
+    (d) => isDocumentReady(d.document_status)
   ).length;
 
   // Get first two evidence refs for the case summary
