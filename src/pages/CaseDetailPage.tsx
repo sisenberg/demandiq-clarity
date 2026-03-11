@@ -16,6 +16,9 @@ import {
   Cog,
   Play,
   Upload,
+  Calendar,
+  MapPin,
+  Hash,
 } from "lucide-react";
 
 const CASE_STATUS_LABEL: Record<string, string> = {
@@ -79,12 +82,12 @@ const CaseDetailPage = () => {
   const [expandedDoc, setExpandedDoc] = useState<string | null>(null);
 
   if (caseLoading) {
-    return <div className="p-6"><p className="text-sm text-muted-foreground">Loading…</p></div>;
+    return <div className="p-8"><p className="text-sm text-muted-foreground">Loading…</p></div>;
   }
 
   if (!caseData) {
     return (
-      <div className="p-6">
+      <div className="p-8">
         <Link to="/cases" className="text-sm text-primary hover:underline flex items-center gap-1 mb-4">
           <ArrowLeft className="h-4 w-4" /> Back to Cases
         </Link>
@@ -94,54 +97,67 @@ const CaseDetailPage = () => {
   }
 
   return (
-    <div className="p-6 max-w-6xl">
-      {/* Header */}
-      <Link to="/cases" className="text-sm text-primary hover:underline flex items-center gap-1 mb-4">
-        <ArrowLeft className="h-4 w-4" /> Back to Cases
+    <div className="p-8 max-w-7xl">
+      {/* Back */}
+      <Link to="/cases" className="text-xs text-primary hover:text-primary/80 flex items-center gap-1 mb-5 font-medium transition-colors">
+        <ArrowLeft className="h-3.5 w-3.5" /> Back to Cases
       </Link>
 
-      <div className="flex items-start justify-between mb-4">
-        <div>
-          <h1 className="text-lg font-semibold text-foreground">
-            {caseData.title || `${caseData.claimant} v. ${caseData.insured}`}
-          </h1>
-          <div className="flex items-center gap-3 mt-1 text-xs text-muted-foreground flex-wrap">
-            <span>{caseData.case_number}</span>
-            {caseData.claim_number && <><span>·</span><span>Claim: {caseData.claim_number}</span></>}
-            {caseData.date_of_loss && <><span>·</span><span>DOL: {caseData.date_of_loss}</span></>}
-            <span>·</span>
-            <span>{caseData.claimant} v. {caseData.insured}</span>
-            {caseData.jurisdiction_state && <><span>·</span><span>{caseData.jurisdiction_state}</span></>}
+      {/* Case Header Card */}
+      <div className="card-elevated px-6 py-5 mb-6">
+        <div className="flex items-start justify-between">
+          <div>
+            <h1 className="text-lg font-semibold text-foreground tracking-tight">
+              {caseData.title || `${caseData.claimant} v. ${caseData.insured}`}
+            </h1>
+            <div className="flex items-center gap-4 mt-2 flex-wrap">
+              <span className="flex items-center gap-1.5 text-xs text-muted-foreground">
+                <Hash className="h-3 w-3" /> {caseData.case_number}
+              </span>
+              {caseData.claim_number && (
+                <span className="text-xs text-muted-foreground">Claim: {caseData.claim_number}</span>
+              )}
+              {caseData.date_of_loss && (
+                <span className="flex items-center gap-1.5 text-xs text-muted-foreground">
+                  <Calendar className="h-3 w-3" /> DOL: {caseData.date_of_loss}
+                </span>
+              )}
+              {caseData.jurisdiction_state && (
+                <span className="flex items-center gap-1.5 text-xs text-muted-foreground">
+                  <MapPin className="h-3 w-3" /> {caseData.jurisdiction_state}
+                </span>
+              )}
+            </div>
           </div>
+          <span className={CASE_STATUS_BADGE[caseData.case_status] ?? "status-badge-draft"}>
+            {CASE_STATUS_LABEL[caseData.case_status] ?? caseData.case_status}
+          </span>
         </div>
-        <span className={CASE_STATUS_BADGE[caseData.case_status] ?? "status-badge-draft"}>
-          {CASE_STATUS_LABEL[caseData.case_status] ?? caseData.case_status}
-        </span>
+
+        {/* Actions */}
+        <div className="flex flex-wrap gap-2 mt-4 pt-4 border-t border-border">
+          {hasPermission(role, "upload_document") && (
+            <button
+              onClick={() => setShowUpload(true)}
+              className="flex items-center gap-1.5 text-xs font-medium px-3.5 py-2 rounded-lg border border-border bg-card text-foreground hover:bg-accent transition-colors"
+            >
+              <Upload className="h-3.5 w-3.5" /> Upload Documents
+            </button>
+          )}
+          {hasPermission(role, "trigger_processing") && documents.some((d) => d.document_status === "uploaded") && (
+            <button
+              onClick={() => triggerProcessing.mutate({ caseId: caseData.id })}
+              disabled={triggerProcessing.isPending}
+              className="flex items-center gap-1.5 text-xs font-medium px-3.5 py-2 rounded-lg bg-primary text-primary-foreground hover:bg-primary/90 transition-colors disabled:opacity-50 shadow-sm"
+            >
+              <Play className="h-3.5 w-3.5" /> Trigger Processing
+            </button>
+          )}
+        </div>
       </div>
 
-      {/* Action Bar */}
-      <div className="flex flex-wrap gap-2 mb-6">
-        {hasPermission(role, "upload_document") && (
-          <button
-            onClick={() => setShowUpload(true)}
-            className="flex items-center gap-1.5 text-xs font-medium px-3 py-1.5 rounded-md border border-border bg-card text-foreground hover:bg-accent transition-colors"
-          >
-            <Upload className="h-3.5 w-3.5" /> Upload Documents
-          </button>
-        )}
-        {hasPermission(role, "trigger_processing") && documents.some((d) => d.document_status === "uploaded") && (
-          <button
-            onClick={() => triggerProcessing.mutate({ caseId: caseData.id })}
-            disabled={triggerProcessing.isPending}
-            className="flex items-center gap-1.5 text-xs font-medium px-3 py-1.5 rounded-md bg-primary text-primary-foreground hover:bg-primary/90 transition-colors disabled:opacity-50"
-          >
-            <Play className="h-3.5 w-3.5" /> Trigger Processing
-          </button>
-        )}
-      </div>
-
-      {/* Stats */}
-      <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 mb-8">
+      {/* Stats Row */}
+      <div className="grid grid-cols-3 gap-4 mb-6">
         <StatCard icon={FileText} label="Documents" value={documents.length} />
         <StatCard icon={Cog} label="Jobs" value={jobs.length} />
         <StatCard
@@ -151,22 +167,29 @@ const CaseDetailPage = () => {
         />
       </div>
 
-      {/* Documents */}
-      <Section title="Documents" count={documents.length} loading={docsLoading}>
+      {/* Documents Card */}
+      <div className="card-elevated overflow-hidden mb-6">
+        <div className="px-5 py-4 border-b border-border flex items-center gap-2">
+          <FileText className="h-4 w-4 text-primary" />
+          <h2 className="text-sm font-semibold text-foreground">Documents</h2>
+          <span className="text-xs text-muted-foreground">({docsLoading ? "…" : documents.length})</span>
+        </div>
         {documents.length === 0 ? (
-          <div className="px-4 py-8 text-center">
-            <FileText className="h-8 w-8 mx-auto text-muted-foreground mb-2" />
+          <div className="px-5 py-12 text-center">
+            <div className="h-10 w-10 rounded-xl bg-accent mx-auto flex items-center justify-center mb-3">
+              <FileText className="h-5 w-5 text-muted-foreground" />
+            </div>
             <p className="text-xs text-muted-foreground">No documents uploaded yet.</p>
           </div>
         ) : (
           <table className="w-full text-sm">
             <thead>
-              <tr className="border-b border-border text-left">
-                <th className="px-4 py-2 text-xs font-medium text-muted-foreground uppercase tracking-wider">File</th>
-                <th className="px-4 py-2 text-xs font-medium text-muted-foreground uppercase tracking-wider">Type</th>
-                <th className="px-4 py-2 text-xs font-medium text-muted-foreground uppercase tracking-wider">Size</th>
-                <th className="px-4 py-2 text-xs font-medium text-muted-foreground uppercase tracking-wider">Pipeline</th>
-                <th className="px-4 py-2 text-xs font-medium text-muted-foreground uppercase tracking-wider">Status</th>
+              <tr className="border-b border-border text-left bg-muted/30">
+                <th className="px-5 py-2.5 text-xs font-medium text-muted-foreground uppercase tracking-wider">File</th>
+                <th className="px-5 py-2.5 text-xs font-medium text-muted-foreground uppercase tracking-wider">Type</th>
+                <th className="px-5 py-2.5 text-xs font-medium text-muted-foreground uppercase tracking-wider">Size</th>
+                <th className="px-5 py-2.5 text-xs font-medium text-muted-foreground uppercase tracking-wider">Pipeline</th>
+                <th className="px-5 py-2.5 text-xs font-medium text-muted-foreground uppercase tracking-wider">Status</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-border">
@@ -174,10 +197,10 @@ const CaseDetailPage = () => {
                 <>
                   <tr
                     key={doc.id}
-                    className="hover:bg-accent/50 transition-colors cursor-pointer"
+                    className="hover:bg-accent/30 transition-colors cursor-pointer"
                     onClick={() => setExpandedDoc(expandedDoc === doc.id ? null : doc.id)}
                   >
-                    <td className="px-4 py-2.5">
+                    <td className="px-5 py-3">
                       <Link
                         to={`/documents/${doc.id}`}
                         onClick={(e) => e.stopPropagation()}
@@ -186,14 +209,14 @@ const CaseDetailPage = () => {
                         {doc.file_name}
                       </Link>
                     </td>
-                    <td className="px-4 py-2.5"><DocumentTypeTag type={doc.document_type} /></td>
-                    <td className="px-4 py-2.5 text-muted-foreground">{formatBytes(doc.file_size_bytes)}</td>
-                    <td className="px-4 py-2.5">
-                      <code className="text-[10px] bg-muted px-1.5 py-0.5 rounded text-foreground">
+                    <td className="px-5 py-3"><DocumentTypeTag type={doc.document_type} /></td>
+                    <td className="px-5 py-3 text-muted-foreground">{formatBytes(doc.file_size_bytes)}</td>
+                    <td className="px-5 py-3">
+                      <code className="text-[10px] bg-accent px-2 py-0.5 rounded-full text-muted-foreground font-medium">
                         {doc.pipeline_stage.replace(/_/g, " ")}
                       </code>
                     </td>
-                    <td className="px-4 py-2.5">
+                    <td className="px-5 py-3">
                       <span className={DOC_STATUS_BADGE[doc.document_status] ?? "status-badge-draft"}>
                         {DOC_STATUS_LABEL[doc.document_status] ?? doc.document_status}
                       </span>
@@ -201,9 +224,9 @@ const CaseDetailPage = () => {
                   </tr>
                   {expandedDoc === doc.id && (
                     <tr key={`${doc.id}-pipeline`}>
-                      <td colSpan={5} className="px-4 py-3 bg-muted/30">
+                      <td colSpan={5} className="px-5 py-4 bg-muted/20">
                         <div className="max-w-xs">
-                          <p className="text-[10px] font-medium text-muted-foreground uppercase tracking-wider mb-2">Processing Pipeline</p>
+                          <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider mb-2">Processing Pipeline</p>
                           <ProcessingPipeline currentStage={doc.pipeline_stage} documentStatus={doc.document_status} />
                         </div>
                       </td>
@@ -214,7 +237,7 @@ const CaseDetailPage = () => {
             </tbody>
           </table>
         )}
-      </Section>
+      </div>
 
       {/* Jobs */}
       <div className="mb-8">
@@ -228,26 +251,12 @@ const CaseDetailPage = () => {
 
 function StatCard({ icon: Icon, label, value }: { icon: React.ElementType; label: string; value: number }) {
   return (
-    <div className="border border-border rounded-lg px-3 py-3 bg-card">
-      <div className="flex items-center gap-2 mb-1">
+    <div className="card-elevated px-4 py-3.5">
+      <div className="flex items-center gap-2 mb-1.5">
         <Icon className="h-3.5 w-3.5 text-muted-foreground" />
         <span className="text-[10px] font-medium text-muted-foreground uppercase tracking-wider">{label}</span>
       </div>
       <p className="text-xl font-semibold text-card-foreground">{value}</p>
-    </div>
-  );
-}
-
-function Section({ title, count, loading, children }: { title: string; count: number; loading?: boolean; children: React.ReactNode }) {
-  return (
-    <div className="mb-8">
-      <h2 className="text-sm font-semibold text-foreground mb-3 flex items-center gap-2">
-        {title}
-        <span className="text-xs font-normal text-muted-foreground">({loading ? "…" : count})</span>
-      </h2>
-      <div className="border border-border rounded-lg bg-card overflow-hidden">
-        {children}
-      </div>
     </div>
   );
 }

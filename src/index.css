@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Source+Sans+3:wght@300;400;500;600;700&family=Source+Code+Pro:wght@400;500;600&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap');
 
 @tailwind base;
 @tailwind components;
@@ -6,68 +6,77 @@
 
 @layer base {
   :root {
-    --background: 0 0% 100%;
-    --foreground: 210 15% 13%;
+    /* ─── Core Surfaces ──────────────────────────── */
+    --background: 210 20% 98%;
+    --foreground: 215 25% 14%;
 
-    --card: 214 30% 97%;
-    --card-foreground: 210 15% 13%;
+    --card: 0 0% 100%;
+    --card-foreground: 215 25% 14%;
 
     --popover: 0 0% 100%;
-    --popover-foreground: 210 15% 13%;
+    --popover-foreground: 215 25% 14%;
 
-    --primary: 214 100% 40%;
+    /* ─── Brand: Navy + Cyan ─────────────────────── */
+    --primary: 205 85% 48%;
     --primary-foreground: 0 0% 100%;
 
-    --secondary: 214 30% 97%;
-    --secondary-foreground: 210 15% 13%;
+    --secondary: 210 16% 95%;
+    --secondary-foreground: 215 25% 14%;
 
-    --muted: 214 30% 97%;
-    --muted-foreground: 215 14% 45%;
+    --muted: 210 16% 95%;
+    --muted-foreground: 215 14% 46%;
 
-    --accent: 214 30% 97%;
-    --accent-foreground: 210 15% 13%;
+    --accent: 210 16% 93%;
+    --accent-foreground: 215 25% 14%;
 
-    --destructive: 0 84% 60%;
+    --destructive: 0 72% 51%;
     --destructive-foreground: 0 0% 100%;
 
-    --border: 214 24% 90%;
-    --input: 214 24% 90%;
-    --ring: 214 100% 40%;
+    --border: 214 18% 91%;
+    --input: 214 18% 91%;
+    --ring: 205 85% 48%;
 
-    --radius: 0.375rem;
+    --radius: 0.5rem;
 
-    /* Status system */
-    --status-review: 40 100% 50%;
-    --status-review-bg: 40 100% 95%;
-    --status-review-foreground: 40 80% 25%;
-    --status-approved: 152 55% 47%;
-    --status-approved-bg: 152 55% 95%;
-    --status-approved-foreground: 152 55% 20%;
-    --status-draft: 214 24% 70%;
-    --status-draft-bg: 214 24% 95%;
-    --status-draft-foreground: 214 24% 35%;
-    --status-processing: 214 100% 50%;
-    --status-processing-bg: 214 100% 96%;
-    --status-processing-foreground: 214 80% 30%;
-    --status-failed: 0 84% 60%;
-    --status-failed-bg: 0 84% 96%;
-    --status-failed-foreground: 0 70% 30%;
-    --status-attention: 28 100% 55%;
-    --status-attention-bg: 28 100% 95%;
-    --status-attention-foreground: 28 80% 25%;
+    /* ─── Status System ──────────────────────────── */
+    --status-review: 40 96% 53%;
+    --status-review-bg: 40 96% 96%;
+    --status-review-foreground: 40 70% 28%;
 
-    /* Layout */
-    --sidebar-width: 280px;
+    --status-approved: 158 60% 44%;
+    --status-approved-bg: 158 60% 96%;
+    --status-approved-foreground: 158 50% 22%;
+
+    --status-draft: 215 14% 72%;
+    --status-draft-bg: 215 14% 96%;
+    --status-draft-foreground: 215 14% 38%;
+
+    --status-processing: 205 85% 48%;
+    --status-processing-bg: 205 85% 96%;
+    --status-processing-foreground: 205 70% 30%;
+
+    --status-failed: 0 72% 51%;
+    --status-failed-bg: 0 72% 97%;
+    --status-failed-foreground: 0 60% 32%;
+
+    --status-attention: 28 92% 52%;
+    --status-attention-bg: 28 92% 96%;
+    --status-attention-foreground: 28 70% 28%;
+
+    /* ─── Layout ─────────────────────────────────── */
+    --sidebar-width: 260px;
     --evidence-width: 420px;
 
-    --sidebar-background: 214 30% 97%;
-    --sidebar-foreground: 210 15% 13%;
-    --sidebar-primary: 214 100% 40%;
+    /* ─── Dark Sidebar ───────────────────────────── */
+    --sidebar-background: 220 30% 14%;
+    --sidebar-foreground: 210 20% 88%;
+    --sidebar-primary: 205 85% 48%;
     --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 214 30% 94%;
-    --sidebar-accent-foreground: 210 15% 13%;
-    --sidebar-border: 214 24% 90%;
-    --sidebar-ring: 214 100% 40%;
+    --sidebar-accent: 220 25% 20%;
+    --sidebar-accent-foreground: 210 20% 95%;
+    --sidebar-border: 220 25% 22%;
+    --sidebar-ring: 205 85% 48%;
+    --sidebar-muted: 220 20% 36%;
   }
 }
 
@@ -77,7 +86,8 @@
   }
 
   body {
-    @apply bg-background text-foreground font-sans antialiased;
+    @apply bg-background text-foreground antialiased;
+    font-family: 'Inter', system-ui, -apple-system, sans-serif;
   }
 
   h1, h2, h3, h4, h5, h6 {
@@ -87,54 +97,68 @@
 
 @layer components {
   .evidence-text {
-    font-family: 'Source Code Pro', monospace;
+    font-family: 'JetBrains Mono', monospace;
   }
 
+  /* ─── Status Badges ──────────────────────────── */
   .status-badge-review {
-    @apply text-xs font-medium px-2 py-0.5 rounded;
+    @apply text-[11px] font-medium px-2 py-0.5 rounded-full;
     background-color: hsl(var(--status-review-bg));
     color: hsl(var(--status-review-foreground));
-    border: 1px solid hsl(var(--status-review) / 0.3);
+    border: 1px solid hsl(var(--status-review) / 0.25);
   }
 
   .status-badge-approved {
-    @apply text-xs font-medium px-2 py-0.5 rounded;
+    @apply text-[11px] font-medium px-2 py-0.5 rounded-full;
     background-color: hsl(var(--status-approved-bg));
     color: hsl(var(--status-approved-foreground));
-    border: 1px solid hsl(var(--status-approved) / 0.3);
+    border: 1px solid hsl(var(--status-approved) / 0.25);
   }
 
   .status-badge-draft {
-    @apply text-xs font-medium px-2 py-0.5 rounded;
+    @apply text-[11px] font-medium px-2 py-0.5 rounded-full;
     background-color: hsl(var(--status-draft-bg));
     color: hsl(var(--status-draft-foreground));
-    border: 1px solid hsl(var(--status-draft) / 0.3);
+    border: 1px solid hsl(var(--status-draft) / 0.25);
   }
 
   .status-badge-processing {
-    @apply text-xs font-medium px-2 py-0.5 rounded;
+    @apply text-[11px] font-medium px-2 py-0.5 rounded-full;
     background-color: hsl(var(--status-processing-bg));
     color: hsl(var(--status-processing-foreground));
-    border: 1px solid hsl(var(--status-processing) / 0.3);
+    border: 1px solid hsl(var(--status-processing) / 0.25);
   }
 
   .status-badge-failed {
-    @apply text-xs font-medium px-2 py-0.5 rounded;
+    @apply text-[11px] font-medium px-2 py-0.5 rounded-full;
     background-color: hsl(var(--status-failed-bg));
     color: hsl(var(--status-failed-foreground));
-    border: 1px solid hsl(var(--status-failed) / 0.3);
+    border: 1px solid hsl(var(--status-failed) / 0.25);
   }
 
   .status-badge-attention {
-    @apply text-xs font-medium px-2 py-0.5 rounded;
+    @apply text-[11px] font-medium px-2 py-0.5 rounded-full;
     background-color: hsl(var(--status-attention-bg));
     color: hsl(var(--status-attention-foreground));
-    border: 1px solid hsl(var(--status-attention) / 0.3);
+    border: 1px solid hsl(var(--status-attention) / 0.25);
   }
 
   .evidence-link-line {
     stroke: hsl(var(--primary));
     stroke-width: 1px;
     pointer-events: none;
+  }
+
+  /* ─── Card Elevation ─────────────────────────── */
+  .card-elevated {
+    @apply bg-card rounded-xl border border-border;
+    box-shadow: 0 1px 3px 0 rgb(0 0 0 / 0.04), 0 1px 2px -1px rgb(0 0 0 / 0.04);
+  }
+
+  .card-elevated-hover {
+    @apply card-elevated transition-shadow;
+  }
+  .card-elevated-hover:hover {
+    box-shadow: 0 4px 12px 0 rgb(0 0 0 / 0.06), 0 1px 3px -1px rgb(0 0 0 / 0.06);
   }
 }
