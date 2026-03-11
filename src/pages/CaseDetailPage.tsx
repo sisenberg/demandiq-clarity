@@ -251,6 +251,11 @@ const CaseDetailPage = () => {
                 <DetectedEntitiesPanel caseId={caseData.id} />
               )}
 
+              {/* ── MEDICAL REVIEW ────────────────── */}
+              {activeSection === "medical-review" && (
+                <TreatmentTimeline caseId={caseData.id} />
+              )}
+
               {/* ── CHAT ──────────────────────────── */}
               {activeSection === "chat" && (
                 <CaseChatView />

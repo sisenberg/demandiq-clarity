@@ -438,9 +438,11 @@ function TreatmentRecordRow({
         </span>
 
         {/* Duplicate flag */}
-        {r.is_duplicate_suspect && (
-          <Copy className="h-3 w-3 text-[hsl(var(--status-review))] shrink-0" title="Possible duplicate" />
-        )}
+      {r.is_duplicate_suspect && (
+        <span title="Possible duplicate">
+          <Copy className="h-3 w-3 text-[hsl(var(--status-review))] shrink-0" />
+        </span>
+      )}
 
         {/* Source link */}
         <button
