@@ -19,7 +19,8 @@ export type Permission =
   | "upload_document"
   | "trigger_processing"
   | "edit_extraction"
-  | "export_package"
+  | "complete_module"
+  | "download_artifacts"
   | "manage_users"
   | "view_audit_log"
   | "assign_case"
@@ -33,7 +34,8 @@ export const ALL_PERMISSIONS: Permission[] = [
   "upload_document",
   "trigger_processing",
   "edit_extraction",
-  "export_package",
+  "complete_module",
+  "download_artifacts",
   "manage_users",
   "view_audit_log",
   "assign_case",
@@ -48,7 +50,8 @@ export const PERMISSION_LABELS: Record<Permission, string> = {
   upload_document: "Upload Document",
   trigger_processing: "Trigger Processing",
   edit_extraction: "Edit Extraction",
-  export_package: "Export Package",
+  complete_module: "Complete Module",
+  download_artifacts: "Download Artifacts",
   manage_users: "Manage Users",
   view_audit_log: "View Audit Log",
   assign_case: "Assign Case",
@@ -64,7 +67,8 @@ export const MATRIX_PERMISSIONS: Permission[] = [
   "upload_document",
   "trigger_processing",
   "edit_extraction",
-  "export_package",
+  "complete_module",
+  "download_artifacts",
   "manage_users",
   "view_audit_log",
 ];
@@ -72,12 +76,12 @@ export const MATRIX_PERMISSIONS: Permission[] = [
 export const ROLE_PERMISSIONS: Record<AppRole, Set<Permission>> = {
   admin: new Set<Permission>([
     "create_case", "upload_document", "trigger_processing", "edit_extraction",
-    "export_package", "manage_users", "view_audit_log", "assign_case",
+    "complete_module", "download_artifacts", "manage_users", "view_audit_log", "assign_case",
     "edit_case", "view_all_cases", "view_assigned_cases", "view_admin",
   ]),
   manager: new Set<Permission>([
     "create_case", "upload_document", "trigger_processing", "edit_extraction",
-    "export_package", "view_audit_log", "assign_case", "edit_case",
+    "complete_module", "download_artifacts", "view_audit_log", "assign_case", "edit_case",
     "view_all_cases", "view_assigned_cases",
   ]),
   reviewer: new Set<Permission>([
@@ -104,7 +108,7 @@ export function canAccessRoute(role: AppRole | null, route: string): boolean {
     case "/audit":
       return hasPermission(role, "view_audit_log");
     case "/exports":
-      return hasPermission(role, "export_package");
+      return hasPermission(role, "download_artifacts");
     default:
       return true;
   }

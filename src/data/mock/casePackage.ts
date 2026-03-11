@@ -533,8 +533,8 @@ const timelineEvents: TimelineEvent[] = [
   {
     id: "te-008", tenant_id: T, case_id: C,
     event_date: "2025-03-01", category: TimelineCategory.Demand,
-    label: "Demand Package Sent",
-    description: "Initial demand letter transmitted to carrier. Demand amount: $285,000. Supporting documentation included medical records, billing summary, and chronology.",
+    label: "Demand Completed",
+    description: "Demand letter finalized and transmitted to carrier. Demand amount: $285,000. Supporting documentation included medical records, billing summary, and chronology.",
     source_type: SourceType.Manual, review_state: ReviewState.Approved,
     evidence_refs: [evidenceRefs[14]],
     version: 1, created_at: "2025-03-01T16:00:00Z", updated_at: "2025-03-01T16:00:00Z",

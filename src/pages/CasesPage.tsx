@@ -14,7 +14,7 @@ const CASE_STATUS_LABEL: Record<string, string> = {
   intake_complete: "Intake Complete",
   processing_in_progress: "Processing",
   complete: "Complete",
-  exported: "Exported",
+  exported: "Demand Completed",
   closed: "Closed",
   failed: "Failed",
 };
@@ -25,7 +25,7 @@ const CASE_STATUS_BADGE: Record<string, string> = {
   intake_complete: "status-badge-approved",
   processing_in_progress: "status-badge-processing",
   complete: "status-badge-approved",
-  exported: "status-badge-draft",
+  exported: "status-badge-approved",
   closed: "status-badge-draft",
   failed: "status-badge-failed",
 };
@@ -40,7 +40,7 @@ const PRIORITY_BADGE: Record<string, string> = {
 const STATUS_GROUPS = [
   { label: "Intake", statuses: ["draft", "intake_in_progress", "intake_complete"] },
   { label: "Processing", statuses: ["processing_in_progress"] },
-  { label: "Ready to Export", statuses: ["complete"] },
+  { label: "Ready to Complete", statuses: ["complete"] },
   { label: "Completed", statuses: ["exported", "closed"] },
   { label: "Failed", statuses: ["failed"] },
 ];

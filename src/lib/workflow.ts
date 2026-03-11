@@ -14,7 +14,7 @@ export const CASE_STATUS_LABEL: Record<CaseStatus, string> = {
   [CaseStatus.IntakeComplete]: "Intake Complete",
   [CaseStatus.ProcessingInProgress]: "Processing",
   [CaseStatus.Complete]: "Complete",
-  [CaseStatus.Exported]: "Exported",
+  [CaseStatus.Exported]: "Demand Completed",
   [CaseStatus.Closed]: "Closed",
   [CaseStatus.Failed]: "Failed",
 };
@@ -25,7 +25,7 @@ export const CASE_STATUS_BADGE: Record<CaseStatus, string> = {
   [CaseStatus.IntakeComplete]: "status-badge-approved",
   [CaseStatus.ProcessingInProgress]: "status-badge-processing",
   [CaseStatus.Complete]: "status-badge-approved",
-  [CaseStatus.Exported]: "status-badge-draft",
+  [CaseStatus.Exported]: "status-badge-approved",
   [CaseStatus.Closed]: "status-badge-draft",
   [CaseStatus.Failed]: "status-badge-failed",
 };
@@ -65,7 +65,7 @@ export const CASE_ACTIONS: Record<CaseStatus, CaseAction[]> = {
     { label: "Mark Failed", targetStatus: CaseStatus.Failed, permission: "trigger_processing", variant: "destructive", icon: "XCircle" },
   ],
   [CaseStatus.Complete]: [
-    { label: "Export", targetStatus: CaseStatus.Exported, permission: "export_package", variant: "primary", icon: "Download" },
+    { label: "Complete Demand", targetStatus: CaseStatus.Exported, permission: "complete_module", variant: "primary", icon: "CheckCircle2" },
   ],
   [CaseStatus.Exported]: [
     { label: "Close Case", targetStatus: CaseStatus.Closed, permission: "edit_case", variant: "secondary", icon: "Archive" },
@@ -102,10 +102,10 @@ export const DOC_STATUS_BADGE: Record<DocumentStatus, string> = {
 
 // ─── Workflow Phase Computation ───────────────────
 
-export type WorkflowPhase = "intake" | "processing" | "export";
+export type WorkflowPhase = "intake" | "processing" | "completion";
 export type PhaseState = "pending" | "active" | "complete" | "failed";
 
-const PHASE_ORDER: WorkflowPhase[] = ["intake", "processing", "export"];
+const PHASE_ORDER: WorkflowPhase[] = ["intake", "processing", "completion"];
 
 const STATUS_TO_PHASE: Record<CaseStatus, { phase: WorkflowPhase; state: PhaseState }> = {
   [CaseStatus.Draft]: { phase: "intake", state: "pending" },
@@ -113,8 +113,8 @@ const STATUS_TO_PHASE: Record<CaseStatus, { phase: WorkflowPhase; state: PhaseSt
   [CaseStatus.IntakeComplete]: { phase: "intake", state: "complete" },
   [CaseStatus.ProcessingInProgress]: { phase: "processing", state: "active" },
   [CaseStatus.Complete]: { phase: "processing", state: "complete" },
-  [CaseStatus.Exported]: { phase: "export", state: "complete" },
-  [CaseStatus.Closed]: { phase: "export", state: "complete" },
+  [CaseStatus.Exported]: { phase: "completion", state: "complete" },
+  [CaseStatus.Closed]: { phase: "completion", state: "complete" },
   [CaseStatus.Failed]: { phase: "intake", state: "failed" },
 };
 
@@ -125,7 +125,7 @@ export function getPhaseStates(caseStatus: CaseStatus): Record<WorkflowPhase, Ph
   const result: Record<WorkflowPhase, PhaseState> = {
     intake: "pending",
     processing: "pending",
-    export: "pending",
+    completion: "pending",
   };
 
   if (caseStatus === CaseStatus.Failed) {

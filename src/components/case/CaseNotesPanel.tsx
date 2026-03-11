@@ -128,11 +128,11 @@ const CaseNotesPanel = () => {
           )}
 
           <div className="relative" ref={exportRef}>
-            <ActionButton icon={Download} label="Export" onClick={() => { setShowExportMenu(!showExportMenu); setShowMoreMenu(false); }} />
+            <ActionButton icon={Download} label="Download" onClick={() => { setShowExportMenu(!showExportMenu); setShowMoreMenu(false); }} />
             {showExportMenu && (
               <DropdownMenu onClose={() => setShowExportMenu(false)}>
-                <DropdownItem icon={FileText} label="Export as PDF" onClick={() => handleExport("pdf")} />
-                <DropdownItem icon={FileDown} label="Export as DOCX" onClick={() => handleExport("docx")} />
+                <DropdownItem icon={FileText} label="Download as PDF" onClick={() => handleExport("pdf")} />
+                <DropdownItem icon={FileDown} label="Download as DOCX" onClick={() => handleExport("docx")} />
               </DropdownMenu>
             )}
           </div>

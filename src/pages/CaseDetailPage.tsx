@@ -370,7 +370,7 @@ const CaseDetailPage = () => {
                       { title: "Document Intake", desc: "Upload, OCR, classify and extract", status: "active", progress: documents.length > 0 ? Math.round((completeDocs / Math.max(documents.length, 1)) * 100) : 0 },
                       { title: "Chronology Build", desc: "Generate timeline from medical records", status: documents.length > 0 ? "ready" : "pending", progress: 0 },
                       { title: "Issue Flagging", desc: "Identify gaps, pre-existing conditions", status: "pending", progress: 0 },
-                      { title: "Demand Package", desc: "Generate demand letter and exhibits", status: "pending", progress: 0 },
+                      { title: "Demand Completion", desc: "Finalize demand letter and supporting exhibits", status: "pending", progress: 0 },
                     ].map((wf) => (
                       <div key={wf.title} className="rounded-xl border border-border p-4 bg-background">
                         <div className="flex items-center justify-between mb-2">

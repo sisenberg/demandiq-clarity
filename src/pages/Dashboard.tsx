@@ -6,7 +6,7 @@ import EmptyState from "@/components/ui/EmptyState";
 import {
   Briefcase,
   FileText,
-  Download,
+  CheckCircle2,
   TrendingUp,
   ChevronRight,
   Inbox,
@@ -26,7 +26,7 @@ const Dashboard = () => {
     (d) => d.document_status === "ocr_in_progress" || d.document_status === "queued"
   ).length;
 
-  const readyForExport = cases.filter(
+  const readyToComplete = cases.filter(
     (c) => c.case_status === "complete"
   ).length;
 
@@ -35,7 +35,7 @@ const Dashboard = () => {
   const stats = [
     { label: "Open Cases", value: openCases, icon: Briefcase, color: "text-primary" },
     { label: "Docs Processing", value: docsProcessing, icon: FileText, color: "text-[hsl(var(--status-processing))]" },
-    { label: "Ready to Export", value: readyForExport, icon: Download, color: "text-[hsl(var(--status-approved))]" },
+    { label: "Ready to Complete", value: readyToComplete, icon: CheckCircle2, color: "text-[hsl(var(--status-approved))]" },
     { label: "Total Documents", value: totalDocs, icon: TrendingUp, color: "text-[hsl(var(--status-attention))]" },
   ];
 

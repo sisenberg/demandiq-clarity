@@ -42,7 +42,7 @@ const App = () => (
               <Route
                 path="/exports"
                 element={
-                  <RoleGuard permission="export_package">
+                  <RoleGuard permission="download_artifacts">
                     <ExportsPage />
                   </RoleGuard>
                 }

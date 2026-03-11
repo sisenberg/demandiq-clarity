@@ -7,47 +7,47 @@ import { useState } from "react";
 
 const CASE_STATUS_BADGE: Record<string, string> = {
   complete: "status-badge-approved",
-  exported: "status-badge-draft",
+  exported: "status-badge-approved",
 };
 
 const CASE_STATUS_LABEL: Record<string, string> = {
-  complete: "Complete",
-  exported: "Exported",
+  complete: "Ready to Complete",
+  exported: "Demand Completed",
 };
 
 const ExportsPage = () => {
   const { data: cases = [], isLoading } = useCases();
-  const [exporting, setExporting] = useState<string | null>(null);
+  const [downloading, setDownloading] = useState<string | null>(null);
 
-  const exportable = cases.filter(
+  const completedCases = cases.filter(
     (c) => c.case_status === "complete" || c.case_status === "exported"
   );
 
-  const handleExport = (caseId: string, format: string) => {
-    setExporting(caseId);
-    console.log(`[Export] Generating ${format} for case ${caseId}`);
-    setTimeout(() => setExporting(null), 2000);
+  const handleDownload = (caseId: string, format: string) => {
+    setDownloading(caseId);
+    console.log(`[Download] Generating ${format} for case ${caseId}`);
+    setTimeout(() => setDownloading(null), 2000);
   };
 
-  if (isLoading) return <PageLoading message="Loading exports…" />;
+  if (isLoading) return <PageLoading message="Loading downloads…" />;
 
   return (
     <div className="p-6 lg:p-8 max-w-7xl">
       <div className="flex items-center justify-between mb-6">
         <div>
-          <h1 className="text-xl font-semibold text-foreground tracking-tight">Exports</h1>
-          <p className="text-sm text-muted-foreground mt-0.5">Cases ready for export</p>
+          <h1 className="text-xl font-semibold text-foreground tracking-tight">Downloads</h1>
+          <p className="text-sm text-muted-foreground mt-0.5">Download completed case artifacts</p>
         </div>
-        <ComingSoonBadge label="Batch Export" />
+        <ComingSoonBadge label="Batch Download" />
       </div>
 
-      {exportable.length === 0 ? (
+      {completedCases.length === 0 ? (
         <div className="card-elevated">
-          <EmptyState icon={Download} title="No cases ready for export" description="Complete case processing to enable exports." />
+          <EmptyState icon={Download} title="No cases ready for download" description="Complete a module workflow to generate downloadable artifacts." />
         </div>
       ) : (
         <div className="flex flex-col gap-3">
-          {exportable.map((c) => (
+          {completedCases.map((c) => (
             <div key={c.id} className="card-elevated px-5 py-4 flex items-center justify-between gap-4">
               <div className="flex items-center gap-3.5 min-w-0">
                 <div className="h-9 w-9 rounded-lg bg-accent flex items-center justify-center shrink-0">
@@ -62,21 +62,21 @@ const ExportsPage = () => {
                 <span className={CASE_STATUS_BADGE[c.case_status] ?? "status-badge-draft"}>
                   {CASE_STATUS_LABEL[c.case_status] ?? c.case_status}
                 </span>
-                {exporting === c.id ? (
+                {downloading === c.id ? (
                   <span className="text-[11px] font-medium text-primary flex items-center gap-1.5">
                     <div className="h-3.5 w-3.5 rounded-full border-2 border-primary border-t-transparent animate-spin" />
-                    Exporting…
+                    Downloading…
                   </span>
                 ) : (
                   <div className="flex gap-1.5">
                     <button
-                      onClick={() => handleExport(c.id, "pdf")}
+                      onClick={() => handleDownload(c.id, "pdf")}
                       className="flex items-center gap-1 text-[11px] font-medium px-2.5 py-1.5 rounded-lg border border-border bg-card text-foreground hover:bg-accent transition-colors"
                     >
                       <FileText className="h-3 w-3" /> PDF
                     </button>
                     <button
-                      onClick={() => handleExport(c.id, "docx")}
+                      onClick={() => handleDownload(c.id, "docx")}
                       className="flex items-center gap-1 text-[11px] font-medium px-2.5 py-1.5 rounded-lg border border-border bg-card text-foreground hover:bg-accent transition-colors"
                     >
                       <FileDown className="h-3 w-3" /> DOCX

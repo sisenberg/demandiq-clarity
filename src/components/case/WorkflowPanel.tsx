@@ -1,12 +1,12 @@
 import type { WorkflowPhase, PhaseState } from "@/lib/workflow";
 import { getPhaseStates, CASE_STATUS_LABEL, CASE_STATUS_BADGE } from "@/lib/workflow";
 import type { CaseStatus } from "@/types";
-import { FileText, Cog, Download } from "lucide-react";
+import { FileText, Cog, CheckCircle2 } from "lucide-react";
 
 const phaseConfig: Record<WorkflowPhase, { label: string; icon: React.ElementType }> = {
   intake: { label: "Intake", icon: FileText },
   processing: { label: "Processing", icon: Cog },
-  export: { label: "Export", icon: Download },
+  completion: { label: "Completion", icon: CheckCircle2 },
 };
 
 const stateStyles: Record<PhaseState, { dot: string; line: string; text: string }> = {
@@ -41,7 +41,7 @@ const stateLabel: Record<PhaseState, string> = {
 
 const WorkflowPanel = ({ caseStatus }: { caseStatus: CaseStatus }) => {
   const phases = getPhaseStates(caseStatus);
-  const phaseOrder: WorkflowPhase[] = ["intake", "processing", "export"];
+  const phaseOrder: WorkflowPhase[] = ["intake", "processing", "completion"];
 
   return (
     <div className="border border-border rounded-lg bg-card overflow-hidden">
