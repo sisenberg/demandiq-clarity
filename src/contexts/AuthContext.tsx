@@ -37,6 +37,7 @@ const AuthContext = createContext<AuthContextValue>({
   loading: true,
   role: null,
   tenantId: null,
+  tenantModules: [ModuleId.DemandIQ],
   profile: null,
   needsOnboarding: false,
   completeSignup: async () => {},
