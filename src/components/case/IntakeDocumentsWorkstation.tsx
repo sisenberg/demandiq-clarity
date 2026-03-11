@@ -6,7 +6,14 @@ import { useInvokeExtraction, useTriggerCaseExtraction } from "@/hooks/useExtrac
 import { useCaseDuplicateFlags } from "@/hooks/useDuplicateFlags";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
-import { INTAKE_STATUS_LABEL } from "@/types/intake";
+import {
+  getIntakeBadge,
+  INTAKE_STATUS_LABEL,
+  INTAKE_PROCESSING_STATUSES,
+  isIntakeProcessing,
+  isIntakeComplete,
+  getPipelineStageLabel,
+} from "@/lib/statuses";
 import IntakeUploadZone from "./IntakeUploadZone";
 import IntakeSummaryPanel from "./IntakeSummaryPanel";
 import DocumentTypeTag from "./DocumentTypeTag";
@@ -29,30 +36,6 @@ import {
   Upload,
   Zap,
 } from "lucide-react";
-
-// ─── Status styles ───────────────────────────────────
-const STATUS_BADGE: Record<string, { class: string; label: string }> = {
-  uploaded: { class: "bg-accent text-muted-foreground", label: "Uploaded" },
-  queued: { class: "bg-accent text-muted-foreground", label: "Queued" },
-  ocr_in_progress: { class: "bg-[hsl(var(--status-processing-bg))] text-[hsl(var(--status-processing-foreground))]", label: "OCR" },
-  classified: { class: "bg-[hsl(var(--status-processing-bg))] text-[hsl(var(--status-processing-foreground))]", label: "Classified" },
-  extracted: { class: "bg-[hsl(var(--status-approved-bg))] text-[hsl(var(--status-approved-foreground))]", label: "Extracted" },
-  needs_attention: { class: "bg-[hsl(var(--status-attention-bg))] text-[hsl(var(--status-attention-foreground))]", label: "Attention" },
-  complete: { class: "bg-[hsl(var(--status-approved-bg))] text-[hsl(var(--status-approved-foreground))]", label: "Complete" },
-  failed: { class: "bg-destructive/10 text-destructive", label: "Failed" },
-};
-
-const INTAKE_BADGE: Record<string, { class: string; label: string }> = {
-  uploaded: { class: "bg-accent text-muted-foreground", label: "Uploaded" },
-  queued_for_text_extraction: { class: "bg-[hsl(var(--status-processing-bg))] text-[hsl(var(--status-processing-foreground))]", label: "OCR Queued" },
-  extracting_text: { class: "bg-[hsl(var(--status-processing-bg))] text-[hsl(var(--status-processing-foreground))]", label: "Extracting" },
-  text_extracted: { class: "bg-[hsl(var(--status-approved-bg))] text-[hsl(var(--status-approved-foreground))]", label: "Text Ready" },
-  queued_for_parsing: { class: "bg-[hsl(var(--status-processing-bg))] text-[hsl(var(--status-processing-foreground))]", label: "Parse Queued" },
-  parsing: { class: "bg-[hsl(var(--status-processing-bg))] text-[hsl(var(--status-processing-foreground))]", label: "Parsing" },
-  parsed: { class: "bg-[hsl(var(--status-approved-bg))] text-[hsl(var(--status-approved-foreground))]", label: "Parsed" },
-  needs_review: { class: "bg-[hsl(var(--status-attention-bg))] text-[hsl(var(--status-attention-foreground))]", label: "Review" },
-  failed: { class: "bg-destructive/10 text-destructive", label: "Failed" },
-};
 
 function formatBytes(bytes: number): string {
   if (bytes < 1024) return `${bytes} B`;

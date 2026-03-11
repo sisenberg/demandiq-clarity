@@ -1,6 +1,6 @@
 import { useMemo } from "react";
 import type { DocumentRow } from "@/hooks/useDocuments";
-import { INTAKE_STATUS_LABEL } from "@/types/intake";
+import { INTAKE_PROCESSING_STATUSES, isIntakeComplete } from "@/lib/statuses";
 import {
   FileText,
   Loader2,

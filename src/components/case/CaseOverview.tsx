@@ -85,7 +85,7 @@ const CaseOverview = ({ caseData, documents }: CaseOverviewProps) => {
   const [selectedTimelineEvent, setSelectedTimelineEvent] = useState<string | null>(null);
 
   const completeDocs = documents.filter(
-    (d) => d.document_status === "complete" || d.document_status === "extracted"
+    (d) => isDocumentReady(d.document_status)
   ).length;
 
   const claimant = pkg.parties.find((p) => p.party_role === "claimant");

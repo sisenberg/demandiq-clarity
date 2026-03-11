@@ -25,42 +25,18 @@ import {
   Eye,
 } from "lucide-react";
 
-// ─── Status styles ───────────────────────────────────
-const STATUS_BADGE: Record<string, { class: string; label: string }> = {
-  uploaded: { class: "bg-accent text-muted-foreground", label: "Uploaded" },
-  queued: { class: "bg-accent text-muted-foreground", label: "Queued" },
-  ocr_in_progress: { class: "bg-[hsl(var(--status-processing-bg))] text-[hsl(var(--status-processing-foreground))]", label: "OCR" },
-  classified: { class: "bg-[hsl(var(--status-processing-bg))] text-[hsl(var(--status-processing-foreground))]", label: "Classified" },
-  extracted: { class: "bg-[hsl(var(--status-approved-bg))] text-[hsl(var(--status-approved-foreground))]", label: "Extracted" },
-  needs_attention: { class: "bg-[hsl(var(--status-attention-bg))] text-[hsl(var(--status-attention-foreground))]", label: "Attention" },
-  complete: { class: "bg-[hsl(var(--status-approved-bg))] text-[hsl(var(--status-approved-foreground))]", label: "Complete" },
-  failed: { class: "bg-destructive/10 text-destructive", label: "Failed" },
-};
+import {
+  DOCUMENT_STATUS_BADGE,
+  PIPELINE_STAGE_LABEL,
+  DOCUMENT_TYPE_LABEL,
+  getDocumentStatusBadge,
+  getPipelineStageLabel,
+  isDocumentReady,
+} from "@/lib/statuses";
 
-const PIPELINE_LABELS: Record<string, string> = {
-  upload_received: "Upload Received",
-  ocr_queued: "OCR Queued",
-  ocr_complete: "OCR Complete",
-  document_classified: "Classified",
-  extraction_complete: "Extracted",
-  evidence_links_created: "Evidence Linked",
-  review_items_generated: "Review Ready",
-};
-
-// ─── Doc type labels ─────────────────────────────────
-const DOC_TYPE_LABEL: Record<string, string> = {
-  medical_record: "Medical Record",
-  police_report: "Police Report",
-  legal_filing: "Legal Filing",
-  correspondence: "Correspondence",
-  billing_record: "Billing Record",
-  imaging_report: "Imaging Report",
-  insurance_document: "Insurance",
-  employment_record: "Employment",
-  expert_report: "Expert Report",
-  photograph: "Photograph",
-  other: "Other",
-};
+const STATUS_BADGE = DOCUMENT_STATUS_BADGE;
+const PIPELINE_LABELS = PIPELINE_STAGE_LABEL;
+const DOC_TYPE_LABEL = DOCUMENT_TYPE_LABEL;
 
 function formatBytes(bytes: number): string {
   if (bytes < 1024) return `${bytes} B`;
