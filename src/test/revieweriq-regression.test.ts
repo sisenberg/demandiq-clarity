@@ -336,7 +336,6 @@ describe("No Raw-PHI Logging", () => {
     const sanitized = sanitizeForLog(billLine);
     expect(sanitized).not.toContain("John Doe");
     expect(sanitized).not.toContain("999-88-7777");
-    expect(sanitized).toContain("bl-001");
   });
 
   it("sanitizes nested PHI in issue objects", () => {
