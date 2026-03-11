@@ -83,7 +83,18 @@ const IntakeDocumentsWorkstation = ({ documents, loading, caseId }: IntakeDocume
   const [confirmDelete, setConfirmDelete] = useState<string | null>(null);
 
   const deleteDoc = useDeleteDocument();
+  const triggerExtraction = useTriggerCaseExtraction();
+  const invokeExtraction = useInvokeExtraction();
+  const retryIntakeJob = useRetryIntakeJob();
+  const { data: intakeJobs = [] } = useCaseIntakeJobs(caseId);
   const { data: duplicateFlags = [] } = useCaseDuplicateFlags(caseId);
+
+  const queuedExtractionCount = intakeJobs.filter(
+    (j) => j.job_type === "text_extraction" && j.status === "queued"
+  ).length;
+  const runningJobCount = intakeJobs.filter(
+    (j) => j.status === "running"
+  ).length;
 
   // Build a set of doc IDs that have duplicate flags
   const duplicateDocIds = useMemo(() => {
