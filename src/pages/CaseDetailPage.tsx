@@ -20,6 +20,7 @@ import ProvidersTab from "@/components/case/ProvidersTab";
 import BillingView from "@/components/case/BillingView";
 import CaseChatView from "@/components/case/CaseChatView";
 import DocumentsWorkstation from "@/components/case/DocumentsWorkstation";
+import IntakeDocumentsWorkstation from "@/components/case/IntakeDocumentsWorkstation";
 import SourcePagesWorkstation from "@/components/case/SourcePagesWorkstation";
 import DocumentUpload from "@/components/case/DocumentUpload";
 import JobsPanel from "@/components/case/JobsPanel";
