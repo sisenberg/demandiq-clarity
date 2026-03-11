@@ -283,6 +283,11 @@ const CaseDetailPage = () => {
             {/* ── NOTES (DemandIQ Workspace) ───── */}
             {activeSection === "notes" && (
               <>
+                <ModuleCompletionStatusPanel
+                  caseId={caseData.id}
+                  moduleId="demandiq"
+                  onCompleteClick={hasPermission(role, "complete_module") ? () => setShowCompletionDialog(true) : undefined}
+                />
                 <CaseNotesPanel />
 
                 {/* ReviewerIQ — show full card if entitled, teaser if not */}
