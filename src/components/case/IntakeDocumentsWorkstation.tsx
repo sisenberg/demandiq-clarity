@@ -123,6 +123,19 @@ const IntakeDocumentsWorkstation = ({ documents, loading, caseId }: IntakeDocume
     if (data?.signedUrl) window.open(data.signedUrl, "_blank");
   };
 
+  // If reviewing a document, show the review workspace full-width
+  if (reviewDocId) {
+    return (
+      <div className="card-elevated overflow-hidden" style={{ height: "calc(100vh - 180px)" }}>
+        <DocumentReviewWorkspace
+          documentId={reviewDocId}
+          caseId={caseId}
+          onBack={() => setReviewDocId(null)}
+        />
+      </div>
+    );
+  }
+
   return (
     <div className="flex flex-col gap-4">
       {/* Intake Summary */}
