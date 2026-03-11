@@ -4,7 +4,9 @@ import { useCases, type CaseRow } from "@/hooks/useCases";
 import { useAuth } from "@/contexts/AuthContext";
 import { hasPermission } from "@/lib/permissions";
 import CreateCaseDialog from "@/components/case/CreateCaseDialog";
-import { Briefcase, Plus, ChevronRight } from "lucide-react";
+import { PageLoading } from "@/components/ui/LoadingSkeleton";
+import EmptyState from "@/components/ui/EmptyState";
+import { Briefcase, Plus, ChevronRight, Inbox } from "lucide-react";
 
 const CASE_STATUS_LABEL: Record<string, string> = {
   draft: "Draft",
@@ -50,7 +52,7 @@ const CasesPage = () => {
   const [showCreate, setShowCreate] = useState(false);
 
   return (
-    <div className="p-8 max-w-7xl">
+    <div className="p-6 lg:p-8 max-w-7xl">
       <div className="flex items-center justify-between mb-6">
         <div>
           <h1 className="text-xl font-semibold text-foreground tracking-tight">Cases</h1>
@@ -88,7 +90,9 @@ const CasesPage = () => {
         </div>
       </div>
 
-      {view === "queue" ? (
+      {isLoading ? (
+        <PageLoading message="Loading cases…" />
+      ) : view === "queue" ? (
         <div className="flex flex-col gap-6">
           {STATUS_GROUPS.map((group) => {
             const groupCases = cases.filter((c) => group.statuses.includes(c.case_status));
@@ -111,7 +115,7 @@ const CasesPage = () => {
                           <Briefcase className="h-4 w-4 text-muted-foreground" />
                         </div>
                         <div className="min-w-0">
-                          <p className="text-sm font-medium text-foreground truncate">{c.title || `${c.claimant} v. ${c.insured}`}</p>
+                          <p className="text-sm font-medium text-foreground truncate group-hover:text-primary transition-colors">{c.title || `${c.claimant} v. ${c.insured}`}</p>
                           <p className="text-xs text-muted-foreground mt-0.5">
                             {c.case_number} · {c.claimant} · DOL: {c.date_of_loss ?? "—"}
                           </p>
@@ -132,24 +136,21 @@ const CasesPage = () => {
               </div>
             );
           })}
-          {!isLoading && cases.length === 0 && (
-            <div className="text-center py-16 card-elevated">
-              <div className="h-12 w-12 rounded-xl bg-accent mx-auto flex items-center justify-center mb-3">
-                <Briefcase className="h-6 w-6 text-muted-foreground" />
-              </div>
-              <p className="text-sm text-muted-foreground">No cases yet. Create your first case to get started.</p>
+          {cases.length === 0 && (
+            <div className="card-elevated">
+              <EmptyState icon={Inbox} title="No cases yet" description="Create your first case to get started." />
             </div>
           )}
         </div>
       ) : (
-        <div className="card-elevated overflow-hidden">
+        <div className="card-elevated overflow-hidden overflow-x-auto">
           <table className="w-full text-sm">
             <thead>
               <tr className="border-b border-border text-left bg-muted/30">
                 <th className="px-5 py-3 text-xs font-medium text-muted-foreground uppercase tracking-wider">Case</th>
-                <th className="px-5 py-3 text-xs font-medium text-muted-foreground uppercase tracking-wider">Case #</th>
-                <th className="px-5 py-3 text-xs font-medium text-muted-foreground uppercase tracking-wider">Claimant</th>
-                <th className="px-5 py-3 text-xs font-medium text-muted-foreground uppercase tracking-wider">DOL</th>
+                <th className="px-5 py-3 text-xs font-medium text-muted-foreground uppercase tracking-wider hidden sm:table-cell">Case #</th>
+                <th className="px-5 py-3 text-xs font-medium text-muted-foreground uppercase tracking-wider hidden md:table-cell">Claimant</th>
+                <th className="px-5 py-3 text-xs font-medium text-muted-foreground uppercase tracking-wider hidden lg:table-cell">DOL</th>
                 <th className="px-5 py-3 text-xs font-medium text-muted-foreground uppercase tracking-wider">Priority</th>
                 <th className="px-5 py-3 text-xs font-medium text-muted-foreground uppercase tracking-wider">Status</th>
               </tr>
@@ -163,9 +164,9 @@ const CasesPage = () => {
                       <span className="font-medium text-foreground">{c.title || `${c.claimant} v. ${c.insured}`}</span>
                     </Link>
                   </td>
-                  <td className="px-5 py-3.5 text-muted-foreground">{c.case_number}</td>
-                  <td className="px-5 py-3.5 text-foreground">{c.claimant}</td>
-                  <td className="px-5 py-3.5 text-muted-foreground">{c.date_of_loss ?? "—"}</td>
+                  <td className="px-5 py-3.5 text-muted-foreground hidden sm:table-cell">{c.case_number}</td>
+                  <td className="px-5 py-3.5 text-foreground hidden md:table-cell">{c.claimant}</td>
+                  <td className="px-5 py-3.5 text-muted-foreground hidden lg:table-cell">{c.date_of_loss ?? "—"}</td>
                   <td className="px-5 py-3.5">
                     <span className={PRIORITY_BADGE[c.priority] ?? "status-badge-draft"}>{c.priority}</span>
                   </td>
