@@ -22,11 +22,13 @@ export type CaseSection =
   | "chat"
   | "documents"
   | "sources"
-  | "entities";
+  | "entities"
+  | "chronology";
 
 const NAV_ITEMS: { key: CaseSection; label: string; icon: React.ElementType }[] = [
   { key: "overview", label: "Overview", icon: LayoutDashboard },
   { key: "notes", label: "Case Notes", icon: StickyNote },
+  { key: "chronology", label: "Chronology", icon: Calendar },
   { key: "billing", label: "Billing", icon: DollarSign },
   { key: "chat", label: "Chat", icon: MessageSquare },
   { key: "documents", label: "Documents", icon: FileText },

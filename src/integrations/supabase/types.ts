@@ -357,6 +357,184 @@ export type Database = {
           },
         ]
       }
+      chronology_event_candidates: {
+        Row: {
+          case_id: string
+          category: Database["public"]["Enums"]["chronology_event_category"]
+          confidence: number | null
+          created_at: string
+          description: string
+          event_date: string
+          event_date_end: string | null
+          id: string
+          label: string
+          machine_category: string | null
+          machine_date: string | null
+          machine_description: string | null
+          machine_label: string | null
+          merged_into_id: string | null
+          source_document_id: string | null
+          source_page: number | null
+          source_type: string
+          status: Database["public"]["Enums"]["chronology_candidate_status"]
+          tenant_id: string
+          updated_at: string
+          user_corrected_category: string | null
+          user_corrected_date: string | null
+          user_corrected_description: string | null
+          user_corrected_label: string | null
+        }
+        Insert: {
+          case_id: string
+          category?: Database["public"]["Enums"]["chronology_event_category"]
+          confidence?: number | null
+          created_at?: string
+          description?: string
+          event_date?: string
+          event_date_end?: string | null
+          id?: string
+          label?: string
+          machine_category?: string | null
+          machine_date?: string | null
+          machine_description?: string | null
+          machine_label?: string | null
+          merged_into_id?: string | null
+          source_document_id?: string | null
+          source_page?: number | null
+          source_type?: string
+          status?: Database["public"]["Enums"]["chronology_candidate_status"]
+          tenant_id: string
+          updated_at?: string
+          user_corrected_category?: string | null
+          user_corrected_date?: string | null
+          user_corrected_description?: string | null
+          user_corrected_label?: string | null
+        }
+        Update: {
+          case_id?: string
+          category?: Database["public"]["Enums"]["chronology_event_category"]
+          confidence?: number | null
+          created_at?: string
+          description?: string
+          event_date?: string
+          event_date_end?: string | null
+          id?: string
+          label?: string
+          machine_category?: string | null
+          machine_date?: string | null
+          machine_description?: string | null
+          machine_label?: string | null
+          merged_into_id?: string | null
+          source_document_id?: string | null
+          source_page?: number | null
+          source_type?: string
+          status?: Database["public"]["Enums"]["chronology_candidate_status"]
+          tenant_id?: string
+          updated_at?: string
+          user_corrected_category?: string | null
+          user_corrected_date?: string | null
+          user_corrected_description?: string | null
+          user_corrected_label?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "chronology_event_candidates_case_id_fkey"
+            columns: ["case_id"]
+            isOneToOne: false
+            referencedRelation: "cases"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "chronology_event_candidates_merged_into_id_fkey"
+            columns: ["merged_into_id"]
+            isOneToOne: false
+            referencedRelation: "chronology_event_candidates"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "chronology_event_candidates_source_document_id_fkey"
+            columns: ["source_document_id"]
+            isOneToOne: false
+            referencedRelation: "case_documents"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "chronology_event_candidates_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      chronology_evidence_links: {
+        Row: {
+          candidate_id: string
+          case_id: string
+          confidence: number | null
+          created_at: string
+          document_id: string
+          id: string
+          page_number: number | null
+          quoted_text: string
+          relevance_type: string
+          tenant_id: string
+        }
+        Insert: {
+          candidate_id: string
+          case_id: string
+          confidence?: number | null
+          created_at?: string
+          document_id: string
+          id?: string
+          page_number?: number | null
+          quoted_text?: string
+          relevance_type?: string
+          tenant_id: string
+        }
+        Update: {
+          candidate_id?: string
+          case_id?: string
+          confidence?: number | null
+          created_at?: string
+          document_id?: string
+          id?: string
+          page_number?: number | null
+          quoted_text?: string
+          relevance_type?: string
+          tenant_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "chronology_evidence_links_candidate_id_fkey"
+            columns: ["candidate_id"]
+            isOneToOne: false
+            referencedRelation: "chronology_event_candidates"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "chronology_evidence_links_case_id_fkey"
+            columns: ["case_id"]
+            isOneToOne: false
+            referencedRelation: "cases"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "chronology_evidence_links_document_id_fkey"
+            columns: ["document_id"]
+            isOneToOne: false
+            referencedRelation: "case_documents"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "chronology_evidence_links_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       document_metadata_extractions: {
         Row: {
           case_id: string
@@ -1766,6 +1944,27 @@ export type Database = {
         | "exported"
         | "closed"
         | "failed"
+      chronology_candidate_status:
+        | "draft"
+        | "accepted"
+        | "suppressed"
+        | "merged"
+      chronology_event_category:
+        | "accident"
+        | "first_treatment"
+        | "treatment"
+        | "imaging"
+        | "injection"
+        | "surgery"
+        | "ime"
+        | "demand"
+        | "legal"
+        | "administrative"
+        | "billing"
+        | "correspondence"
+        | "investigation"
+        | "representation"
+        | "other"
       dependency_status:
         | "current"
         | "stale_due_to_upstream_change"
@@ -2032,6 +2231,29 @@ export const Constants = {
         "exported",
         "closed",
         "failed",
+      ],
+      chronology_candidate_status: [
+        "draft",
+        "accepted",
+        "suppressed",
+        "merged",
+      ],
+      chronology_event_category: [
+        "accident",
+        "first_treatment",
+        "treatment",
+        "imaging",
+        "injection",
+        "surgery",
+        "ime",
+        "demand",
+        "legal",
+        "administrative",
+        "billing",
+        "correspondence",
+        "investigation",
+        "representation",
+        "other",
       ],
       dependency_status: [
         "current",
