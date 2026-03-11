@@ -61,7 +61,8 @@ Deno.serve(async (req: Request) => {
       );
     }
 
-    console.log("[generate-chronology] Case:", caseData.claimant, "tenant:", caseData.tenant_id);
+    // COMPLIANCE: Do not log claimant name (PII). Log only tenant prefix.
+    console.log("[generate-chronology] Case loaded, tenant:", caseData.tenant_id?.slice(0, 8));
 
     // 2. Gather all parsed document data for this case
     const [docsResult, pagesResult, metaResult, factsResult, typesResult] = await Promise.all([
