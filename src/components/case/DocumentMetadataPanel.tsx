@@ -1,5 +1,5 @@
 import { useState } from "react";
-import {
+import { useAuditLog } from "@/hooks/useAuditLog";
   useDocumentTypeSuggestions,
   useDocumentMetadataExtractions,
   useClassifyDocument,

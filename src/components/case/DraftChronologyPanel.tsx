@@ -400,6 +400,13 @@ function CandidateRow({
           {isMergeTarget && (
             <button
               onClick={() => {
+                auditLog.mutate({
+                  actionType: "chronology_merged",
+                  entityType: "chronology_event_candidates",
+                  entityId: mergeMode!,
+                  caseId,
+                  afterValue: { merged_into: candidate.id },
+                });
                 mergeCandidates.mutate({ sourceId: mergeMode!, targetId: candidate.id, caseId });
                 onMergeInto();
               }}
