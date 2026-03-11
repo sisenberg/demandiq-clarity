@@ -27,6 +27,20 @@ export interface MedicalReviewConfig {
   duplicate_tolerance_days: number;
   /** High-variance threshold % for pricing flags */
   high_variance_threshold_pct: number;
+  /** Min objective findings length to be considered adequate */
+  min_objective_findings_length: number;
+  /** Jaccard similarity threshold for near-identical notes (0-1) */
+  near_identical_note_threshold: number;
+  /** Gap in days that triggers gap-then-intensive-care rule */
+  treatment_gap_days: number;
+  /** Visits per week after gap to be considered "intensive" */
+  post_gap_intensive_visits_per_week: number;
+  /** Provider utilization: min visits to trigger pattern analysis */
+  provider_pattern_min_visits: number;
+  /** Provider utilization: % of case total billed to flag */
+  provider_concentration_pct: number;
+  /** Rule engine version for audit metadata */
+  rule_engine_version: string;
 }
 
 export const DEFAULT_MEDICAL_REVIEW_CONFIG: MedicalReviewConfig = {
@@ -36,6 +50,13 @@ export const DEFAULT_MEDICAL_REVIEW_CONFIG: MedicalReviewConfig = {
   max_passive_only_weeks: 4,
   duplicate_tolerance_days: 1,
   high_variance_threshold_pct: 200,
+  min_objective_findings_length: 30,
+  near_identical_note_threshold: 0.7,
+  treatment_gap_days: 30,
+  post_gap_intensive_visits_per_week: 3,
+  provider_pattern_min_visits: 8,
+  provider_concentration_pct: 60,
+  rule_engine_version: "1.1.0",
 };
 
 // ─── Rule Engine ────────────────────────────────────────
@@ -59,11 +80,15 @@ export function runMedicalReviewRules(
   issues.push(...checkBeyondRecoveryWindow(treatments, config, T, C));
   issues.push(...checkRepeatedPassiveModalities(treatments, config, T, C));
   issues.push(...checkDuplicateServices(treatments, config, T, C));
-  issues.push(...checkEscalationWithoutFindings(treatments, T, C));
+  issues.push(...checkEscalationWithoutFindings(treatments, config, T, C));
   issues.push(...checkBillNoTreatment(billLines, treatments, T, C));
   issues.push(...checkTreatmentNoBill(treatments, billLines, T, C));
   issues.push(...checkHighVariancePricing(billLines, config, T, C));
   issues.push(...checkCodeNoteMismatch(treatments, T, C));
+  issues.push(...checkProlongedCareWeakFindings(treatments, config, T, C));
+  issues.push(...checkNearIdenticalNotes(treatments, config, T, C));
+  issues.push(...checkGapThenIntensiveCare(treatments, config, T, C));
+  issues.push(...checkProviderUtilizationPattern(treatments, config, T, C));
 
   return issues;
 }
@@ -275,6 +300,7 @@ function checkDuplicateServices(
 
 function checkEscalationWithoutFindings(
   treatments: ReviewerTreatmentRecord[],
+  config: MedicalReviewConfig,
   T: string, C: string,
 ): ReviewIssue[] {
   const issues: ReviewIssue[] = [];
@@ -284,7 +310,7 @@ function checkEscalationWithoutFindings(
     const escalated = r.procedures.some(p => p.code && escalationCodes.has(p.code));
     if (!escalated) continue;
 
-    const hasObjective = r.objective_findings && r.objective_findings.length > 30;
+    const hasObjective = r.objective_findings && r.objective_findings.length > config.min_objective_findings_length;
     if (!hasObjective) {
       issues.push(makeIssue({
         tenant_id: T, case_id: C,
@@ -292,7 +318,7 @@ function checkEscalationWithoutFindings(
         severity: "high",
         title: `Escalation lacking objective findings — ${r.visit_date || "unknown date"}`,
         description: `Invasive/interventional procedure performed without adequate documented objective findings.`,
-        machine_explanation: `Rule: Flag escalation procedures (injections, surgery) where objective_findings is empty or <30 chars. Record ${r.id} has ${r.objective_findings?.length ?? 0} chars of objective findings.`,
+        machine_explanation: `Rule: Flag escalation procedures (injections, surgery) where objective_findings is empty or <${config.min_objective_findings_length} chars. Record ${r.id} has ${r.objective_findings?.length ?? 0} chars of objective findings. (v${config.rule_engine_version})`,
         affected_provider: r.provider_name_normalized || r.provider_name_raw,
         affected_date_start: r.visit_date,
         affected_date_end: r.visit_date,
@@ -424,7 +450,196 @@ function checkCodeNoteMismatch(
   return issues;
 }
 
+// ─── Clinical Phase 1 Rules ─────────────────────────────
+
+function checkProlongedCareWeakFindings(
+  treatments: ReviewerTreatmentRecord[],
+  config: MedicalReviewConfig,
+  T: string, C: string,
+): ReviewIssue[] {
+  const issues: ReviewIssue[] = [];
+  const byProvider = groupByProvider(treatments);
+
+  for (const [provider, recs] of byProvider) {
+    const dated = recs.filter(r => r.visit_date).sort((a, b) => a.visit_date!.localeCompare(b.visit_date!));
+    if (dated.length < 4) continue;
+
+    const first = parseISO(dated[0].visit_date!);
+    const last = parseISO(dated[dated.length - 1].visit_date!);
+    const span = differenceInDays(last, first);
+    if (span <= config.soft_tissue_recovery_days) continue;
+
+    // Check if objective findings are consistently weak across later visits
+    const laterVisits = dated.filter(r => differenceInDays(parseISO(r.visit_date!), first) > config.soft_tissue_recovery_days);
+    const weakCount = laterVisits.filter(r => !r.objective_findings || r.objective_findings.length < config.min_objective_findings_length).length;
+
+    if (weakCount >= Math.ceil(laterVisits.length * 0.6)) {
+      issues.push(makeIssue({
+        tenant_id: T, case_id: C,
+        issue_type: "prolonged_care_weak_findings",
+        severity: "high",
+        title: `Prolonged care (${span}d) with weak objective findings — ${provider}`,
+        description: `${weakCount} of ${laterVisits.length} visits beyond the ${config.soft_tissue_recovery_days}-day window have insufficient objective findings.`,
+        machine_explanation: `Rule: Flag providers treating beyond ${config.soft_tissue_recovery_days} days where ≥60% of later visits have objective_findings < ${config.min_objective_findings_length} chars. ${provider}: ${weakCount}/${laterVisits.length} weak. (v${config.rule_engine_version})`,
+        affected_provider: provider,
+        affected_date_start: laterVisits[0]?.visit_date ?? null,
+        affected_date_end: laterVisits[laterVisits.length - 1]?.visit_date ?? null,
+        affected_bill_line_ids: [],
+        affected_treatment_ids: laterVisits.map(r => r.id),
+        evidence: laterVisits.filter(r => !r.objective_findings || r.objective_findings.length < config.min_objective_findings_length).slice(0, 3).map(makeEvidence),
+        questioned_amount: laterVisits.reduce((s, r) => s + (r.total_billed ?? 0), 0),
+      }));
+    }
+  }
+  return issues;
+}
+
+function checkNearIdenticalNotes(
+  treatments: ReviewerTreatmentRecord[],
+  config: MedicalReviewConfig,
+  T: string, C: string,
+): ReviewIssue[] {
+  const issues: ReviewIssue[] = [];
+  const byProvider = groupByProvider(treatments);
+
+  for (const [provider, recs] of byProvider) {
+    const dated = recs.filter(r => r.visit_date && r.assessment_summary && r.assessment_summary.length > 10)
+      .sort((a, b) => a.visit_date!.localeCompare(b.visit_date!));
+    if (dated.length < 3) continue;
+
+    // Compare consecutive notes using Jaccard similarity on word tokens
+    const identicalPairs: Array<[ReviewerTreatmentRecord, ReviewerTreatmentRecord]> = [];
+    for (let i = 1; i < dated.length; i++) {
+      const sim = jaccardSimilarity(dated[i - 1].assessment_summary, dated[i].assessment_summary);
+      if (sim >= config.near_identical_note_threshold) {
+        identicalPairs.push([dated[i - 1], dated[i]]);
+      }
+    }
+
+    if (identicalPairs.length >= 2) {
+      const allAffected = [...new Set(identicalPairs.flatMap(([a, b]) => [a.id, b.id]))];
+      issues.push(makeIssue({
+        tenant_id: T, case_id: C,
+        issue_type: "near_identical_notes",
+        severity: "medium",
+        title: `${identicalPairs.length} near-identical note pairs — ${provider}`,
+        description: `${identicalPairs.length} consecutive visit pairs have assessment notes with ≥${Math.round(config.near_identical_note_threshold * 100)}% similarity, suggesting templated or copy-pasted documentation.`,
+        machine_explanation: `Rule: Flag providers with ≥2 consecutive note pairs exceeding ${config.near_identical_note_threshold} Jaccard similarity. ${provider}: ${identicalPairs.length} pairs. (v${config.rule_engine_version})`,
+        affected_provider: provider,
+        affected_date_start: identicalPairs[0][0].visit_date,
+        affected_date_end: identicalPairs[identicalPairs.length - 1][1].visit_date,
+        affected_bill_line_ids: [],
+        affected_treatment_ids: allAffected,
+        evidence: identicalPairs.slice(0, 2).flatMap(([a, b]) => [makeEvidence(a), makeEvidence(b)]),
+        questioned_amount: 0,
+      }));
+    }
+  }
+  return issues;
+}
+
+function checkGapThenIntensiveCare(
+  treatments: ReviewerTreatmentRecord[],
+  config: MedicalReviewConfig,
+  T: string, C: string,
+): ReviewIssue[] {
+  const issues: ReviewIssue[] = [];
+  const byProvider = groupByProvider(treatments);
+
+  for (const [provider, recs] of byProvider) {
+    const dated = recs.filter(r => r.visit_date).sort((a, b) => a.visit_date!.localeCompare(b.visit_date!));
+    if (dated.length < 3) continue;
+
+    for (let i = 1; i < dated.length; i++) {
+      const gap = differenceInDays(parseISO(dated[i].visit_date!), parseISO(dated[i - 1].visit_date!));
+      if (gap < config.treatment_gap_days) continue;
+
+      // Check intensity in 14-day window after gap
+      const gapEnd = parseISO(dated[i].visit_date!);
+      const windowEnd = new Date(gapEnd.getTime() + 14 * 86400000);
+      const postGapVisits = dated.filter(r => {
+        const d = parseISO(r.visit_date!);
+        return d >= gapEnd && d <= windowEnd;
+      });
+
+      const visitsPerWeek = postGapVisits.length / 2;
+      if (visitsPerWeek >= config.post_gap_intensive_visits_per_week) {
+        issues.push(makeIssue({
+          tenant_id: T, case_id: C,
+          issue_type: "gap_then_intensive_care",
+          severity: "medium",
+          title: `${gap}-day gap then ${postGapVisits.length} visits in 2 weeks — ${provider}`,
+          description: `After a ${gap}-day treatment gap, ${postGapVisits.length} visits occurred in the following 14 days (${visitsPerWeek.toFixed(1)}/week), suggesting resumed intensive care without documented clinical justification.`,
+          machine_explanation: `Rule: Flag ≥${config.treatment_gap_days}-day gaps followed by ≥${config.post_gap_intensive_visits_per_week} visits/week in the next 14 days. Gap: ${dated[i - 1].visit_date} → ${dated[i].visit_date} (${gap}d). Post-gap: ${postGapVisits.length} visits. (v${config.rule_engine_version})`,
+          affected_provider: provider,
+          affected_date_start: dated[i - 1].visit_date,
+          affected_date_end: postGapVisits[postGapVisits.length - 1]?.visit_date ?? null,
+          affected_bill_line_ids: [],
+          affected_treatment_ids: postGapVisits.map(r => r.id),
+          evidence: postGapVisits.slice(0, 3).map(makeEvidence),
+          questioned_amount: postGapVisits.reduce((s, r) => s + (r.total_billed ?? 0), 0),
+        }));
+        break; // One flag per provider
+      }
+    }
+  }
+  return issues;
+}
+
+function checkProviderUtilizationPattern(
+  treatments: ReviewerTreatmentRecord[],
+  config: MedicalReviewConfig,
+  T: string, C: string,
+): ReviewIssue[] {
+  const issues: ReviewIssue[] = [];
+  const totalBilled = treatments.reduce((s, r) => s + (r.total_billed ?? 0), 0);
+  if (totalBilled === 0) return issues;
+
+  const byProvider = groupByProvider(treatments);
+  for (const [provider, recs] of byProvider) {
+    if (recs.length < config.provider_pattern_min_visits) continue;
+
+    const providerBilled = recs.reduce((s, r) => s + (r.total_billed ?? 0), 0);
+    const concentration = (providerBilled / totalBilled) * 100;
+
+    if (concentration >= config.provider_concentration_pct) {
+      const dated = recs.filter(r => r.visit_date).sort((a, b) => a.visit_date!.localeCompare(b.visit_date!));
+      issues.push(makeIssue({
+        tenant_id: T, case_id: C,
+        issue_type: "provider_utilization_pattern",
+        severity: "medium",
+        title: `${provider} accounts for ${Math.round(concentration)}% of case billing`,
+        description: `${recs.length} visits totaling $${providerBilled.toLocaleString()} represent ${Math.round(concentration)}% of total case billing ($${totalBilled.toLocaleString()}). Elevated concentration warrants closer review.`,
+        machine_explanation: `Rule: Flag providers with ≥${config.provider_pattern_min_visits} visits representing ≥${config.provider_concentration_pct}% of total case billing. ${provider}: ${recs.length} visits, $${providerBilled.toLocaleString()} / $${totalBilled.toLocaleString()} = ${Math.round(concentration)}%. (v${config.rule_engine_version})`,
+        affected_provider: provider,
+        affected_date_start: dated[0]?.visit_date ?? null,
+        affected_date_end: dated[dated.length - 1]?.visit_date ?? null,
+        affected_bill_line_ids: [],
+        affected_treatment_ids: recs.map(r => r.id),
+        evidence: recs.slice(0, 3).map(makeEvidence),
+        questioned_amount: 0, // Informational, not questioned
+      }));
+    }
+  }
+  return issues;
+}
+
 // ─── Helpers ────────────────────────────────────────────
+
+function jaccardSimilarity(a: string, b: string): number {
+  if (!a || !b) return 0;
+  const tokensA = new Set(a.toLowerCase().split(/\s+/).filter(t => t.length > 2));
+  const tokensB = new Set(b.toLowerCase().split(/\s+/).filter(t => t.length > 2));
+  if (tokensA.size === 0 && tokensB.size === 0) return 1;
+  if (tokensA.size === 0 || tokensB.size === 0) return 0;
+  let intersection = 0;
+  for (const t of tokensA) if (tokensB.has(t)) intersection++;
+  const union = tokensA.size + tokensB.size - intersection;
+  return union === 0 ? 0 : intersection / union;
+}
+
+/** Exported for testing */
+export { jaccardSimilarity };
 
 function groupByProvider(treatments: ReviewerTreatmentRecord[]): Map<string, ReviewerTreatmentRecord[]> {
   const map = new Map<string, ReviewerTreatmentRecord[]>();

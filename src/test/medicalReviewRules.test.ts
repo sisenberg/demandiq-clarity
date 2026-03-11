@@ -1,9 +1,9 @@
 /**
- * Tests for ReviewerIQ medical review rules and reference pricing.
+ * Tests for ReviewerIQ medical review rules, reference pricing, and clinical Phase 1 rules.
  */
 
 import { describe, it, expect } from "vitest";
-import { runMedicalReviewRules, DEFAULT_MEDICAL_REVIEW_CONFIG } from "@/lib/medicalReviewRules";
+import { runMedicalReviewRules, DEFAULT_MEDICAL_REVIEW_CONFIG, jaccardSimilarity } from "@/lib/medicalReviewRules";
 import { lookupReferencePrice, computeVariance, isHighVariance, computeReferenceTotal } from "@/lib/referencePricing";
 import type { ReviewerTreatmentRecord } from "@/hooks/useReviewerTreatments";
 import type { ReviewerBillLine } from "@/types/reviewer-bills";
@@ -34,14 +34,13 @@ describe("Reference Pricing", () => {
   it("applies geographic adjustment", () => {
     const ref = lookupReferencePrice("72141"); // MRI cervical
     expect(ref).not.toBeNull();
-    // Sacramento GPCI is 1.12
     expect(ref!.adjusted_amount).toBeCloseTo(380 * 1.12, 0);
   });
 
   it("computes variance correctly", () => {
     const { variance_amount, variance_pct } = computeVariance(3200, 425);
     expect(variance_amount).toBe(2775);
-    expect(variance_pct).toBe(753); // 753% of reference
+    expect(variance_pct).toBe(753);
   });
 
   it("identifies high variance", () => {
@@ -68,9 +67,8 @@ describe("Medical Review Rules", () => {
   it("generates no issues for clean single-provider course", () => {
     const issues = runMedicalReviewRules(SOFT_TISSUE_COURSE, emptyBillLines, {
       ...DEFAULT_MEDICAL_REVIEW_CONFIG,
-      soft_tissue_recovery_days: 180, // relaxed window
+      soft_tissue_recovery_days: 180,
     });
-    // Should not flag excessive frequency or beyond-window for this clean course
     const frequencyIssues = issues.filter(i => i.issue_type === "excessive_visit_frequency");
     expect(frequencyIssues).toHaveLength(0);
   });
@@ -78,11 +76,9 @@ describe("Medical Review Rules", () => {
   it("flags treatment beyond soft-tissue recovery window", () => {
     const issues = runMedicalReviewRules(ESCALATING_CARE, emptyBillLines, {
       ...DEFAULT_MEDICAL_REVIEW_CONFIG,
-      soft_tissue_recovery_days: 7, // very tight window to trigger on fixtures
+      soft_tissue_recovery_days: 7,
     });
     const windowIssues = issues.filter(i => i.issue_type === "treatment_beyond_recovery_window");
-    // ESCALATING_CARE may or may not have PT records spanning > 7 days
-    // At minimum verify the rule runs without error and returns valid issues
     for (const issue of windowIssues) {
       expect(issue.machine_explanation).toContain("soft-tissue");
     }
@@ -96,12 +92,11 @@ describe("Medical Review Rules", () => {
   });
 
   it("flags escalation without findings", () => {
-    // Create a record with an injection but no objective findings
     const injectionNoFindings: ReviewerTreatmentRecord[] = [{
       ...ESCALATING_CARE[0],
       id: "test-escalation",
       procedures: [{ code: "64483", description: "ESI" }],
-      objective_findings: "", // Empty findings
+      objective_findings: "",
     }];
     const issues = runMedicalReviewRules(injectionNoFindings, emptyBillLines);
     const escalationIssues = issues.filter(i => i.issue_type === "escalation_without_findings");
@@ -131,7 +126,7 @@ describe("Medical Review Rules", () => {
     const pricingIssues = issues.filter(i => i.issue_type === "high_variance_pricing");
     expect(pricingIssues.length).toBe(1);
     expect(pricingIssues[0].questioned_amount).toBe(2775);
-    expect(pricingIssues[0].severity).toBe("high"); // >500%
+    expect(pricingIssues[0].severity).toBe("high");
   });
 
   it("includes machine explanation on all issues", () => {
@@ -179,6 +174,141 @@ describe("Medical Review Rules", () => {
     const issues = runMedicalReviewRules([], orphanBill);
     const noTxIssues = issues.filter(i => i.issue_type === "bill_no_treatment_note");
     expect(noTxIssues.length).toBe(1);
+  });
+});
+
+// ─── Clinical Phase 1 Rules ────────────────────────────
+
+describe("Clinical Phase 1 — Prolonged Care with Weak Findings", () => {
+  const emptyBillLines: ReviewerBillLine[] = [];
+
+  it("flags prolonged care with weak objective findings", () => {
+    // Create 6 PT visits spanning 120 days, later ones with no findings
+    const records: ReviewerTreatmentRecord[] = Array.from({ length: 6 }, (_, i) => ({
+      ...SOFT_TISSUE_COURSE[1], // PT template
+      id: `pcwf-${i}`,
+      visit_date: `2025-0${Math.min(i + 1, 9)}-${String((i * 20) % 28 + 1).padStart(2, "0")}`,
+      visit_type: "physical_therapy" as const,
+      objective_findings: i < 2 ? "ROM cervical 60% flexion, tenderness C5-C6" : "", // weak after first 2
+      total_billed: 400,
+    }));
+
+    const issues = runMedicalReviewRules(records, emptyBillLines, {
+      ...DEFAULT_MEDICAL_REVIEW_CONFIG,
+      soft_tissue_recovery_days: 30, // tight window
+    });
+    const pwf = issues.filter(i => i.issue_type === "prolonged_care_weak_findings");
+    expect(pwf.length).toBeGreaterThanOrEqual(1);
+    expect(pwf[0].severity).toBe("high");
+    expect(pwf[0].machine_explanation).toContain("weak");
+  });
+});
+
+describe("Clinical Phase 1 — Near-Identical Notes", () => {
+  const emptyBillLines: ReviewerBillLine[] = [];
+
+  it("flags near-identical consecutive assessment notes", () => {
+    const templateNote = "Patient reports continued cervical pain rated 6/10. ROM limited. Continue current treatment plan with PT exercises and modalities. Follow up in two weeks.";
+    const records: ReviewerTreatmentRecord[] = Array.from({ length: 5 }, (_, i) => ({
+      ...SOFT_TISSUE_COURSE[1],
+      id: `nin-${i}`,
+      visit_date: `2025-06-${String(i * 7 + 1).padStart(2, "0")}`,
+      assessment_summary: templateNote, // identical notes
+    }));
+
+    const issues = runMedicalReviewRules(records, emptyBillLines);
+    const ninIssues = issues.filter(i => i.issue_type === "near_identical_notes");
+    expect(ninIssues.length).toBeGreaterThanOrEqual(1);
+    expect(ninIssues[0].severity).toBe("medium");
+    expect(ninIssues[0].machine_explanation).toContain("similarity");
+  });
+
+  it("does not flag dissimilar notes", () => {
+    const records: ReviewerTreatmentRecord[] = [
+      { ...SOFT_TISSUE_COURSE[1], id: "dsn-1", visit_date: "2025-06-01", assessment_summary: "Initial evaluation cervical strain. ROM 40% flex. Tenderness bilateral." },
+      { ...SOFT_TISSUE_COURSE[1], id: "dsn-2", visit_date: "2025-06-08", assessment_summary: "Patient improving significantly. Full ROM restored. Discharge from therapy recommended." },
+      { ...SOFT_TISSUE_COURSE[1], id: "dsn-3", visit_date: "2025-06-15", assessment_summary: "Final visit. No pain reported. Patient cleared for full activity return." },
+    ];
+    const issues = runMedicalReviewRules(records, emptyBillLines);
+    const ninIssues = issues.filter(i => i.issue_type === "near_identical_notes");
+    expect(ninIssues).toHaveLength(0);
+  });
+});
+
+describe("Clinical Phase 1 — Gap Then Intensive Care", () => {
+  const emptyBillLines: ReviewerBillLine[] = [];
+
+  it("flags intensive care resumption after treatment gap", () => {
+    const records: ReviewerTreatmentRecord[] = [
+      { ...SOFT_TISSUE_COURSE[1], id: "gtic-1", visit_date: "2025-03-01", total_billed: 400 },
+      { ...SOFT_TISSUE_COURSE[1], id: "gtic-2", visit_date: "2025-03-05", total_billed: 400 },
+      // 45-day gap
+      { ...SOFT_TISSUE_COURSE[1], id: "gtic-3", visit_date: "2025-04-20", total_billed: 400 },
+      { ...SOFT_TISSUE_COURSE[1], id: "gtic-4", visit_date: "2025-04-22", total_billed: 400 },
+      { ...SOFT_TISSUE_COURSE[1], id: "gtic-5", visit_date: "2025-04-24", total_billed: 400 },
+      { ...SOFT_TISSUE_COURSE[1], id: "gtic-6", visit_date: "2025-04-26", total_billed: 400 },
+      { ...SOFT_TISSUE_COURSE[1], id: "gtic-7", visit_date: "2025-04-28", total_billed: 400 },
+      { ...SOFT_TISSUE_COURSE[1], id: "gtic-8", visit_date: "2025-04-30", total_billed: 400 },
+    ];
+
+    const issues = runMedicalReviewRules(records, emptyBillLines, {
+      ...DEFAULT_MEDICAL_REVIEW_CONFIG,
+      treatment_gap_days: 30,
+      post_gap_intensive_visits_per_week: 3,
+    });
+    const gapIssues = issues.filter(i => i.issue_type === "gap_then_intensive_care");
+    expect(gapIssues.length).toBeGreaterThanOrEqual(1);
+    expect(gapIssues[0].machine_explanation).toContain("gap");
+  });
+});
+
+describe("Clinical Phase 1 — Provider Utilization Pattern", () => {
+  const emptyBillLines: ReviewerBillLine[] = [];
+
+  it("flags providers with high billing concentration", () => {
+    // 10 visits from one provider = $4000, 2 from another = $200
+    const records: ReviewerTreatmentRecord[] = [
+      ...Array.from({ length: 10 }, (_, i) => ({
+        ...SOFT_TISSUE_COURSE[1],
+        id: `pup-main-${i}`,
+        visit_date: `2025-06-${String(i + 1).padStart(2, "0")}`,
+        provider_name_normalized: "Heavy Provider",
+        total_billed: 400,
+      })),
+      { ...SOFT_TISSUE_COURSE[1], id: "pup-other-1", visit_date: "2025-06-01", provider_name_normalized: "Light Provider", total_billed: 100 },
+      { ...SOFT_TISSUE_COURSE[1], id: "pup-other-2", visit_date: "2025-06-02", provider_name_normalized: "Light Provider", total_billed: 100 },
+    ];
+
+    const issues = runMedicalReviewRules(records, emptyBillLines, {
+      ...DEFAULT_MEDICAL_REVIEW_CONFIG,
+      provider_pattern_min_visits: 8,
+      provider_concentration_pct: 60,
+    });
+    const pupIssues = issues.filter(i => i.issue_type === "provider_utilization_pattern");
+    expect(pupIssues.length).toBe(1);
+    expect(pupIssues[0].affected_provider).toBe("Heavy Provider");
+    expect(pupIssues[0].machine_explanation).toContain("%");
+  });
+});
+
+describe("Jaccard Similarity Helper", () => {
+  it("returns 1 for identical strings", () => {
+    expect(jaccardSimilarity("the quick brown fox", "the quick brown fox")).toBe(1);
+  });
+
+  it("returns 0 for completely different strings", () => {
+    expect(jaccardSimilarity("alpha beta gamma", "delta epsilon zeta")).toBe(0);
+  });
+
+  it("returns partial overlap score", () => {
+    const sim = jaccardSimilarity("the quick brown fox", "the slow brown cat");
+    expect(sim).toBeGreaterThan(0);
+    expect(sim).toBeLessThan(1);
+  });
+
+  it("handles empty strings", () => {
+    expect(jaccardSimilarity("", "test")).toBe(0);
+    expect(jaccardSimilarity("", "")).toBe(0);
   });
 });
 

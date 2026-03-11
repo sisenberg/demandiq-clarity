@@ -8,12 +8,16 @@ import { useState, useMemo } from "react";
 import {
   AlertTriangle, CheckCircle2, XCircle, HelpCircle, ArrowUpRight,
   ChevronDown, ChevronRight, Filter, Search, X, FileText,
-  DollarSign, Stethoscope, Shield,
+  DollarSign, Stethoscope, Shield, Clock, Zap, Activity, BookOpen,
 } from "lucide-react";
 import type {
   ReviewIssue, ReviewIssueType, ReviewIssueSeverity, ReviewIssueDisposition,
+  ClinicalIssueCategory,
 } from "@/types/reviewer-issues";
-import { ISSUE_TYPE_LABEL, ISSUE_SEVERITY_LABEL, DISPOSITION_LABEL } from "@/types/reviewer-issues";
+import {
+  ISSUE_TYPE_LABEL, ISSUE_SEVERITY_LABEL, DISPOSITION_LABEL,
+  ISSUE_CATEGORY_MAP, CLINICAL_CATEGORY_LABEL,
+} from "@/types/reviewer-issues";
 
 // ─── Severity styling ───────────────────────────────────
 
@@ -46,32 +50,47 @@ export default function ReviewerIssueWorkspace({ issues, onDisposition }: Review
   const [search, setSearch] = useState("");
   const [severityFilter, setSeverityFilter] = useState<ReviewIssueSeverity | null>(null);
   const [typeFilter, setTypeFilter] = useState<ReviewIssueType | null>(null);
+  const [categoryFilter, setCategoryFilter] = useState<ClinicalIssueCategory | null>(null);
   const [expandedIssues, setExpandedIssues] = useState<Set<string>>(new Set());
   const [showPendingOnly, setShowPendingOnly] = useState(false);
+  const [groupMode, setGroupMode] = useState<"provider" | "category">("provider");
 
   const filtered = useMemo(() => {
     return issues.filter(i => {
       if (showPendingOnly && i.disposition !== "pending") return false;
       if (severityFilter && i.severity !== severityFilter) return false;
       if (typeFilter && i.issue_type !== typeFilter) return false;
+      if (categoryFilter && ISSUE_CATEGORY_MAP[i.issue_type] !== categoryFilter) return false;
       if (search) {
         const q = search.toLowerCase();
         if (!`${i.title} ${i.description} ${i.affected_provider || ""}`.toLowerCase().includes(q)) return false;
       }
       return true;
     });
-  }, [issues, search, severityFilter, typeFilter, showPendingOnly]);
+  }, [issues, search, severityFilter, typeFilter, categoryFilter, showPendingOnly]);
 
   // Group by provider
   const grouped = useMemo(() => {
     const map = new Map<string, ReviewIssue[]>();
     for (const i of filtered) {
-      const key = i.affected_provider || "General";
+      const key = groupMode === "provider"
+        ? (i.affected_provider || "General")
+        : CLINICAL_CATEGORY_LABEL[ISSUE_CATEGORY_MAP[i.issue_type]];
       if (!map.has(key)) map.set(key, []);
       map.get(key)!.push(i);
     }
     return [...map.entries()].sort((a, b) => b[1].length - a[1].length);
-  }, [filtered]);
+  }, [filtered, groupMode]);
+
+  // Category counts for filter chips
+  const categoryCounts = useMemo(() => {
+    const counts: Partial<Record<ClinicalIssueCategory, number>> = {};
+    for (const i of issues) {
+      const cat = ISSUE_CATEGORY_MAP[i.issue_type];
+      counts[cat] = (counts[cat] ?? 0) + 1;
+    }
+    return counts;
+  }, [issues]);
 
   const pendingCount = issues.filter(i => i.disposition === "pending").length;
   const totalQuestioned = filtered.reduce((s, i) => s + i.questioned_amount, 0);
@@ -113,6 +132,22 @@ export default function ReviewerIssueWorkspace({ issues, onDisposition }: Review
           {search && <button onClick={() => setSearch("")} className="absolute right-2 top-1/2 -translate-y-1/2"><X className="h-3 w-3 text-muted-foreground" /></button>}
         </div>
 
+        {/* Group mode toggle */}
+        <div className="flex items-center rounded-lg border border-border overflow-hidden">
+          <button
+            onClick={() => setGroupMode("provider")}
+            className={`text-[10px] font-medium px-2.5 py-1.5 transition-colors ${groupMode === "provider" ? "bg-primary/10 text-primary" : "bg-card text-muted-foreground"}`}
+          >
+            By Provider
+          </button>
+          <button
+            onClick={() => setGroupMode("category")}
+            className={`text-[10px] font-medium px-2.5 py-1.5 transition-colors ${groupMode === "category" ? "bg-primary/10 text-primary" : "bg-card text-muted-foreground"}`}
+          >
+            By Category
+          </button>
+        </div>
+
         <button
           onClick={() => setShowPendingOnly(!showPendingOnly)}
           className={`text-[10px] font-medium px-2.5 py-1.5 rounded-lg border transition-colors ${
@@ -141,6 +176,25 @@ export default function ReviewerIssueWorkspace({ issues, onDisposition }: Review
         })}
 
         <div className="ml-auto text-[10px] text-muted-foreground">{filtered.length} issues</div>
+      </div>
+
+      {/* Clinical category chips */}
+      <div className="flex items-center gap-1.5 flex-wrap">
+        <span className="text-[9px] text-muted-foreground font-medium mr-1">Categories:</span>
+        {(Object.entries(categoryCounts) as [ClinicalIssueCategory, number][]).map(([cat, count]) => {
+          const isActive = categoryFilter === cat;
+          return (
+            <button
+              key={cat}
+              onClick={() => setCategoryFilter(isActive ? null : cat)}
+              className={`text-[9px] font-medium px-2 py-1 rounded-md border transition-colors ${
+                isActive ? "border-primary/30 bg-primary/5 text-primary" : "border-border bg-card text-muted-foreground hover:text-foreground"
+              }`}
+            >
+              {CLINICAL_CATEGORY_LABEL[cat]} ({count})
+            </button>
+          );
+        })}
       </div>
 
       {/* Grouped issue list */}

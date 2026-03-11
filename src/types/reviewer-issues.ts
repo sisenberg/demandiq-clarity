@@ -20,7 +20,50 @@ export type ReviewIssueType =
   | "high_variance_pricing"
   | "missing_documentation"
   | "duplicate_bill_line"
-  | "provider_concern";
+  | "provider_concern"
+  | "near_identical_notes"
+  | "gap_then_intensive_care"
+  | "provider_utilization_pattern";
+
+// ─── Clinical Issue Categories ──────────────────────────
+
+export type ClinicalIssueCategory =
+  | "duration"
+  | "frequency"
+  | "passive_care"
+  | "escalation"
+  | "documentation"
+  | "note_pattern"
+  | "financial";
+
+export const ISSUE_CATEGORY_MAP: Record<ReviewIssueType, ClinicalIssueCategory> = {
+  excessive_visit_frequency: "frequency",
+  treatment_beyond_recovery_window: "duration",
+  repeated_passive_modalities: "passive_care",
+  duplicate_service: "frequency",
+  escalation_without_findings: "escalation",
+  code_note_mismatch: "documentation",
+  bill_no_treatment_note: "documentation",
+  treatment_no_bill: "documentation",
+  prolonged_care_weak_findings: "duration",
+  high_variance_pricing: "financial",
+  missing_documentation: "documentation",
+  duplicate_bill_line: "financial",
+  provider_concern: "frequency",
+  near_identical_notes: "note_pattern",
+  gap_then_intensive_care: "frequency",
+  provider_utilization_pattern: "frequency",
+};
+
+export const CLINICAL_CATEGORY_LABEL: Record<ClinicalIssueCategory, string> = {
+  duration: "Duration Concern",
+  frequency: "Frequency Concern",
+  passive_care: "Passive Care Concern",
+  escalation: "Escalation Concern",
+  documentation: "Documentation Support Concern",
+  note_pattern: "Note-Pattern Concern",
+  financial: "Financial Concern",
+};
 
 export type ReviewIssueSeverity = "critical" | "high" | "medium" | "low" | "info";
 
@@ -95,6 +138,9 @@ export const ISSUE_TYPE_LABEL: Record<ReviewIssueType, string> = {
   missing_documentation: "Missing Documentation",
   duplicate_bill_line: "Duplicate Bill Line",
   provider_concern: "Provider Concern",
+  near_identical_notes: "Near-Identical Notes",
+  gap_then_intensive_care: "Gap Then Intensive Care",
+  provider_utilization_pattern: "Provider Utilization Pattern",
 };
 
 export const ISSUE_SEVERITY_LABEL: Record<ReviewIssueSeverity, string> = {
