@@ -11,6 +11,8 @@ import { isEntitlementActive } from "@/hooks/useModuleEntitlements";
 import { useModuleCompletion } from "@/hooks/useModuleCompletion";
 import { ModuleId, ModuleCompletionStatus } from "@/types";
 import CaseOverview from "@/components/case/CaseOverview";
+import CoverPageTab from "@/components/case/CoverPageTab";
+import ChecklistTab from "@/components/case/ChecklistTab";
 import DocumentUpload from "@/components/case/DocumentUpload";
 import JobsPanel from "@/components/case/JobsPanel";
 import DocumentTypeTag from "@/components/case/DocumentTypeTag";
@@ -216,37 +218,62 @@ const CaseDetailPage = () => {
                 <CaseOverview caseData={caseData} documents={documents} />
               )}
 
-              {/* ── CASE NOTES (DemandIQ Workspace) ──── */}
+              {/* ── DemandIQ WORKSPACE (tab-driven) ──── */}
               {activeSection === "notes" && (
                 <>
-                  <ModuleCompletionStatusPanel
-                    caseId={caseData.id}
-                    moduleId="demandiq"
-                    onCompleteClick={hasPermission(role, "complete_module") ? () => setShowCompletionDialog(true) : undefined}
-                  />
-                  <CaseNotesPanel />
+                  {activeTab === "cover" && (
+                    <CoverPageTab caseData={caseData} documents={documents} />
+                  )}
 
-                  {hasReviewerIQ ? (
-                    <AnalysisCard
-                      icon={ClipboardCheck}
-                      title="Medical Review Snapshot"
-                      subtitle="ReviewerIQ"
-                      sections={MEDICAL_REVIEW_SECTIONS}
-                    />
-                  ) : (
-                    <div className="relative">
-                      <div className="absolute top-3 right-3 z-10">
-                        <ComingSoonBadge label="ReviewerIQ · Add-on" />
-                      </div>
-                      <div className="opacity-50 pointer-events-none">
+                  {activeTab === "checklist" && (
+                    <ChecklistTab />
+                  )}
+
+                  {activeTab === "assessment" && (
+                    <>
+                      <ModuleCompletionStatusPanel
+                        caseId={caseData.id}
+                        moduleId="demandiq"
+                        onCompleteClick={hasPermission(role, "complete_module") ? () => setShowCompletionDialog(true) : undefined}
+                      />
+                      <CaseNotesPanel />
+
+                      {hasReviewerIQ ? (
                         <AnalysisCard
                           icon={ClipboardCheck}
                           title="Medical Review Snapshot"
-                          subtitle="ReviewerIQ Preview"
-                          sections={MEDICAL_REVIEW_SECTIONS.slice(0, 1)}
+                          subtitle="ReviewerIQ"
+                          sections={MEDICAL_REVIEW_SECTIONS}
+                        />
+                      ) : (
+                        <div className="relative">
+                          <div className="absolute top-3 right-3 z-10">
+                            <ComingSoonBadge label="ReviewerIQ · Add-on" />
+                          </div>
+                          <div className="opacity-50 pointer-events-none">
+                            <AnalysisCard
+                              icon={ClipboardCheck}
+                              title="Medical Review Snapshot"
+                              subtitle="ReviewerIQ Preview"
+                              sections={MEDICAL_REVIEW_SECTIONS.slice(0, 1)}
+                            />
+                          </div>
+                        </div>
+                      )}
+                    </>
+                  )}
+
+                  {/* Placeholder tabs */}
+                  {(activeTab === "chronology" || activeTab === "background" || activeTab === "providers") && (
+                    <WorkspaceCard icon={FileText} title={activeTab.charAt(0).toUpperCase() + activeTab.slice(1)}>
+                      <div className="p-5">
+                        <EmptyState
+                          icon={FileText}
+                          title={`${activeTab.charAt(0).toUpperCase() + activeTab.slice(1)} workspace`}
+                          description="This section will be built in a future iteration."
                         />
                       </div>
-                    </div>
+                    </WorkspaceCard>
                   )}
                 </>
               )}
