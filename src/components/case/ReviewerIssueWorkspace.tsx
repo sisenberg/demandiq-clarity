@@ -73,12 +73,24 @@ export default function ReviewerIssueWorkspace({ issues, onDisposition }: Review
   const grouped = useMemo(() => {
     const map = new Map<string, ReviewIssue[]>();
     for (const i of filtered) {
-      const key = i.affected_provider || "General";
+      const key = groupMode === "provider"
+        ? (i.affected_provider || "General")
+        : CLINICAL_CATEGORY_LABEL[ISSUE_CATEGORY_MAP[i.issue_type]];
       if (!map.has(key)) map.set(key, []);
       map.get(key)!.push(i);
     }
     return [...map.entries()].sort((a, b) => b[1].length - a[1].length);
-  }, [filtered]);
+  }, [filtered, groupMode]);
+
+  // Category counts for filter chips
+  const categoryCounts = useMemo(() => {
+    const counts: Partial<Record<ClinicalIssueCategory, number>> = {};
+    for (const i of issues) {
+      const cat = ISSUE_CATEGORY_MAP[i.issue_type];
+      counts[cat] = (counts[cat] ?? 0) + 1;
+    }
+    return counts;
+  }, [issues]);
 
   const pendingCount = issues.filter(i => i.disposition === "pending").length;
   const totalQuestioned = filtered.reduce((s, i) => s + i.questioned_amount, 0);
