@@ -9,6 +9,7 @@ import MainLayout from "@/components/layout/MainLayout";
 import SignIn from "@/pages/SignIn";
 import Dashboard from "@/pages/Dashboard";
 import CasesPage from "@/pages/CasesPage";
+import NewCasePage from "@/pages/NewCasePage";
 import CaseDetailPage from "@/pages/CaseDetailPage";
 import DocumentsPage from "@/pages/DocumentsPage";
 import DocumentDetailPage from "@/pages/DocumentDetailPage";
@@ -34,8 +35,9 @@ const App = () => (
                 </ProtectedRoute>
               }
             >
-              <Route path="/" element={<Dashboard />} />
+              <Route path="/" element={<CasesPage />} />
               <Route path="/cases" element={<CasesPage />} />
+              <Route path="/cases/new" element={<NewCasePage />} />
               <Route path="/cases/:caseId" element={<CaseDetailPage />} />
               <Route path="/documents" element={<DocumentsPage />} />
               <Route path="/documents/:docId" element={<DocumentDetailPage />} />
