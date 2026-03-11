@@ -76,12 +76,12 @@ export const MATRIX_PERMISSIONS: Permission[] = [
 export const ROLE_PERMISSIONS: Record<AppRole, Set<Permission>> = {
   admin: new Set<Permission>([
     "create_case", "upload_document", "trigger_processing", "edit_extraction",
-    "export_package", "manage_users", "view_audit_log", "assign_case",
+    "complete_module", "download_artifacts", "manage_users", "view_audit_log", "assign_case",
     "edit_case", "view_all_cases", "view_assigned_cases", "view_admin",
   ]),
   manager: new Set<Permission>([
     "create_case", "upload_document", "trigger_processing", "edit_extraction",
-    "export_package", "view_audit_log", "assign_case", "edit_case",
+    "complete_module", "download_artifacts", "view_audit_log", "assign_case", "edit_case",
     "view_all_cases", "view_assigned_cases",
   ]),
   reviewer: new Set<Permission>([
