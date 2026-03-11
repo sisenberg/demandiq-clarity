@@ -100,7 +100,7 @@ const DocumentsWorkstation = ({ documents, loading, caseId }: DocumentsWorkstati
 
   // Stats
   const totalPages = documents.reduce((s, d) => s + (d.page_count ?? 0), 0);
-  const completeDocs = documents.filter((d) => d.document_status === "complete" || d.document_status === "extracted").length;
+  const completeDocs = documents.filter((d) => isDocumentReady(d.document_status)).length;
 
   return (
     <div className="flex h-[calc(100vh-180px)] -m-5 border-t border-border">
