@@ -12,7 +12,7 @@ import {
 } from "@/lib/billNormalization";
 import { lookupReferencePrice } from "@/lib/referencePricing";
 import { runMedicalReviewRules, DEFAULT_MEDICAL_REVIEW_CONFIG } from "@/lib/medicalReviewRules";
-import { sanitizeForLog } from "@/lib/safe-log";
+import { sanitizeForLogSafe as sanitizeForLog } from "@/lib/safe-log";
 import type { ReviewerBillLine } from "@/types/reviewer-bills";
 import type { ReviewIssueDisposition } from "@/types/reviewer-issues";
 import { REVIEWER_PACKAGE_VERSION } from "@/types/reviewer-package";
