@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/lib/supabase";
 import { useAuth } from "@/contexts/AuthContext";
-import { Shield } from "lucide-react";
+import { Zap } from "lucide-react";
 
 const SignIn = () => {
   const navigate = useNavigate();
