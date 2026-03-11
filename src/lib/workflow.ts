@@ -125,7 +125,7 @@ export function getPhaseStates(caseStatus: CaseStatus): Record<WorkflowPhase, Ph
   const result: Record<WorkflowPhase, PhaseState> = {
     intake: "pending",
     processing: "pending",
-    export: "pending",
+    completion: "pending",
   };
 
   if (caseStatus === CaseStatus.Failed) {
