@@ -97,6 +97,9 @@ const CaseOverview = ({ caseData, documents, onNavigate }: CaseOverviewProps) =>
     <div className="flex gap-5">
       {/* ═══ LEFT COLUMN — Main content ═══ */}
       <div className="flex-1 min-w-0 flex flex-col gap-4">
+        {/* ── Row 0: Intake Readiness ── */}
+        <IntakeReadinessPanel documents={documents} caseId={caseData.id} onNavigate={onNavigate} />
+
         {/* ── Row 1: Case Snapshot + Key Metrics ── */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
           {/* Case / Claimant Summary */}
