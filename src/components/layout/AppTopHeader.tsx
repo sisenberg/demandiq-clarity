@@ -1,33 +1,32 @@
 import { useAuth } from "@/contexts/AuthContext";
-import { LogOut, Search } from "lucide-react";
+import { LogOut, Search, Bell } from "lucide-react";
 import RoleBadge from "@/components/ui/RoleBadge";
 
 const AppTopHeader = () => {
   const { profile, role, signOut } = useAuth();
 
   return (
-    <header className="h-14 border-b border-border bg-card flex items-center justify-between px-6 shrink-0">
+    <header className="h-12 border-b border-border bg-card flex items-center justify-between px-6 shrink-0">
       {/* Search */}
-      <div className="flex items-center gap-2 text-muted-foreground bg-background rounded-lg border border-border px-3 py-1.5 w-72">
+      <div className="search-input w-64">
         <Search className="h-3.5 w-3.5 shrink-0" />
-        <input
-          type="text"
-          placeholder="Search cases, documents…"
-          className="bg-transparent text-xs text-foreground placeholder:text-muted-foreground outline-none w-full"
-        />
+        <input type="text" placeholder="Search cases, documents…" />
       </div>
 
       {/* Right side */}
-      <div className="flex items-center gap-4">
+      <div className="flex items-center gap-2">
         <RoleBadge role={role} />
-        <div className="h-5 w-px bg-border" />
+        <div className="h-4 w-px bg-border mx-1" />
+        <button className="btn-ghost p-2" title="Notifications">
+          <Bell className="h-3.5 w-3.5" />
+        </button>
         <button
           onClick={signOut}
-          className="flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground transition-colors px-2 py-1.5 rounded-lg hover:bg-accent"
+          className="btn-ghost"
           title="Sign out"
         >
           <LogOut className="h-3.5 w-3.5" />
-          <span>Sign Out</span>
+          <span className="hidden sm:inline">Sign Out</span>
         </button>
       </div>
     </header>

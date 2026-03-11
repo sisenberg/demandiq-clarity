@@ -195,7 +195,7 @@ const CaseDetailPage = () => {
 
         {/* Center workspace */}
         <div className="flex-1 overflow-y-auto">
-          <div className="p-6 max-w-5xl flex flex-col gap-5">
+          <div className="p-5 max-w-5xl flex flex-col gap-4">
             {/* ── OVERVIEW ────────────────────────── */}
             {activeSection === "overview" && (
               <>
@@ -212,18 +212,15 @@ const CaseDetailPage = () => {
                   actions={
                     <div className="flex gap-2">
                       {hasPermission(role, "upload_document") && (
-                        <button
-                          onClick={() => setShowUpload(true)}
-                          className="flex items-center gap-1.5 text-[11px] font-medium px-2.5 py-1.5 rounded-lg border border-border bg-card text-foreground hover:bg-accent transition-colors"
-                        >
+                         <button onClick={() => setShowUpload(true)} className="btn-secondary text-[11px]">
                           <Upload className="h-3 w-3" /> Upload
                         </button>
                       )}
                       {hasPermission(role, "trigger_processing") && pendingDocs > 0 && (
-                        <button
+                         <button
                           onClick={() => triggerProcessing.mutate({ caseId: caseData.id })}
                           disabled={triggerProcessing.isPending}
-                          className="flex items-center gap-1.5 text-[11px] font-medium px-2.5 py-1.5 rounded-lg bg-primary text-primary-foreground hover:bg-primary/90 transition-colors disabled:opacity-50"
+                          className="btn-primary text-[11px]"
                         >
                           <Play className="h-3 w-3" /> Process
                         </button>
@@ -321,21 +318,18 @@ const CaseDetailPage = () => {
               <>
                 <div className="flex flex-wrap gap-2">
                   {hasPermission(role, "upload_document") && (
-                    <button
-                      onClick={() => setShowUpload(true)}
-                      className="flex items-center gap-1.5 text-xs font-medium px-3.5 py-2 rounded-lg border border-border bg-card text-foreground hover:bg-accent transition-colors"
-                    >
-                      <Upload className="h-3.5 w-3.5" /> Upload Documents
-                    </button>
+                     <button onClick={() => setShowUpload(true)} className="btn-secondary">
+                       <Upload className="h-3.5 w-3.5" /> Upload Documents
+                     </button>
                   )}
                   {hasPermission(role, "trigger_processing") && pendingDocs > 0 && (
-                    <button
-                      onClick={() => triggerProcessing.mutate({ caseId: caseData.id })}
-                      disabled={triggerProcessing.isPending}
-                      className="flex items-center gap-1.5 text-xs font-medium px-3.5 py-2 rounded-lg bg-primary text-primary-foreground hover:bg-primary/90 transition-colors disabled:opacity-50 shadow-sm"
-                    >
-                      <Play className="h-3.5 w-3.5" /> Trigger Processing
-                    </button>
+                     <button
+                       onClick={() => triggerProcessing.mutate({ caseId: caseData.id })}
+                       disabled={triggerProcessing.isPending}
+                       className="btn-primary"
+                     >
+                       <Play className="h-3.5 w-3.5" /> Trigger Processing
+                     </button>
                   )}
                 </div>
                 <WorkspaceCard icon={FileText} title="All Documents" count={documents.length}>
