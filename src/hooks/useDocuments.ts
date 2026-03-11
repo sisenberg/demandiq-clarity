@@ -16,6 +16,7 @@ export interface DocumentRow {
   document_type: string;
   pipeline_stage: string;
   intake_status: string;
+  file_hash: string | null;
   extracted_text: string | null;
   uploaded_by: string;
   extracted_at: string | null;
@@ -69,51 +70,123 @@ export function useAllDocuments() {
   });
 }
 
+/** Compute SHA-256 hash of a file as hex string */
+async function computeFileHash(file: File): Promise<string> {
+  const buffer = await file.arrayBuffer();
+  const hashBuffer = await crypto.subtle.digest("SHA-256", buffer);
+  const hashArray = Array.from(new Uint8Array(hashBuffer));
+  return hashArray.map((b) => b.toString(16).padStart(2, "0")).join("");
+}
+
+export interface UploadFileProgress {
+  file: File;
+  status: "pending" | "uploading" | "creating_record" | "done" | "error";
+  progress: number; // 0-100
+  error?: string;
+  documentId?: string;
+  hash?: string;
+}
+
 export function useUploadDocuments() {
   const queryClient = useQueryClient();
   const { tenantId, user } = useAuth();
 
   return useMutation({
-    mutationFn: async ({ caseId, files, documentType }: { caseId: string; files: File[]; documentType: string }) => {
+    mutationFn: async ({
+      caseId,
+      files,
+      documentType,
+      onFileProgress,
+    }: {
+      caseId: string;
+      files: File[];
+      documentType: string;
+      onFileProgress?: (fileIndex: number, update: Partial<UploadFileProgress>) => void;
+    }) => {
       if (!tenantId || !user) throw new Error("Not authenticated");
       const results: DocumentRow[] = [];
 
-      for (const file of files) {
-        // Upload to storage
-        const storagePath = `${tenantId}/${caseId}/${crypto.randomUUID()}_${file.name}`;
-        const { error: uploadError } = await supabase.storage
-          .from("case-documents")
-          .upload(storagePath, file);
-        if (uploadError) throw uploadError;
+      for (let i = 0; i < files.length; i++) {
+        const file = files[i];
+        try {
+          // Hash
+          onFileProgress?.(i, { status: "uploading", progress: 10 });
+          const hash = await computeFileHash(file);
+          onFileProgress?.(i, { progress: 30, hash });
 
-        // Create document record
-        const { data, error } = await (supabase
-          .from("case_documents") as any)
-          .insert({
-            case_id: caseId,
-            file_name: file.name,
-            file_type: file.type || "application/octet-stream",
-            file_size_bytes: file.size,
-            storage_path: storagePath,
-            document_status: "uploaded",
-            document_type: documentType,
-            pipeline_stage: "upload_received",
-            uploaded_by: user.id,
-          })
-          .select()
-          .single();
-        if (error) throw error;
-        results.push(data as DocumentRow);
+          // Upload to storage
+          const storagePath = `${tenantId}/${caseId}/${crypto.randomUUID()}_${file.name}`;
+          const { error: uploadError } = await supabase.storage
+            .from("case-documents")
+            .upload(storagePath, file);
+          if (uploadError) throw uploadError;
+          onFileProgress?.(i, { progress: 70, status: "creating_record" });
+
+          // Create document record with hash
+          const { data, error } = await (supabase
+            .from("case_documents") as any)
+            .insert({
+              case_id: caseId,
+              file_name: file.name,
+              file_type: file.type || "application/octet-stream",
+              file_size_bytes: file.size,
+              storage_path: storagePath,
+              document_status: "uploaded",
+              document_type: documentType,
+              pipeline_stage: "upload_received",
+              intake_status: "uploaded",
+              file_hash: hash,
+              uploaded_by: user.id,
+            })
+            .select()
+            .single();
+          if (error) throw error;
+
+          onFileProgress?.(i, { status: "done", progress: 100, documentId: data.id });
+          results.push(data as DocumentRow);
+
+          // Auto-enqueue intake jobs for this document
+          await (supabase.from("intake_jobs") as any).insert([
+            { tenant_id: tenantId, case_id: caseId, document_id: data.id, job_type: "text_extraction", status: "queued" },
+            { tenant_id: tenantId, case_id: caseId, document_id: data.id, job_type: "duplicate_detection", status: "queued" },
+          ]);
+        } catch (err: any) {
+          onFileProgress?.(i, { status: "error", error: err.message, progress: 0 });
+        }
       }
       return results;
     },
     onSuccess: (_, { caseId }) => {
       queryClient.invalidateQueries({ queryKey: ["case-documents", caseId] });
       queryClient.invalidateQueries({ queryKey: ["case-documents", "all"] });
-      toast.success("Documents uploaded");
+      queryClient.invalidateQueries({ queryKey: ["intake-jobs", caseId] });
     },
     onError: (err) => {
-      toast.error(`Upload failed: ${err.message}`);
+      toast.error(`Upload failed: ${(err as Error).message}`);
+    },
+  });
+}
+
+export function useDeleteDocument() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async ({ docId, storagePath }: { docId: string; storagePath: string | null }) => {
+      // Delete from storage first if path exists
+      if (storagePath) {
+        await supabase.storage.from("case-documents").remove([storagePath]);
+      }
+      const { error } = await (supabase.from("case_documents") as any)
+        .delete()
+        .eq("id", docId);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["case-documents"] });
+      toast.success("Document removed");
+    },
+    onError: (err) => {
+      toast.error(`Delete failed: ${(err as Error).message}`);
     },
   });
 }

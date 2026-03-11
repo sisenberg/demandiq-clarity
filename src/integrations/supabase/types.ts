@@ -159,6 +159,7 @@ export type Database = {
           document_type: Database["public"]["Enums"]["document_type"]
           extracted_at: string | null
           extracted_text: string | null
+          file_hash: string | null
           file_name: string
           file_size_bytes: number
           file_type: string
@@ -178,6 +179,7 @@ export type Database = {
           document_type?: Database["public"]["Enums"]["document_type"]
           extracted_at?: string | null
           extracted_text?: string | null
+          file_hash?: string | null
           file_name: string
           file_size_bytes?: number
           file_type?: string
@@ -197,6 +199,7 @@ export type Database = {
           document_type?: Database["public"]["Enums"]["document_type"]
           extracted_at?: string | null
           extracted_text?: string | null
+          file_hash?: string | null
           file_name?: string
           file_size_bytes?: number
           file_type?: string
