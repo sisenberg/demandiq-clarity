@@ -36,7 +36,7 @@ interface CaseHeaderProps {
   children?: React.ReactNode;
 }
 
-const CaseHeader = ({ caseData }: CaseHeaderProps) => {
+const CaseHeader = ({ caseData, children }: CaseHeaderProps) => {
   return (
     <header className="bg-card border-b border-border px-6 py-4 shrink-0">
       <div className="flex items-center justify-between">
