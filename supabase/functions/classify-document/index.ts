@@ -92,7 +92,8 @@ Deno.serve(async (req: Request) => {
       );
     }
 
-    console.log("[classify-document] Found document:", doc.file_name, "tenant:", doc.tenant_id);
+    // COMPLIANCE: Do not log file_name (may contain claimant PII) or tenant_id in production
+    console.log("[classify-document] Found document, tenant:", doc.tenant_id?.slice(0, 8));
 
     // 2. Fetch extracted pages
     const { data: pages, error: pagesErr } = await supabase
