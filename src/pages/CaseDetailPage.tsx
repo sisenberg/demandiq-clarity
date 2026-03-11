@@ -318,12 +318,9 @@ const CaseDetailPage = () => {
               <>
                 <div className="flex flex-wrap gap-2">
                   {hasPermission(role, "upload_document") && (
-                    <button
-                      onClick={() => setShowUpload(true)}
-                      className="flex items-center gap-1.5 text-xs font-medium px-3.5 py-2 rounded-lg border border-border bg-card text-foreground hover:bg-accent transition-colors"
-                    >
-                      <Upload className="h-3.5 w-3.5" /> Upload Documents
-                    </button>
+                     <button onClick={() => setShowUpload(true)} className="btn-secondary">
+                       <Upload className="h-3.5 w-3.5" /> Upload Documents
+                     </button>
                   )}
                   {hasPermission(role, "trigger_processing") && pendingDocs > 0 && (
                     <button
