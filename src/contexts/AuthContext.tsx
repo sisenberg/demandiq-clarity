@@ -23,6 +23,8 @@ interface AuthContextValue {
   loading: boolean;
   role: AppRole | null;
   tenantId: string | null;
+  /** Module IDs the tenant has licensed (DemandIQ always included) */
+  tenantModules: string[];
   profile: Profile | null;
   needsOnboarding: boolean;
   completeSignup: (displayName: string, orgName: string, orgCode?: string) => Promise<void>;
