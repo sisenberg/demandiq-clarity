@@ -120,9 +120,11 @@ const CaseDetailPage = () => {
   const { data: jobs = [], isLoading: jobsLoading } = useCaseJobs(caseId);
   const triggerProcessing = useTriggerProcessing();
   const [showUpload, setShowUpload] = useState(false);
+  const [showCompletionDialog, setShowCompletionDialog] = useState(false);
   const [activeSection, setActiveSection] = useState<CaseSection>("overview");
   const [showRightRail, setShowRightRail] = useState(true);
   const hasReviewerIQ = isEntitlementActive(entitlements, ModuleId.ReviewerIQ);
+  const { data: demandCompletion } = useModuleCompletion(caseId, "demandiq");
 
   if (caseLoading) {
     return <PageLoading message="Loading case…" />;
