@@ -164,9 +164,12 @@ Rules:
         model: "google/gemini-2.5-flash",
         messages: [
           { role: "system", content: systemPrompt },
-          {
-            role: "user",
-            content: `Case: ${caseData.claimant}, Claim #${caseData.claim_number}, DOL: ${caseData.date_of_loss ?? "unknown"}\n\nDocuments:\n${truncatedContext}`,
+            {
+              role: "user",
+              // COMPLIANCE: claimant name and claim_number are PII but required for
+              // accurate chronology. This is an approved AI boundary path (see ai-data-boundary.md).
+              content: `Case: ${caseData.claimant}, Claim #${caseData.claim_number}, DOL: ${caseData.date_of_loss ?? "unknown"}\n\nDocuments:\n${truncatedContext}`,
+            },
           },
         ],
         tools: [

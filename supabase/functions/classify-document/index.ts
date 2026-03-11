@@ -150,6 +150,8 @@ Confidence scores:
           { role: "system", content: systemPrompt },
           {
             role: "user",
+            // COMPLIANCE: file_name may contain PII; extracted text contains PHI.
+            // This is an approved AI boundary path — see docs/compliance/ai-data-boundary.md.
             content: `Analyze this document. File name: "${doc.file_name}", File type: ${doc.file_type}\n\nExtracted text:\n${truncatedText}`,
           },
         ],
