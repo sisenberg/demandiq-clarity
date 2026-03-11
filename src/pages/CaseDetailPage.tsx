@@ -217,10 +217,10 @@ const CaseDetailPage = () => {
                         </button>
                       )}
                       {hasPermission(role, "trigger_processing") && pendingDocs > 0 && (
-                        <button
+                         <button
                           onClick={() => triggerProcessing.mutate({ caseId: caseData.id })}
                           disabled={triggerProcessing.isPending}
-                          className="flex items-center gap-1.5 text-[11px] font-medium px-2.5 py-1.5 rounded-lg bg-primary text-primary-foreground hover:bg-primary/90 transition-colors disabled:opacity-50"
+                          className="btn-primary text-[11px]"
                         >
                           <Play className="h-3 w-3" /> Process
                         </button>
