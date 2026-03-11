@@ -300,6 +300,7 @@ function checkDuplicateServices(
 
 function checkEscalationWithoutFindings(
   treatments: ReviewerTreatmentRecord[],
+  config: MedicalReviewConfig,
   T: string, C: string,
 ): ReviewIssue[] {
   const issues: ReviewIssue[] = [];
@@ -309,7 +310,7 @@ function checkEscalationWithoutFindings(
     const escalated = r.procedures.some(p => p.code && escalationCodes.has(p.code));
     if (!escalated) continue;
 
-    const hasObjective = r.objective_findings && r.objective_findings.length > 30;
+    const hasObjective = r.objective_findings && r.objective_findings.length > config.min_objective_findings_length;
     if (!hasObjective) {
       issues.push(makeIssue({
         tenant_id: T, case_id: C,
@@ -317,7 +318,7 @@ function checkEscalationWithoutFindings(
         severity: "high",
         title: `Escalation lacking objective findings — ${r.visit_date || "unknown date"}`,
         description: `Invasive/interventional procedure performed without adequate documented objective findings.`,
-        machine_explanation: `Rule: Flag escalation procedures (injections, surgery) where objective_findings is empty or <30 chars. Record ${r.id} has ${r.objective_findings?.length ?? 0} chars of objective findings.`,
+        machine_explanation: `Rule: Flag escalation procedures (injections, surgery) where objective_findings is empty or <${config.min_objective_findings_length} chars. Record ${r.id} has ${r.objective_findings?.length ?? 0} chars of objective findings. (v${config.rule_engine_version})`,
         affected_provider: r.provider_name_normalized || r.provider_name_raw,
         affected_date_start: r.visit_date,
         affected_date_end: r.visit_date,
