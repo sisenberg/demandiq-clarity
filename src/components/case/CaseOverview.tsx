@@ -144,7 +144,7 @@ const CaseOverview = ({ caseData, documents }: CaseOverviewProps) => {
               <MetricRow icon={Stethoscope} label="Providers" value={`${stats.providers}`} sub={`${stats.totalVisits} visits`} />
               <MetricRow icon={DollarSign} label="Billed" value={`$${billing.totalBilled.toLocaleString()}`} sub={`adj. $${billing.totalAdjusted.toLocaleString()}`} />
               <MetricRow icon={Activity} label="Injuries" value={`${pkg.injuries.length}`} sub={`${pkg.injuries.filter(i => i.severity === "severe" || i.severity === "catastrophic").length} severe`} />
-              <MetricRow icon={Shield} label="Demand" value={`$${pkg.demand_summary.total_demand.toLocaleString()}`} sub="transmitted" />
+              <MetricRow icon={Shield} label="Demand" value={`$${pkg.demand_summary.demand_amount.toLocaleString()}`} sub="transmitted" />
             </div>
           </div>
         </div>
