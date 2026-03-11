@@ -3,6 +3,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
 import { isIntakeProcessing } from "@/lib/statuses";
+import { useAuditLog } from "@/hooks/useAuditLog";
 export interface DocumentRow {
   id: string;
   tenant_id: string;
@@ -98,6 +99,7 @@ export interface UploadFileProgress {
 export function useUploadDocuments() {
   const queryClient = useQueryClient();
   const { tenantId, user } = useAuth();
+  const auditLog = useAuditLog();
 
   return useMutation({
     mutationFn: async ({
@@ -152,6 +154,15 @@ export function useUploadDocuments() {
 
           onFileProgress?.(i, { status: "done", progress: 100, documentId: data.id });
           results.push(data as DocumentRow);
+
+          // Audit: track document upload as a security-sensitive action
+          auditLog.mutate({
+            actionType: "document_uploaded",
+            entityType: "case_document",
+            entityId: data.id,
+            caseId,
+            afterValue: { file_name: file.name, file_type: file.type, file_size_bytes: file.size, document_type: documentType },
+          });
 
           // Auto-enqueue intake jobs for this document
           const { data: createdJobs } = await (supabase.from("intake_jobs") as any).insert([
