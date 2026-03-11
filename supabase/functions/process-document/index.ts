@@ -382,6 +382,8 @@ Deno.serve(async (req: Request) => {
     const fullText = pages.map((p) => p.text).join("\n\n--- Page Break ---\n\n");
 
     // 10. Update document record
+    // process-document owns: text_extracted + ocr_complete
+    // classify-document will later advance pipeline_stage to document_classified
     await supabase
       .from("case_documents")
       .update({
@@ -418,7 +420,9 @@ Deno.serve(async (req: Request) => {
     });
 
     // 13. Auto-trigger document classification
+    // Fire-and-forget but log failures durably to intake_jobs
     try {
+      console.log("[process-document] Triggering classify-document for", doc.id);
       const classifyUrl = `${supabaseUrl}/functions/v1/classify-document`;
       const classifyResp = await fetch(classifyUrl, {
         method: "POST",
@@ -429,11 +433,33 @@ Deno.serve(async (req: Request) => {
         body: JSON.stringify({ document_id: doc.id }),
       });
       if (!classifyResp.ok) {
-        console.warn("Auto-classification failed:", await classifyResp.text());
+        const errText = await classifyResp.text();
+        console.error("[process-document] Auto-classification failed:", classifyResp.status, errText);
+        // Record classification failure as a failed intake job for visibility
+        await supabase.from("intake_jobs").insert({
+          tenant_id: doc.tenant_id,
+          case_id: doc.case_id,
+          document_id: doc.id,
+          job_type: "document_parsing",
+          status: "failed",
+          error_message: `Auto-classification failed [${classifyResp.status}]: ${errText.substring(0, 500)}`,
+        });
+      } else {
+        const classifyResult = await classifyResp.json();
+        console.log("[process-document] Classification result:", JSON.stringify(classifyResult));
       }
     } catch (classifyErr) {
-      console.warn("Auto-classification error:", classifyErr);
-      // Non-fatal: classification can be triggered manually
+      const errMsg = classifyErr instanceof Error ? classifyErr.message : String(classifyErr);
+      console.error("[process-document] Auto-classification error:", errMsg);
+      // Record the failure durably
+      await supabase.from("intake_jobs").insert({
+        tenant_id: doc.tenant_id,
+        case_id: doc.case_id,
+        document_id: doc.id,
+        job_type: "document_parsing",
+        status: "failed",
+        error_message: `Auto-classification exception: ${errMsg}`,
+      });
     }
 
     return new Response(

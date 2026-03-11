@@ -6,17 +6,6 @@ const corsHeaders = {
     "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
 };
 
-/**
- * classify-document: AI-powered document typing + intake metadata extraction.
- *
- * Invoked after text extraction is complete. Reads extracted text from
- * document_pages, calls Lovable AI to classify the document type and
- * extract structured metadata candidates, then persists results to
- * document_type_suggestions and document_metadata_extractions.
- *
- * Input: { document_id: string }
- */
-
 const METADATA_FIELDS = [
   "claimant_name",
   "attorney_name",
@@ -53,11 +42,18 @@ Deno.serve(async (req: Request) => {
     return new Response(null, { headers: corsHeaders });
   }
 
+  console.log("[classify-document] Invoked");
+
   const supabaseUrl = Deno.env.get("SUPABASE_URL");
   const serviceRoleKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
   const lovableApiKey = Deno.env.get("LOVABLE_API_KEY");
 
   if (!supabaseUrl || !serviceRoleKey || !lovableApiKey) {
+    console.error("[classify-document] Missing env vars:", {
+      hasUrl: !!supabaseUrl,
+      hasKey: !!serviceRoleKey,
+      hasAI: !!lovableApiKey,
+    });
     return new Response(
       JSON.stringify({ error: "Server configuration missing" }),
       { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
@@ -68,6 +64,7 @@ Deno.serve(async (req: Request) => {
 
   try {
     const { document_id } = await req.json();
+    console.log("[classify-document] document_id:", document_id);
 
     if (!document_id) {
       return new Response(
@@ -84,50 +81,57 @@ Deno.serve(async (req: Request) => {
       .single();
 
     if (docErr || !doc) {
+      console.error("[classify-document] Document lookup failed:", docErr?.message);
       return new Response(
         JSON.stringify({ error: `Document not found: ${docErr?.message}` }),
         { status: 404, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
 
+    console.log("[classify-document] Found document:", doc.file_name, "tenant:", doc.tenant_id);
+
     // 2. Fetch extracted pages
-    const { data: pages } = await supabase
+    const { data: pages, error: pagesErr } = await supabase
       .from("document_pages")
       .select("page_number, extracted_text")
       .eq("document_id", document_id)
       .order("page_number", { ascending: true });
 
+    console.log("[classify-document] Pages found:", pages?.length ?? 0, "error:", pagesErr?.message ?? "none");
+
     const pageTexts = (pages || [])
       .filter((p: any) => p.extracted_text?.trim())
       .map((p: any) => `--- Page ${p.page_number} ---\n${p.extracted_text}`);
 
-    if (pageTexts.length === 0 && !doc.extracted_text) {
+    // Also check document-level extracted_text
+    const docText = doc.extracted_text?.trim() || "";
+
+    if (pageTexts.length === 0 && !docText) {
+      console.error("[classify-document] No text available for classification");
       return new Response(
         JSON.stringify({ error: "No extracted text available for classification" }),
         { status: 422, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
 
-    // Use page-level text if available, else document-level
-    const textForAnalysis = pageTexts.length > 0
-      ? pageTexts.join("\n\n")
-      : doc.extracted_text;
-
-    // Truncate to ~8000 chars to stay within token limits
+    const textForAnalysis = pageTexts.length > 0 ? pageTexts.join("\n\n") : docText;
     const truncatedText = textForAnalysis.substring(0, 8000);
+    console.log("[classify-document] Text length for analysis:", truncatedText.length);
 
-    // 3. Call AI for classification + metadata extraction via tool calling
-    const systemPrompt = `You are a legal document analyst for personal injury claims. You analyze document text to:
+    // 3. Call AI for classification + metadata extraction
+    const systemPrompt = `You are a legal document analyst for personal injury claims. Analyze document text to:
 1. Classify the document type
 2. Extract structured metadata candidates
 
-Be precise. Extract only what is clearly present in the text. For each metadata field, include the exact source text snippet that supports the extraction. If a field has multiple candidates (e.g., multiple provider names), return ALL of them as separate entries.
+Be precise. Extract only what is clearly present. For each metadata field, include the exact source text snippet. If a field has multiple candidates, return ALL as separate entries.
 
-For confidence scores, use:
+Confidence scores:
 - 0.9-1.0: Clearly stated, unambiguous
 - 0.7-0.89: Likely correct based on context
 - 0.5-0.69: Possible but uncertain
 - Below 0.5: Very uncertain, but worth flagging`;
+
+    console.log("[classify-document] Calling AI gateway...");
 
     const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
       method: "POST",
@@ -149,73 +153,47 @@ For confidence scores, use:
             type: "function",
             function: {
               name: "classify_and_extract",
-              description: "Classify the document type and extract metadata candidates from the document text.",
+              description: "Classify the document type and extract metadata candidates.",
               parameters: {
                 type: "object",
                 properties: {
                   document_type_suggestions: {
                     type: "array",
-                    description: "Ranked list of likely document types, most likely first.",
+                    description: "Ranked list of likely document types.",
                     items: {
                       type: "object",
                       properties: {
                         suggested_type: {
                           type: "string",
                           enum: [...DOCUMENT_TYPES],
-                          description: "The document type classification",
                         },
-                        confidence: {
-                          type: "number",
-                          description: "Confidence score 0-1",
-                        },
-                        reasoning: {
-                          type: "string",
-                          description: "Brief explanation of why this type was suggested",
-                        },
-                        source_snippet: {
-                          type: "string",
-                          description: "Key text excerpt supporting this classification",
-                        },
+                        confidence: { type: "number" },
+                        reasoning: { type: "string" },
+                        source_snippet: { type: "string" },
                       },
                       required: ["suggested_type", "confidence", "reasoning"],
-                      additionalProperties: false,
                     },
                   },
                   metadata_extractions: {
                     type: "array",
-                    description: "Extracted metadata candidates found in the document.",
+                    description: "Extracted metadata candidates.",
                     items: {
                       type: "object",
                       properties: {
                         field_type: {
                           type: "string",
                           enum: [...METADATA_FIELDS],
-                          description: "The type of metadata field",
                         },
-                        extracted_value: {
-                          type: "string",
-                          description: "The extracted value",
-                        },
-                        confidence: {
-                          type: "number",
-                          description: "Confidence score 0-1",
-                        },
-                        source_snippet: {
-                          type: "string",
-                          description: "Exact text from the document supporting this extraction",
-                        },
-                        source_page: {
-                          type: "integer",
-                          description: "Page number where this was found, if known",
-                        },
+                        extracted_value: { type: "string" },
+                        confidence: { type: "number" },
+                        source_snippet: { type: "string" },
+                        source_page: { type: "integer" },
                       },
                       required: ["field_type", "extracted_value", "confidence", "source_snippet"],
-                      additionalProperties: false,
                     },
                   },
                 },
                 required: ["document_type_suggestions", "metadata_extractions"],
-                additionalProperties: false,
               },
             },
           },
@@ -226,40 +204,46 @@ For confidence scores, use:
     });
 
     if (!response.ok) {
+      const errBody = await response.text();
+      console.error("[classify-document] AI response error:", response.status, errBody.substring(0, 500));
       if (response.status === 429) {
         return new Response(
-          JSON.stringify({ error: "Rate limit exceeded, please retry later" }),
+          JSON.stringify({ error: "Rate limit exceeded, retry later" }),
           { status: 429, headers: { ...corsHeaders, "Content-Type": "application/json" } }
         );
       }
-      if (response.status === 402) {
-        return new Response(
-          JSON.stringify({ error: "AI credits exhausted" }),
-          { status: 402, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-        );
-      }
-      const errBody = await response.text();
       throw new Error(`AI classification failed [${response.status}]: ${errBody.substring(0, 300)}`);
     }
 
     const aiData = await response.json();
     const toolCall = aiData.choices?.[0]?.message?.tool_calls?.[0];
 
+    console.log("[classify-document] AI response received, has tool_call:", !!toolCall);
+
     if (!toolCall?.function?.arguments) {
-      throw new Error("AI did not return structured output");
+      // Fallback: check if content has the data directly (some models respond differently)
+      const content = aiData.choices?.[0]?.message?.content;
+      console.error("[classify-document] No tool call in response. Content:", content?.substring(0, 200));
+      throw new Error("AI did not return structured tool call output");
     }
 
     const parsed = JSON.parse(toolCall.function.arguments);
     const typeSuggestions = parsed.document_type_suggestions || [];
     const metadataExtractions = parsed.metadata_extractions || [];
 
-    // 4. Delete existing suggestions for this document (idempotent re-runs)
-    await Promise.all([
+    console.log("[classify-document] Parsed:", typeSuggestions.length, "type suggestions,", metadataExtractions.length, "metadata extractions");
+
+    // 4. Delete existing suggestions (idempotent re-runs)
+    const [delTypes, delMeta] = await Promise.all([
       supabase.from("document_type_suggestions").delete().eq("document_id", document_id),
       supabase.from("document_metadata_extractions").delete().eq("document_id", document_id),
     ]);
+    console.log("[classify-document] Cleared old data. Types err:", delTypes.error?.message ?? "none", "Meta err:", delMeta.error?.message ?? "none");
 
     // 5. Insert type suggestions
+    let topType: string | null = null;
+    let topConfidence: number | null = null;
+
     if (typeSuggestions.length > 0) {
       const typeRecords = typeSuggestions.map((s: any) => ({
         tenant_id: doc.tenant_id,
@@ -276,20 +260,24 @@ For confidence scores, use:
         .insert(typeRecords);
 
       if (typeErr) {
-        console.error("Failed to insert type suggestions:", typeErr.message);
+        console.error("[classify-document] Failed to insert type suggestions:", typeErr.message);
+      } else {
+        console.log("[classify-document] Inserted", typeRecords.length, "type suggestions");
       }
 
-      // Auto-accept highest confidence suggestion if > 0.8
-      const topSuggestion = typeSuggestions.sort(
+      const sorted = [...typeSuggestions].sort(
         (a: any, b: any) => (b.confidence ?? 0) - (a.confidence ?? 0)
-      )[0];
+      );
+      topType = sorted[0]?.suggested_type;
+      topConfidence = sorted[0]?.confidence;
 
-      if (topSuggestion && (topSuggestion.confidence ?? 0) >= 0.8) {
-        // Update document type to the top suggestion
-        await supabase
+      // Auto-accept highest confidence if >= 0.8
+      if (topType && (topConfidence ?? 0) >= 0.8) {
+        const { error: updateErr } = await supabase
           .from("case_documents")
-          .update({ document_type: topSuggestion.suggested_type })
+          .update({ document_type: topType })
           .eq("id", document_id);
+        console.log("[classify-document] Auto-set document_type to", topType, "err:", updateErr?.message ?? "none");
       }
     }
 
@@ -311,32 +299,38 @@ For confidence scores, use:
         .insert(metaRecords);
 
       if (metaErr) {
-        console.error("Failed to insert metadata extractions:", metaErr.message);
+        console.error("[classify-document] Failed to insert metadata:", metaErr.message);
+      } else {
+        console.log("[classify-document] Inserted", metaRecords.length, "metadata extractions");
       }
     }
 
-    // 7. Update pipeline stage
-    await supabase
+    // 7. Update pipeline stage — advance to document_classified
+    // Do NOT regress intake_status; only advance pipeline_stage
+    const { error: stageErr } = await supabase
       .from("case_documents")
-      .update({
-        pipeline_stage: "document_classified",
-        intake_status: "queued_for_parsing",
-      })
+      .update({ pipeline_stage: "document_classified" })
       .eq("id", document_id);
 
-    return new Response(
-      JSON.stringify({
-        success: true,
-        type_suggestions: typeSuggestions.length,
-        metadata_extractions: metadataExtractions.length,
-        top_type: typeSuggestions[0]?.suggested_type ?? null,
-        top_confidence: typeSuggestions[0]?.confidence ?? null,
-      }),
-      { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-    );
+    console.log("[classify-document] Updated pipeline_stage. err:", stageErr?.message ?? "none");
+
+    const result = {
+      success: true,
+      type_suggestions: typeSuggestions.length,
+      metadata_extractions: metadataExtractions.length,
+      top_type: topType,
+      top_confidence: topConfidence,
+    };
+
+    console.log("[classify-document] Complete:", JSON.stringify(result));
+
+    return new Response(JSON.stringify(result), {
+      status: 200,
+      headers: { ...corsHeaders, "Content-Type": "application/json" },
+    });
   } catch (error: unknown) {
     const errMsg = error instanceof Error ? error.message : "Unknown error";
-    console.error("Classify document error:", errMsg);
+    console.error("[classify-document] Error:", errMsg);
 
     return new Response(
       JSON.stringify({ error: errMsg }),

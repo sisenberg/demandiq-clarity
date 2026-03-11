@@ -213,7 +213,7 @@ function ClusterRow({
   };
 
   return (
-    <div className={`${isMergeTarget ? "bg-primary/5" : ""}`}>
+    <div className={`group ${isMergeTarget ? "bg-primary/5" : ""}`}>
       <div className="flex items-center gap-2 px-3 py-2">
         <button onClick={onToggle} className="shrink-0">
           {isExpanded ? (
