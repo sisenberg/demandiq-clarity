@@ -142,18 +142,35 @@ const IntakeDocumentsWorkstation = ({ documents, loading, caseId }: IntakeDocume
       {/* Intake Summary */}
       <IntakeSummaryPanel documents={documents} loading={loading} />
 
-      {/* Upload toggle */}
+      {/* Actions bar */}
       <div className="flex items-center justify-between">
-        <h3 className="text-xs font-semibold text-foreground uppercase tracking-wider">
+        <h3 className="text-xs font-semibold text-foreground uppercase tracking-wider flex items-center gap-2">
           Document Intake
+          {runningJobCount > 0 && (
+            <span className="flex items-center gap-1 text-[10px] font-medium text-primary normal-case tracking-normal">
+              <Loader2 className="h-3 w-3 animate-spin" /> {runningJobCount} processing
+            </span>
+          )}
         </h3>
-        <button
-          onClick={() => setShowUploadZone(!showUploadZone)}
-          className="flex items-center gap-1.5 text-xs font-medium px-3.5 py-2 rounded-lg bg-primary text-primary-foreground hover:bg-primary/90 transition-colors shadow-sm"
-        >
-          <Upload className="h-3.5 w-3.5" />
-          {showUploadZone ? "Hide Upload" : "Upload Documents"}
-        </button>
+        <div className="flex items-center gap-2">
+          {queuedExtractionCount > 0 && (
+            <button
+              onClick={() => triggerExtraction.mutate(caseId)}
+              disabled={triggerExtraction.isPending}
+              className="flex items-center gap-1.5 text-xs font-medium px-3.5 py-2 rounded-lg border border-primary/20 bg-primary/5 text-primary hover:bg-primary/10 transition-colors disabled:opacity-50"
+            >
+              <Zap className="h-3.5 w-3.5" />
+              {triggerExtraction.isPending ? "Starting…" : `Extract ${queuedExtractionCount} Doc${queuedExtractionCount !== 1 ? "s" : ""}`}
+            </button>
+          )}
+          <button
+            onClick={() => setShowUploadZone(!showUploadZone)}
+            className="flex items-center gap-1.5 text-xs font-medium px-3.5 py-2 rounded-lg bg-primary text-primary-foreground hover:bg-primary/90 transition-colors shadow-sm"
+          >
+            <Upload className="h-3.5 w-3.5" />
+            {showUploadZone ? "Hide Upload" : "Upload Documents"}
+          </button>
+        </div>
       </div>
 
       {/* Upload zone */}
