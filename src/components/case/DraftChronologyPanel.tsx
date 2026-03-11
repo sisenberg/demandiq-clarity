@@ -10,6 +10,7 @@ import {
   type ChronologyCandidateRow,
   type ChronologyCandidateStatus,
 } from "@/hooks/useChronologyCandidates";
+import { useAuditLog } from "@/hooks/useAuditLog";
 import { ConfidenceBadge } from "./DocumentMetadataPanel";
 import {
   Clock,
