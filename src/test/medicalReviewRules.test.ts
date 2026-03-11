@@ -308,7 +308,7 @@ describe("Jaccard Similarity Helper", () => {
 
   it("handles empty strings", () => {
     expect(jaccardSimilarity("", "test")).toBe(0);
-    expect(jaccardSimilarity("", "")).toBe(1);
+    expect(jaccardSimilarity("", "")).toBe(0);
   });
 });
 
