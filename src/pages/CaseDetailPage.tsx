@@ -240,6 +240,11 @@ const CaseDetailPage = () => {
               {/* ── SOURCE PAGES ──────────────────── */}
               {activeSection === "sources" && <SourcePagesWorkstation />}
 
+              {/* ── CHRONOLOGY ────────────────────── */}
+              {activeSection === "chronology" && (
+                <DraftChronologyPanel caseId={caseData.id} />
+              )}
+
               {/* ── ENTITIES ──────────────────────── */}
               {activeSection === "entities" && (
                 <DetectedEntitiesPanel caseId={caseData.id} />
