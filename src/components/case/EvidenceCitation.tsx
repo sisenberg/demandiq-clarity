@@ -27,10 +27,10 @@ export const CitationBadge = ({ source }: { source: CitationSource }) => {
         e.stopPropagation();
         openSource(source);
       }}
-      className="inline-flex items-center gap-1 text-[10px] font-medium px-1.5 py-0.5 rounded border bg-primary/5 text-primary border-primary/15 cursor-pointer hover:bg-primary/10 active:bg-primary/15 transition-colors ml-1"
+      className="inline-flex items-center gap-0.5 text-[9px] font-semibold px-1.5 py-[2px] rounded-md border bg-primary/4 text-primary border-primary/12 cursor-pointer hover:bg-primary/10 hover:border-primary/20 active:bg-primary/15 transition-all duration-100 ml-1"
       title={`${source.docName} — ${source.page}${source.excerpt ? `\n"${source.excerpt}"` : ""}`}
     >
-      <BookOpen className="h-2.5 w-2.5" />
+      <BookOpen className="h-2 w-2" />
       {source.page}
     </span>
   );
@@ -45,21 +45,21 @@ export const CitationBlock = ({ source }: { source: CitationSource }) => {
 
   return (
     <div
-      className="rounded-lg border border-border bg-background p-3 cursor-pointer hover:border-primary/30 transition-colors"
+      className="rounded-lg border border-border bg-background p-3 cursor-pointer hover:border-primary/20 hover:shadow-sm transition-all duration-150 group"
       onClick={() => openSource(source)}
     >
       <div className="flex items-center gap-2 mb-1.5">
-        <span className={`text-[9px] font-semibold uppercase tracking-wider px-1.5 py-0.5 rounded border ${relStyle}`}>
+        <span className={`text-[8px] font-semibold uppercase tracking-wider px-1.5 py-0.5 rounded border ${relStyle}`}>
           {source.relevance ?? "direct"}
         </span>
-        <span className="text-[10px] font-semibold bg-primary/10 text-primary px-1.5 py-0.5 rounded-full">
+        <span className="text-[10px] font-semibold bg-primary/8 text-primary px-1.5 py-0.5 rounded-md">
           {source.page}
         </span>
-        <span className="text-xs font-medium text-foreground truncate flex-1">{source.docName}</span>
-        <ExternalLink className="h-3 w-3 text-muted-foreground shrink-0 hover:text-primary transition-colors" />
+        <span className="text-[11px] font-medium text-foreground truncate flex-1">{source.docName}</span>
+        <ExternalLink className="h-3 w-3 text-muted-foreground/30 group-hover:text-primary transition-colors" />
       </div>
       {source.excerpt && (
-        <blockquote className="text-xs text-foreground leading-relaxed pl-3 border-l-2 border-primary/30 mt-2 font-mono">
+        <blockquote className="text-[11px] text-foreground/80 leading-relaxed pl-3 border-l-2 border-primary/20 mt-2 evidence-text">
           "{source.excerpt}"
         </blockquote>
       )}

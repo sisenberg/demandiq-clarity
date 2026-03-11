@@ -141,10 +141,10 @@ const CaseDetailPage = () => {
         {hasPermission(role, "complete_module") && (caseData.case_status === "complete" || caseData.case_status === "exported") && (
           <button
             onClick={() => setShowCompletionDialog(true)}
-            className={`flex items-center gap-1.5 text-xs font-medium px-3.5 py-2 rounded-lg transition-colors shadow-sm ${
+            className={`flex items-center gap-1.5 text-[11px] font-semibold px-3.5 py-2 rounded-lg transition-all duration-150 ${
               demandCompletion?.status === ModuleCompletionStatus.Completed
-                ? "border border-[hsl(var(--status-approved))]/30 bg-[hsl(var(--status-approved))]/10 text-foreground hover:bg-[hsl(var(--status-approved))]/20"
-                : "bg-primary text-primary-foreground hover:bg-primary/90"
+                ? "border border-[hsl(var(--status-approved))]/25 bg-[hsl(var(--status-approved))]/8 text-foreground hover:bg-[hsl(var(--status-approved))]/15"
+                : "bg-primary text-primary-foreground hover:bg-primary/90 shadow-sm"
             }`}
           >
             <CheckCircle2 className="h-3.5 w-3.5" />
@@ -168,7 +168,7 @@ const CaseDetailPage = () => {
             <button
               key={s}
               onClick={() => setActiveSection(s)}
-              className={`px-3 py-2.5 text-xs font-medium whitespace-nowrap transition-colors ${
+              className={`px-3 py-2.5 text-[11px] font-medium whitespace-nowrap transition-colors ${
                 activeSection === s ? "text-primary border-b-2 border-primary" : "text-muted-foreground"
               }`}
             >

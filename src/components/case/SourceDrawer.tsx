@@ -471,25 +471,28 @@ export const SourceDrawer = () => {
     <>
       {/* Backdrop */}
       <div
-        className="fixed inset-0 bg-foreground/20 z-40 transition-opacity"
+        className="fixed inset-0 bg-foreground/15 backdrop-blur-[1px] z-40 transition-opacity"
         onClick={close}
       />
 
       {/* Drawer panel */}
-      <div className="fixed right-0 top-0 bottom-0 w-full max-w-xl bg-card border-l border-border shadow-xl z-50 flex flex-col animate-in slide-in-from-right duration-200">
+      <div className="fixed right-0 top-0 bottom-0 w-full max-w-xl bg-card border-l border-border z-50 flex flex-col animate-in slide-in-from-right duration-200"
+        style={{ boxShadow: '-8px 0 30px -10px rgb(0 0 0 / 0.08)' }}>
         {/* Header */}
-        <div className="px-5 py-4 border-b border-border flex items-center gap-3 shrink-0">
-          <BookOpen className="h-4 w-4 text-primary" />
+        <div className="px-5 py-3.5 border-b border-border flex items-center gap-3 shrink-0">
+          <div className="h-8 w-8 rounded-lg bg-primary/8 flex items-center justify-center shrink-0">
+            <BookOpen className="h-4 w-4 text-primary" />
+          </div>
           <div className="flex-1 min-w-0">
-            <h3 className="text-sm font-semibold text-foreground truncate">
+            <h3 className="text-[13px] font-semibold text-foreground truncate">
               {state.source?.docName ?? "Source Document"}
             </h3>
             <div className="flex items-center gap-2 mt-0.5">
-              <span className="text-[10px] font-semibold bg-primary/10 text-primary px-1.5 py-0.5 rounded-full">
+              <span className="text-[10px] font-semibold bg-primary/8 text-primary px-1.5 py-0.5 rounded-md">
                 {state.source?.page}
               </span>
               {state.source?.relevance && (
-                <span className={`text-[9px] font-semibold uppercase tracking-wider px-1.5 py-0.5 rounded border ${RELEVANCE_STYLE[state.source.relevance]}`}>
+                <span className={`text-[8px] font-semibold uppercase tracking-wider px-1.5 py-0.5 rounded border ${RELEVANCE_STYLE[state.source.relevance]}`}>
                   {state.source.relevance}
                 </span>
               )}
@@ -497,7 +500,7 @@ export const SourceDrawer = () => {
           </div>
           <button
             onClick={close}
-            className="p-1.5 rounded-lg text-muted-foreground hover:text-foreground hover:bg-accent transition-colors"
+            className="p-1.5 rounded-lg text-muted-foreground hover:text-foreground hover:bg-accent transition-all duration-100"
           >
             <X className="h-4 w-4" />
           </button>
@@ -509,17 +512,17 @@ export const SourceDrawer = () => {
             <div className="p-5">
               {/* Document meta */}
               <div className="flex items-center gap-2 mb-4">
-                <FileText className="h-3.5 w-3.5 text-muted-foreground" />
-                <span className="text-[11px] text-muted-foreground">{state.page.documentType.replace(/_/g, " ")}</span>
-                <span className="text-[11px] text-muted-foreground">·</span>
-                <span className="text-[11px] text-muted-foreground">Page {state.page.pageNumber}</span>
+                <FileText className="h-3 w-3 text-muted-foreground" />
+                <span className="text-[10px] text-muted-foreground capitalize">{state.page.documentType.replace(/_/g, " ")}</span>
+                <span className="text-[10px] text-muted-foreground">·</span>
+                <span className="text-[10px] font-medium text-foreground">Page {state.page.pageNumber}</span>
               </div>
 
               {/* Highlighted excerpt callout */}
               {state.source?.excerpt && (
-                <div className="mb-5 rounded-lg border border-primary/20 bg-primary/5 p-3">
-                  <p className="text-[10px] font-semibold text-primary uppercase tracking-wider mb-1.5">Referenced Excerpt</p>
-                  <blockquote className="text-sm text-foreground leading-relaxed font-mono">
+                <div className="mb-5 rounded-lg border border-primary/15 bg-primary/3 p-3.5">
+                  <p className="text-[9px] font-semibold text-primary uppercase tracking-wider mb-2">Referenced Excerpt</p>
+                  <blockquote className="text-[12px] text-foreground leading-relaxed evidence-text">
                     "{state.source.excerpt}"
                   </blockquote>
                 </div>
@@ -527,10 +530,10 @@ export const SourceDrawer = () => {
 
               {/* Full page text with highlights */}
               <div className="rounded-lg border border-border bg-background p-4">
-                <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider mb-3">
+                <p className="text-[9px] font-semibold text-muted-foreground uppercase tracking-wider mb-3">
                   Extracted Text — Page {state.page.pageNumber}
                 </p>
-                <div className="text-xs text-foreground leading-relaxed font-mono whitespace-pre-wrap">
+                <div className="text-[11px] text-foreground leading-relaxed evidence-text whitespace-pre-wrap">
                   <HighlightedText
                     text={state.page.extractedText}
                     highlights={state.page.highlights}
@@ -541,16 +544,16 @@ export const SourceDrawer = () => {
               {/* Other highlights on this page */}
               {state.page.highlights.length > 0 && (
                 <div className="mt-4">
-                  <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider mb-2">
-                    Evidence Highlights on This Page
+                  <p className="text-[9px] font-semibold text-muted-foreground uppercase tracking-wider mb-2">
+                    Evidence Highlights
                   </p>
-                  <div className="flex flex-col gap-2">
+                  <div className="flex flex-col gap-1.5">
                     {state.page.highlights.map((h, i) => (
-                      <div key={i} className="flex items-start gap-2 rounded-lg border border-border p-2.5">
-                        <span className={`text-[9px] font-semibold uppercase tracking-wider px-1.5 py-0.5 rounded border shrink-0 mt-0.5 ${RELEVANCE_STYLE[h.relevance]}`}>
+                      <div key={i} className="flex items-start gap-2 rounded-lg border border-border/60 p-2.5">
+                        <span className={`text-[8px] font-semibold uppercase tracking-wider px-1.5 py-0.5 rounded border shrink-0 mt-0.5 ${RELEVANCE_STYLE[h.relevance]}`}>
                           {h.relevance}
                         </span>
-                        <p className="text-xs text-foreground leading-relaxed">"{h.text}"</p>
+                        <p className="text-[11px] text-foreground leading-relaxed evidence-text">"{h.text}"</p>
                       </div>
                     ))}
                   </div>
@@ -558,16 +561,16 @@ export const SourceDrawer = () => {
               )}
             </div>
           ) : (
-            <div className="p-5 text-center">
-              <div className="h-12 w-12 rounded-xl bg-accent mx-auto flex items-center justify-center mb-3">
-                <FileText className="h-6 w-6 text-muted-foreground" />
+            <div className="p-5 text-center pt-16">
+              <div className="h-12 w-12 rounded-xl bg-accent/60 mx-auto flex items-center justify-center mb-3.5">
+                <FileText className="h-6 w-6 text-muted-foreground/40" />
               </div>
-              <p className="text-sm font-medium text-foreground mb-1">Source page not available</p>
-              <p className="text-xs text-muted-foreground">
+              <p className="text-[13px] font-semibold text-foreground mb-1">Source page not available</p>
+              <p className="text-[11px] text-muted-foreground leading-relaxed">
                 The extracted source page for this citation has not been processed yet.
               </p>
               {state.source?.excerpt && (
-                <blockquote className="mt-4 text-sm text-foreground leading-relaxed pl-3 border-l-2 border-primary/30 font-mono text-left mx-auto max-w-md">
+                <blockquote className="mt-5 text-[12px] text-foreground leading-relaxed pl-3 border-l-2 border-primary/20 evidence-text text-left mx-auto max-w-md">
                   "{state.source.excerpt}"
                 </blockquote>
               )}
