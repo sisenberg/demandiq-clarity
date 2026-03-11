@@ -26,7 +26,6 @@ import JobsPanel from "@/components/case/JobsPanel";
 import DocumentTypeTag from "@/components/case/DocumentTypeTag";
 import CaseNavRail, { type CaseSection } from "@/components/case/CaseNavRail";
 import CaseHeader from "@/components/case/CaseHeader";
-import CaseRightRail from "@/components/case/CaseRightRail";
 import CaseRightUtilityRail from "@/components/case/CaseRightUtilityRail";
 import CaseWorkspaceTabs, { type WorkspaceTab } from "@/components/case/CaseWorkspaceTabs";
 import CaseWorkspaceToolbar from "@/components/case/CaseWorkspaceToolbar";
