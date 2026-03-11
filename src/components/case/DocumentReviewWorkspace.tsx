@@ -52,8 +52,8 @@ interface DocumentReviewWorkspaceProps {
 }
 
 const DocumentReviewWorkspace = ({ documentId, caseId, onBack }: DocumentReviewWorkspaceProps) => {
-  const { data: doc } = useDocument(documentId);
-  const { data: pages = [] } = useDocumentPages(documentId);
+  const { data: doc, isLoading: docLoading } = useDocument(documentId);
+  const { data: pages = [], isLoading: pagesLoading } = useDocumentPages(documentId);
   const { data: facts = [] } = useDocumentExtractedFacts(documentId);
   const { data: typeSuggestions = [] } = useDocumentTypeSuggestions(documentId);
   const { data: metaExtractions = [] } = useDocumentMetadataExtractions(documentId);
