@@ -14,7 +14,7 @@ export const CASE_STATUS_LABEL: Record<CaseStatus, string> = {
   [CaseStatus.IntakeComplete]: "Intake Complete",
   [CaseStatus.ProcessingInProgress]: "Processing",
   [CaseStatus.Complete]: "Complete",
-  [CaseStatus.Exported]: "Exported",
+  [CaseStatus.Exported]: "Demand Completed",
   [CaseStatus.Closed]: "Closed",
   [CaseStatus.Failed]: "Failed",
 };
@@ -25,7 +25,7 @@ export const CASE_STATUS_BADGE: Record<CaseStatus, string> = {
   [CaseStatus.IntakeComplete]: "status-badge-approved",
   [CaseStatus.ProcessingInProgress]: "status-badge-processing",
   [CaseStatus.Complete]: "status-badge-approved",
-  [CaseStatus.Exported]: "status-badge-draft",
+  [CaseStatus.Exported]: "status-badge-approved",
   [CaseStatus.Closed]: "status-badge-draft",
   [CaseStatus.Failed]: "status-badge-failed",
 };
@@ -65,7 +65,7 @@ export const CASE_ACTIONS: Record<CaseStatus, CaseAction[]> = {
     { label: "Mark Failed", targetStatus: CaseStatus.Failed, permission: "trigger_processing", variant: "destructive", icon: "XCircle" },
   ],
   [CaseStatus.Complete]: [
-    { label: "Export", targetStatus: CaseStatus.Exported, permission: "export_package", variant: "primary", icon: "Download" },
+    { label: "Complete Demand", targetStatus: CaseStatus.Exported, permission: "complete_module", variant: "primary", icon: "CheckCircle2" },
   ],
   [CaseStatus.Exported]: [
     { label: "Close Case", targetStatus: CaseStatus.Closed, permission: "edit_case", variant: "secondary", icon: "Archive" },
