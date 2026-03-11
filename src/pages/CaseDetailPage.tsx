@@ -253,7 +253,7 @@ const CaseDetailPage = () => {
 
               {/* ── MEDICAL REVIEW ────────────────── */}
               {activeSection === "medical-review" && (
-                <TreatmentTimeline caseId={caseData.id} />
+                <MedicalReviewWorkspace caseId={caseData.id} />
               )}
 
               {/* ── CHAT ──────────────────────────── */}
