@@ -118,9 +118,12 @@ const IntakeDocumentsWorkstation = ({ documents, loading, caseId }: IntakeDocume
   const types = [...new Set(documents.map((d) => d.document_type))];
   const selectedDoc = selectedDocId ? documents.find((d) => d.id === selectedDocId) : null;
 
+  // COMPLIANCE: View-original uses a short-lived signed URL (120s).
+  // PRIMARY EVIDENCE ZONE — raw uploaded document (L4 restricted_phi).
+  // Storage RLS enforces tenant-scoped access.
   const handleViewOriginal = async (doc: DocumentRow) => {
     if (!doc.storage_path) return;
-    const { data } = await supabase.storage.from("case-documents").createSignedUrl(doc.storage_path, 300);
+    const { data } = await supabase.storage.from("case-documents").createSignedUrl(doc.storage_path, 120);
     if (data?.signedUrl) window.open(data.signedUrl, "_blank");
   };
 

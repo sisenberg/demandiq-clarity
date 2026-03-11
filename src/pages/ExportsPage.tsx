@@ -23,8 +23,15 @@ const ExportsPage = () => {
     (c) => c.case_status === "complete" || c.case_status === "exported"
   );
 
+  // COMPLIANCE: Export generation handles DERIVED WORKING ZONE data that
+  // contains assembled PHI/PII (L4 restricted_phi). Generated artifacts
+  // should be treated as sensitive documents. Export filenames must not
+  // leak claimant names or case details beyond the case number.
+  // See docs/compliance/data-classification.md.
   const handleDownload = (caseId: string, format: string) => {
     setDownloading(caseId);
+    // TODO: When real export is implemented, use audit action "artifact_exported"
+    // and generate filenames using case_number only (no claimant name).
     console.log(`[Download] Generating ${format} for case ${caseId}`);
     setTimeout(() => setDownloading(null), 2000);
   };
