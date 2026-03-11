@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useAuditLog } from "@/hooks/useAuditLog";
 import {
   useDocumentTypeSuggestions,
   useDocumentMetadataExtractions,
@@ -43,6 +44,7 @@ const DocumentMetadataPanel = ({
   const acceptType = useAcceptTypeSuggestion();
   const correctMeta = useCorrectMetadata();
   const acceptMeta = useAcceptMetadata();
+  const auditLog = useAuditLog();
 
   const [showAllTypes, setShowAllTypes] = useState(false);
   const [editingMeta, setEditingMeta] = useState<string | null>(null);
@@ -72,8 +74,15 @@ const DocumentMetadataPanel = ({
     setEditValue(extraction.user_corrected_value ?? extraction.extracted_value);
   };
 
-  const handleSaveEdit = (extractionId: string) => {
-    correctMeta.mutate({ extractionId, correctedValue: editValue });
+  const handleSaveEdit = (extraction: MetadataExtractionRow) => {
+    auditLog.mutate({
+      actionType: "metadata_corrected",
+      entityType: "document_metadata_extractions",
+      entityId: extraction.id,
+      beforeValue: { value: extraction.user_corrected_value ?? extraction.extracted_value },
+      afterValue: { value: editValue },
+    });
+    correctMeta.mutate({ extractionId: extraction.id, correctedValue: editValue });
     setEditingMeta(null);
   };
 
@@ -241,7 +250,7 @@ const DocumentMetadataPanel = ({
                                 autoFocus
                               />
                               <button
-                                onClick={() => handleSaveEdit(extraction.id)}
+                                onClick={() => handleSaveEdit(extraction)}
                                 className="p-1 rounded text-primary hover:bg-primary/10"
                               >
                                 <Check className="h-3 w-3" />

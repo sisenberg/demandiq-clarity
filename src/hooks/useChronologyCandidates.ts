@@ -84,6 +84,7 @@ export function useCaseChronologyCandidates(caseId: string | undefined) {
   return useQuery({
     queryKey: ["chronology-candidates", caseId],
     enabled: !!caseId,
+    staleTime: 30_000,
     queryFn: async () => {
       const { data, error } = await (supabase.from("chronology_event_candidates") as any)
         .select("*")

@@ -10,6 +10,7 @@ import {
   type ChronologyCandidateRow,
   type ChronologyCandidateStatus,
 } from "@/hooks/useChronologyCandidates";
+import { useAuditLog } from "@/hooks/useAuditLog";
 import { ConfidenceBadge } from "./DocumentMetadataPanel";
 import {
   Clock,
@@ -61,6 +62,10 @@ const CATEGORY_DOT: Record<string, string> = {
 const DraftChronologyPanel = ({ caseId }: DraftChronologyPanelProps) => {
   const { data: candidates = [], isLoading } = useCaseChronologyCandidates(caseId);
   const generateChronology = useGenerateChronology();
+  const updateStatus = useUpdateCandidateStatus();
+  const editCandidate = useEditCandidate();
+  const mergeCandidates = useMergeCandidates();
+  const auditLog = useAuditLog();
   const [statusFilter, setStatusFilter] = useState("all");
   const [mergeMode, setMergeMode] = useState<string | null>(null);
 
@@ -154,6 +159,10 @@ const DraftChronologyPanel = ({ caseId }: DraftChronologyPanelProps) => {
                 onStartMerge={() => setMergeMode(candidate.id)}
                 onCancelMerge={() => setMergeMode(null)}
                 onMergeInto={() => setMergeMode(null)}
+                updateStatus={updateStatus}
+                editCandidate={editCandidate}
+                mergeCandidates={mergeCandidates}
+                auditLog={auditLog}
               />
             ))}
           </div>
@@ -172,6 +181,10 @@ interface CandidateRowProps {
   onStartMerge: () => void;
   onCancelMerge: () => void;
   onMergeInto: () => void;
+  updateStatus: ReturnType<typeof useUpdateCandidateStatus>;
+  editCandidate: ReturnType<typeof useEditCandidate>;
+  mergeCandidates: ReturnType<typeof useMergeCandidates>;
+  auditLog: ReturnType<typeof useAuditLog>;
 }
 
 function CandidateRow({
@@ -181,10 +194,11 @@ function CandidateRow({
   onStartMerge,
   onCancelMerge,
   onMergeInto,
+  updateStatus,
+  editCandidate,
+  mergeCandidates,
+  auditLog,
 }: CandidateRowProps) {
-  const updateStatus = useUpdateCandidateStatus();
-  const editCandidate = useEditCandidate();
-  const mergeCandidates = useMergeCandidates();
 
   const [expanded, setExpanded] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
@@ -203,6 +217,14 @@ function CandidateRow({
   const isMergeTarget = mergeMode && mergeMode !== candidate.id;
 
   const handleSaveEdit = () => {
+    auditLog.mutate({
+      actionType: "chronology_edited",
+      entityType: "chronology_event_candidates",
+      entityId: candidate.id,
+      caseId,
+      beforeValue: { label: candidate.label, description: candidate.description, event_date: candidate.event_date },
+      afterValue: { label: editForm.label, description: editForm.description, event_date: editForm.event_date },
+    });
     editCandidate.mutate({
       candidateId: candidate.id,
       caseId,
@@ -216,6 +238,18 @@ function CandidateRow({
       },
     });
     setIsEditing(false);
+  };
+
+  const handleStatusChange = (newStatus: ChronologyCandidateStatus) => {
+    auditLog.mutate({
+      actionType: "chronology_status_changed",
+      entityType: "chronology_event_candidates",
+      entityId: candidate.id,
+      caseId,
+      beforeValue: { status: candidate.status },
+      afterValue: { status: newStatus },
+    });
+    updateStatus.mutate({ candidateId: candidate.id, status: newStatus, caseId });
   };
 
   return (
@@ -312,7 +346,7 @@ function CandidateRow({
             <div className="flex items-center gap-0.5 ml-auto opacity-0 group-hover:opacity-100 transition-opacity">
               {candidate.status === "draft" && (
                 <button
-                  onClick={() => updateStatus.mutate({ candidateId: candidate.id, status: "accepted", caseId })}
+                  onClick={() => handleStatusChange("accepted")}
                   className="p-1 rounded text-muted-foreground/50 hover:text-[hsl(var(--status-approved))] hover:bg-accent transition-colors"
                   title="Accept"
                 >
@@ -321,7 +355,7 @@ function CandidateRow({
               )}
               {candidate.status === "accepted" && (
                 <button
-                  onClick={() => updateStatus.mutate({ candidateId: candidate.id, status: "draft", caseId })}
+                  onClick={() => handleStatusChange("draft")}
                   className="p-1 rounded text-muted-foreground/50 hover:text-foreground hover:bg-accent transition-colors"
                   title="Revert to draft"
                 >
@@ -339,11 +373,7 @@ function CandidateRow({
                 <Pencil className="h-3 w-3" />
               </button>
               <button
-                onClick={() => updateStatus.mutate({
-                  candidateId: candidate.id,
-                  status: candidate.status === "suppressed" ? "draft" : "suppressed",
-                  caseId,
-                })}
+                onClick={() => handleStatusChange(candidate.status === "suppressed" ? "draft" : "suppressed")}
                 className="p-1 rounded text-muted-foreground/50 hover:text-foreground hover:bg-accent transition-colors"
                 title={candidate.status === "suppressed" ? "Restore" : "Suppress"}
               >
@@ -370,6 +400,13 @@ function CandidateRow({
           {isMergeTarget && (
             <button
               onClick={() => {
+                auditLog.mutate({
+                  actionType: "chronology_merged",
+                  entityType: "chronology_event_candidates",
+                  entityId: mergeMode!,
+                  caseId,
+                  afterValue: { merged_into: candidate.id },
+                });
                 mergeCandidates.mutate({ sourceId: mergeMode!, targetId: candidate.id, caseId });
                 onMergeInto();
               }}
