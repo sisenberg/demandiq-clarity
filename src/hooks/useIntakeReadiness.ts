@@ -114,7 +114,10 @@ export function useIntakeReadiness(
     const complete = documents.filter((d) => isIntakeComplete(d.intake_status) || d.document_status === "complete" || d.document_status === "extracted");
     const needsReview = documents.filter((d) => d.intake_status === "needs_review" || d.document_status === "needs_attention");
     const noText = documents.filter((d) =>
-      (d.document_status === "complete" || d.document_status === "extracted") && !d.extracted_text && d.file_type === "application/pdf"
+      (d.document_status === "complete" || d.document_status === "extracted")
+      && !d.extracted_text
+      && d.file_type === "application/pdf"
+      && !!d.storage_path // only flag real uploads, not seed placeholders
     );
 
     const stats: IntakeReadinessStats = {
