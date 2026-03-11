@@ -107,7 +107,7 @@ export default function MedicalReviewWorkspace({ caseId }: MedicalReviewWorkspac
       <div className="flex items-center gap-1 bg-accent/30 rounded-lg p-1">
         {TABS.map(tab => {
           const isActive = activeTab === tab.key;
-          const badge = tab.key === "issues" ? pendingIssues : tab.key === "bills" ? pendingBills : 0;
+          const badge = tab.key === "issues" ? pendingIssues : tab.key === "bills" ? pendingBills : tab.key === "specialty" ? escalationCount : 0;
           return (
             <button
               key={tab.key}
