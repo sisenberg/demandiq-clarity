@@ -212,10 +212,7 @@ const CaseDetailPage = () => {
                   actions={
                     <div className="flex gap-2">
                       {hasPermission(role, "upload_document") && (
-                        <button
-                          onClick={() => setShowUpload(true)}
-                          className="flex items-center gap-1.5 text-[11px] font-medium px-2.5 py-1.5 rounded-lg border border-border bg-card text-foreground hover:bg-accent transition-colors"
-                        >
+                         <button onClick={() => setShowUpload(true)} className="btn-secondary text-[11px]">
                           <Upload className="h-3 w-3" /> Upload
                         </button>
                       )}
