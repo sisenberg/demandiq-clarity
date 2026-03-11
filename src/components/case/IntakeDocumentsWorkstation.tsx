@@ -70,6 +70,7 @@ const IntakeDocumentsWorkstation = ({ documents, loading, caseId }: IntakeDocume
   const [confirmDelete, setConfirmDelete] = useState<string | null>(null);
   const [reviewDocId, setReviewDocId] = useState<string | null>(null);
 
+  const auditLog = useAuditLog();
   const deleteDoc = useDeleteDocument();
   const triggerExtraction = useTriggerCaseExtraction();
   const invokeExtraction = useInvokeExtraction();
