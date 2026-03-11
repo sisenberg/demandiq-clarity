@@ -15,7 +15,7 @@ const CASE_STATUS_LABEL: Record<string, string> = {
   intake_complete: "Intake Complete",
   processing_in_progress: "Processing",
   complete: "Complete",
-  exported: "Exported",
+  exported: "Demand Completed",
   closed: "Closed",
   failed: "Failed",
 };
