@@ -1,5 +1,6 @@
 // ===================================================
-// DemandIQ v1 — Core Entity Types & Status Enums
+// CasualtyIQ — Platform-Wide Entity Types & Enums
+// DemandIQ is Module 1; types here are shared across modules.
 // ===================================================
 
 // ─── Status Enums ────────────────────────────────────
