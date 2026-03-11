@@ -5,6 +5,7 @@ import { CitationBadge, EvidenceStatement, type CitationSource } from "./Evidenc
 import { getBillingSummary, getTreatmentStats } from "@/data/mock/casePackage";
 import type { CaseRow } from "@/hooks/useCases";
 import type { DocumentRow } from "@/hooks/useDocuments";
+import { isDocumentReady } from "@/lib/statuses";
 import type { EvidenceReference, TimelineEvent } from "@/types";
 import {
   User,

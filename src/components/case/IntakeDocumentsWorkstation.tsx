@@ -261,11 +261,11 @@ const IntakeDocumentsWorkstation = ({ documents, loading, caseId }: IntakeDocume
             ) : (
               <div className="divide-y divide-border/30">
                 {sorted.map((doc) => {
-                  const intakeBadge = INTAKE_BADGE[doc.intake_status] ?? INTAKE_BADGE.uploaded;
+                  const intakeBadge = getIntakeBadge(doc.intake_status);
                   const isSelected = selectedDocId === doc.id;
                   const isDuplicate = duplicateDocIds.has(doc.id);
                   const isFailed = doc.intake_status === "failed";
-                  const isProcessing = ["queued_for_text_extraction", "extracting_text", "queued_for_parsing", "parsing"].includes(doc.intake_status);
+                  const isProcessing = isIntakeProcessing(doc.intake_status);
 
                   return (
                     <button
