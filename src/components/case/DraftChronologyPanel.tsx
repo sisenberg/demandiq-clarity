@@ -217,6 +217,14 @@ function CandidateRow({
   const isMergeTarget = mergeMode && mergeMode !== candidate.id;
 
   const handleSaveEdit = () => {
+    auditLog.mutate({
+      actionType: "chronology_edited",
+      entityType: "chronology_event_candidates",
+      entityId: candidate.id,
+      caseId,
+      beforeValue: { label: candidate.label, description: candidate.description, event_date: candidate.event_date },
+      afterValue: { label: editForm.label, description: editForm.description, event_date: editForm.event_date },
+    });
     editCandidate.mutate({
       candidateId: candidate.id,
       caseId,
@@ -230,6 +238,18 @@ function CandidateRow({
       },
     });
     setIsEditing(false);
+  };
+
+  const handleStatusChange = (newStatus: ChronologyCandidateStatus) => {
+    auditLog.mutate({
+      actionType: "chronology_status_changed",
+      entityType: "chronology_event_candidates",
+      entityId: candidate.id,
+      caseId,
+      beforeValue: { status: candidate.status },
+      afterValue: { status: newStatus },
+    });
+    updateStatus.mutate({ candidateId: candidate.id, status: newStatus, caseId });
   };
 
   return (
