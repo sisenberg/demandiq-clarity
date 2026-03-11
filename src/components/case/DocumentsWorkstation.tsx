@@ -267,8 +267,8 @@ const DocumentsWorkstation = ({ documents, loading, caseId }: DocumentsWorkstati
           <div className="flex-1 overflow-y-auto p-4 space-y-4">
             {/* Metadata grid */}
             <div className="grid grid-cols-2 gap-3">
-              <MetaItem label="Status" value={STATUS_BADGE[selectedDoc.document_status]?.label ?? selectedDoc.document_status} />
-              <MetaItem label="Pipeline Stage" value={PIPELINE_LABELS[selectedDoc.pipeline_stage] ?? selectedDoc.pipeline_stage} />
+              <MetaItem label="Status" value={getDocumentStatusBadge(selectedDoc.document_status).label} />
+              <MetaItem label="Pipeline Stage" value={getPipelineStageLabel(selectedDoc.pipeline_stage)} />
               <MetaItem label="Uploaded" value={formatDate(selectedDoc.created_at)} />
               <MetaItem label="Extracted" value={selectedDoc.extracted_at ? formatDate(selectedDoc.extracted_at) : "Pending"} />
             </div>
