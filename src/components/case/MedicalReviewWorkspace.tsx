@@ -21,6 +21,9 @@ import { MOCK_BILL_LINES, MOCK_BILL_HEADERS } from "@/data/mock/reviewerBillLine
 import { MOCK_TREATMENT_RECORDS } from "@/data/mock/treatmentRecords";
 import { runMedicalReviewRules } from "@/lib/medicalReviewRules";
 import { runSpecialtyReview } from "@/lib/specialtyReviewEngine";
+import { assessCompletionReadiness, generateReviewPackage, createHandoffEvent, createAuditEvent } from "@/lib/reviewerWorkflow";
+import type { ReviewPackageV1, PackageVersionEntry } from "@/lib/reviewerWorkflow";
+import { CompletionRail, CompleteReviewerModal, PackageVersionHistory } from "@/components/case/ReviewerCompletionUI";
 
 type MedicalReviewTab = "treatments" | "issues" | "bills" | "financial" | "specialty";
 
