@@ -195,7 +195,7 @@ const CaseDetailPage = () => {
             <div className={`p-5 flex flex-col gap-4 ${activeSection === "overview" ? "max-w-[1400px]" : "max-w-5xl"}`}>
               {/* ── OVERVIEW ────────────────────────── */}
               {activeSection === "overview" && (
-                <CaseOverview caseData={caseData} documents={documents} />
+                <CaseOverview caseData={caseData} documents={documents} onNavigate={(s) => setActiveSection(s as CaseSection)} />
               )}
 
               {/* ── DemandIQ WORKSPACE (tab-driven) ──── */}
