@@ -47,41 +47,12 @@ import ComingSoonBadge from "@/components/ui/ComingSoonBadge";
 import {
   ArrowLeft,
   FileText,
-  Play,
   Upload,
   ClipboardCheck,
   CheckCircle2,
   Inbox,
 } from "lucide-react";
 
-// ─── Status lookups ─────────────────────────────────
-const DOC_STATUS_BADGE: Record<string, string> = {
-  uploaded: "status-badge-draft",
-  queued: "status-badge-draft",
-  ocr_in_progress: "status-badge-processing",
-  classified: "status-badge-processing",
-  extracted: "status-badge-approved",
-  needs_attention: "status-badge-attention",
-  complete: "status-badge-approved",
-  failed: "status-badge-failed",
-};
-
-const DOC_STATUS_LABEL: Record<string, string> = {
-  uploaded: "Uploaded",
-  queued: "Queued",
-  ocr_in_progress: "OCR In Progress",
-  classified: "Classified",
-  extracted: "Extracted",
-  needs_attention: "Needs Attention",
-  complete: "Complete",
-  failed: "Failed",
-};
-
-function formatBytes(bytes: number): string {
-  if (bytes < 1024) return `${bytes} B`;
-  if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(0)} KB`;
-  return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
-}
 
 // ─── ReviewerIQ Preview ─────────────────────────────
 const MEDICAL_REVIEW_SECTIONS: AnalysisSection[] = [
