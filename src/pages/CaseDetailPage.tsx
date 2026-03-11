@@ -8,7 +8,8 @@ import { useAuth } from "@/contexts/AuthContext";
 import { hasPermission } from "@/lib/permissions";
 import { CasePackageProvider, useCasePackage } from "@/hooks/useCasePackage";
 import { isEntitlementActive } from "@/hooks/useModuleEntitlements";
-import { ModuleId } from "@/types";
+import { useModuleCompletion, COMPLETION_STATUS_LABEL, COMPLETION_STATUS_BADGE } from "@/hooks/useModuleCompletion";
+import { ModuleId, ModuleCompletionStatus } from "@/types";
 import DocumentUpload from "@/components/case/DocumentUpload";
 import JobsPanel from "@/components/case/JobsPanel";
 import DocumentTypeTag from "@/components/case/DocumentTypeTag";
@@ -25,6 +26,7 @@ import AnalysisCard from "@/components/case/AnalysisCard";
 import type { AnalysisSection } from "@/components/case/AnalysisCard";
 import SourcePagesPanel from "@/components/case/SourcePagesPanel";
 import { SourceDrawerProvider, SourceDrawer } from "@/components/case/SourceDrawer";
+import CompleteDemandDialog from "@/components/case/CompleteDemandDialog";
 import EmptyState from "@/components/ui/EmptyState";
 import { PageLoading, WorkspaceSkeleton } from "@/components/ui/LoadingSkeleton";
 import ComingSoonBadge from "@/components/ui/ComingSoonBadge";
@@ -38,6 +40,7 @@ import {
   ClipboardCheck,
   PanelRightClose,
   PanelRightOpen,
+  CheckCircle2,
   Inbox,
 } from "lucide-react";
 
@@ -117,9 +120,11 @@ const CaseDetailPage = () => {
   const { data: jobs = [], isLoading: jobsLoading } = useCaseJobs(caseId);
   const triggerProcessing = useTriggerProcessing();
   const [showUpload, setShowUpload] = useState(false);
+  const [showCompletionDialog, setShowCompletionDialog] = useState(false);
   const [activeSection, setActiveSection] = useState<CaseSection>("overview");
   const [showRightRail, setShowRightRail] = useState(true);
   const hasReviewerIQ = isEntitlementActive(entitlements, ModuleId.ReviewerIQ);
+  const { data: demandCompletion } = useModuleCompletion(caseId, "demandiq");
 
   if (caseLoading) {
     return <PageLoading message="Loading case…" />;
@@ -144,7 +149,24 @@ const CaseDetailPage = () => {
     <SourceDrawerProvider>
     <div className="flex flex-col h-full">
       {/* Top case header */}
-      <CaseHeader caseData={caseData} />
+      <CaseHeader caseData={caseData}>
+        {/* Completion action in header */}
+        {hasPermission(role, "complete_module") && (caseData.case_status === "complete" || caseData.case_status === "exported") && (
+          <button
+            onClick={() => setShowCompletionDialog(true)}
+            className={`flex items-center gap-1.5 text-xs font-medium px-3.5 py-2 rounded-lg transition-colors shadow-sm ${
+              demandCompletion?.status === ModuleCompletionStatus.Completed
+                ? "border border-[hsl(var(--status-approved))]/30 bg-[hsl(var(--status-approved))]/10 text-foreground hover:bg-[hsl(var(--status-approved))]/20"
+                : "bg-primary text-primary-foreground hover:bg-primary/90"
+            }`}
+          >
+            <CheckCircle2 className="h-3.5 w-3.5" />
+            {demandCompletion?.status === ModuleCompletionStatus.Completed
+              ? `Demand Completed · v${demandCompletion.version}`
+              : "Complete Demand"}
+          </button>
+        )}
+      </CaseHeader>
 
       {/* Workspace body */}
       <div className="flex flex-1 overflow-hidden">
@@ -423,6 +445,13 @@ const CaseDetailPage = () => {
       </div>
 
       <DocumentUpload caseId={caseData.id} open={showUpload} onClose={() => setShowUpload(false)} />
+      <CompleteDemandDialog
+        caseId={caseData.id}
+        caseStatus={caseData.case_status}
+        documents={documents}
+        open={showCompletionDialog}
+        onClose={() => setShowCompletionDialog(false)}
+      />
       <SourceDrawer />
     </div>
     </SourceDrawerProvider>
