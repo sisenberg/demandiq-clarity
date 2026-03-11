@@ -37,6 +37,7 @@ import {
   Inbox,
   Upload,
   Zap,
+  Pencil,
 } from "lucide-react";
 
 function formatBytes(bytes: number): string {
