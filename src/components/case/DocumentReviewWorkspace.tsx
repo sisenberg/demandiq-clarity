@@ -190,10 +190,10 @@ const DocumentReviewWorkspace = ({ documentId, caseId, onBack }: DocumentReviewW
         </div>
       </div>
 
-      {/* Split pane */}
-      <div className="flex flex-1 min-h-0 overflow-hidden">
+      {/* Split pane — responsive: stack on narrow, side-by-side on wide */}
+      <div className="flex flex-col lg:flex-row flex-1 min-h-0 overflow-hidden">
         {/* Left: Document viewer */}
-        <div className="w-1/2 flex flex-col border-r border-border bg-muted/20">
+        <div className="w-full lg:w-1/2 flex flex-col border-b lg:border-b-0 lg:border-r border-border bg-muted/20 min-h-[40vh] lg:min-h-0">
           {/* Page thumbnails strip */}
           <div className="flex gap-1 px-3 py-2 border-b border-border overflow-x-auto shrink-0">
             {pages.slice(0, 50).map((page) => (
