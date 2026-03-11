@@ -280,7 +280,7 @@ const IntakeDocumentsWorkstation = ({ documents, loading, caseId }: IntakeDocume
                           <Loader2 className="h-4 w-4 text-primary animate-spin" />
                         ) : isFailed ? (
                           <AlertTriangle className="h-4 w-4 text-destructive" />
-                        ) : doc.intake_status === "parsed" || doc.intake_status === "text_extracted" ? (
+                        ) : isIntakeComplete(doc.intake_status) ? (
                           <CheckCircle2 className="h-4 w-4 text-[hsl(var(--status-approved))]" />
                         ) : (
                           <FileText className="h-4 w-4 text-muted-foreground" />
