@@ -232,7 +232,7 @@ const CaseDetailPage = () => {
 
               {/* ── DOCUMENTS ─────────────────────── */}
               {activeSection === "documents" && (
-                <DocumentsWorkstation documents={documents} loading={docsLoading} caseId={caseData.id} />
+                <IntakeDocumentsWorkstation documents={documents} loading={docsLoading} caseId={caseData.id} />
               )}
 
               {/* ── SOURCE PAGES ──────────────────── */}
