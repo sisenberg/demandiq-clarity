@@ -123,7 +123,7 @@ describe("Pricing Result Generation", () => {
     const customLine = result.lines.find(l => l.cpt_code_raw === "CUSTOM01");
     expect(customLine).toBeTruthy();
     expect(customLine!.reference_amount).toBeNull();
-    expect(customLine!.reference_basis).toBe("");
+    expect(customLine!.reference_basis).toContain("No reference");
   });
 
   it("lookupReferencePrice returns explainable basis", () => {
