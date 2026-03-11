@@ -14,6 +14,53 @@ export type Database = {
   }
   public: {
     Tables: {
+      audit_events: {
+        Row: {
+          action_type: string
+          actor_user_id: string
+          after_value: Json | null
+          before_value: Json | null
+          case_id: string | null
+          created_at: string
+          entity_id: string
+          entity_type: string
+          id: string
+          tenant_id: string
+        }
+        Insert: {
+          action_type: string
+          actor_user_id: string
+          after_value?: Json | null
+          before_value?: Json | null
+          case_id?: string | null
+          created_at?: string
+          entity_id: string
+          entity_type: string
+          id?: string
+          tenant_id: string
+        }
+        Update: {
+          action_type?: string
+          actor_user_id?: string
+          after_value?: Json | null
+          before_value?: Json | null
+          case_id?: string | null
+          created_at?: string
+          entity_id?: string
+          entity_type?: string
+          id?: string
+          tenant_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "audit_events_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       bills: {
         Row: {
           adjusted_amount: number | null
@@ -628,6 +675,124 @@ export type Database = {
           },
         ]
       }
+      module_completion_snapshots: {
+        Row: {
+          case_id: string
+          completion_id: string
+          created_at: string
+          created_by: string | null
+          id: string
+          module_id: string
+          snapshot_json: Json
+          tenant_id: string
+          version: number
+        }
+        Insert: {
+          case_id: string
+          completion_id: string
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          module_id: string
+          snapshot_json?: Json
+          tenant_id: string
+          version?: number
+        }
+        Update: {
+          case_id?: string
+          completion_id?: string
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          module_id?: string
+          snapshot_json?: Json
+          tenant_id?: string
+          version?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "module_completion_snapshots_case_id_fkey"
+            columns: ["case_id"]
+            isOneToOne: false
+            referencedRelation: "cases"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "module_completion_snapshots_completion_id_fkey"
+            columns: ["completion_id"]
+            isOneToOne: false
+            referencedRelation: "module_completions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "module_completion_snapshots_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      module_completions: {
+        Row: {
+          case_id: string
+          completed_at: string | null
+          completed_by: string | null
+          created_at: string
+          id: string
+          module_id: string
+          reopened_at: string | null
+          reopened_by: string | null
+          status: Database["public"]["Enums"]["module_completion_status"]
+          tenant_id: string
+          updated_at: string
+          version: number
+        }
+        Insert: {
+          case_id: string
+          completed_at?: string | null
+          completed_by?: string | null
+          created_at?: string
+          id?: string
+          module_id: string
+          reopened_at?: string | null
+          reopened_by?: string | null
+          status?: Database["public"]["Enums"]["module_completion_status"]
+          tenant_id: string
+          updated_at?: string
+          version?: number
+        }
+        Update: {
+          case_id?: string
+          completed_at?: string | null
+          completed_by?: string | null
+          created_at?: string
+          id?: string
+          module_id?: string
+          reopened_at?: string | null
+          reopened_by?: string | null
+          status?: Database["public"]["Enums"]["module_completion_status"]
+          tenant_id?: string
+          updated_at?: string
+          version?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "module_completions_case_id_fkey"
+            columns: ["case_id"]
+            isOneToOne: false
+            referencedRelation: "cases"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "module_completions_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       profiles: {
         Row: {
           created_at: string
@@ -931,6 +1096,11 @@ export type Database = {
         | "package_export"
         | "ocr"
         | "classification"
+      module_completion_status:
+        | "not_started"
+        | "in_progress"
+        | "completed"
+        | "reopened"
       module_entitlement_status: "enabled" | "disabled" | "trial" | "suspended"
       party_role:
         | "claimant"
@@ -1151,6 +1321,12 @@ export const Constants = {
         "package_export",
         "ocr",
         "classification",
+      ],
+      module_completion_status: [
+        "not_started",
+        "in_progress",
+        "completed",
+        "reopened",
       ],
       module_entitlement_status: ["enabled", "disabled", "trial", "suspended"],
       party_role: [
