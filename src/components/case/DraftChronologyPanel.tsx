@@ -159,6 +159,10 @@ const DraftChronologyPanel = ({ caseId }: DraftChronologyPanelProps) => {
                 onStartMerge={() => setMergeMode(candidate.id)}
                 onCancelMerge={() => setMergeMode(null)}
                 onMergeInto={() => setMergeMode(null)}
+                updateStatus={updateStatus}
+                editCandidate={editCandidate}
+                mergeCandidates={mergeCandidates}
+                auditLog={auditLog}
               />
             ))}
           </div>
