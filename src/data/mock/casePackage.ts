@@ -718,6 +718,11 @@ export function getDemandIQOutput(): DemandIQOutput {
     last_edited_by: "Ana García",
     last_edited_at: "2025-03-10T16:42:00Z",
   };
+
+  // Populate the modules.demandiq section on the package
+  MARTINEZ_CASE_PACKAGE.modules.demandiq = output;
+
+  return output;
 }
 
 // ─── Computed helpers for UI consumption ────────────
