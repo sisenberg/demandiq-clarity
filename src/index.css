@@ -32,7 +32,7 @@
     --destructive: 0 84% 60%;
     --destructive-foreground: 0 0% 100%;
 
-    --border: 220 13% 91%;
+    --border: 220 13% 90%;
     --input: 220 13% 91%;
     --ring: 213 94% 44%;
 
@@ -104,10 +104,10 @@
   }
 
   /* Refined scrollbar */
-  ::-webkit-scrollbar { width: 6px; height: 6px; }
+  ::-webkit-scrollbar { width: 5px; height: 5px; }
   ::-webkit-scrollbar-track { background: transparent; }
-  ::-webkit-scrollbar-thumb { @apply bg-border rounded-full; }
-  ::-webkit-scrollbar-thumb:hover { @apply bg-muted-foreground/30; }
+  ::-webkit-scrollbar-thumb { @apply bg-border/60 rounded-full; }
+  ::-webkit-scrollbar-thumb:hover { @apply bg-muted-foreground/25; }
 }
 
 @layer components {
@@ -116,46 +116,50 @@
   }
 
   /* ─── Status Badges ──────────────────────────── */
+  .status-badge-base {
+    @apply inline-flex items-center text-[9px] font-semibold px-2 py-0.5 rounded-md tracking-wide leading-none;
+  }
+
   .status-badge-review {
-    @apply inline-flex items-center text-[10px] font-semibold px-2 py-0.5 rounded-md tracking-wide;
+    @apply status-badge-base;
     background-color: hsl(var(--status-review-bg));
     color: hsl(var(--status-review-foreground));
-    border: 1px solid hsl(var(--status-review) / 0.2);
+    border: 1px solid hsl(var(--status-review) / 0.15);
   }
 
   .status-badge-approved {
-    @apply inline-flex items-center text-[10px] font-semibold px-2 py-0.5 rounded-md tracking-wide;
+    @apply status-badge-base;
     background-color: hsl(var(--status-approved-bg));
     color: hsl(var(--status-approved-foreground));
-    border: 1px solid hsl(var(--status-approved) / 0.2);
+    border: 1px solid hsl(var(--status-approved) / 0.15);
   }
 
   .status-badge-draft {
-    @apply inline-flex items-center text-[10px] font-semibold px-2 py-0.5 rounded-md tracking-wide;
+    @apply status-badge-base;
     background-color: hsl(var(--status-draft-bg));
     color: hsl(var(--status-draft-foreground));
-    border: 1px solid hsl(var(--status-draft) / 0.15);
+    border: 1px solid hsl(var(--status-draft) / 0.1);
   }
 
   .status-badge-processing {
-    @apply inline-flex items-center text-[10px] font-semibold px-2 py-0.5 rounded-md tracking-wide;
+    @apply status-badge-base;
     background-color: hsl(var(--status-processing-bg));
     color: hsl(var(--status-processing-foreground));
-    border: 1px solid hsl(var(--status-processing) / 0.2);
+    border: 1px solid hsl(var(--status-processing) / 0.15);
   }
 
   .status-badge-failed {
-    @apply inline-flex items-center text-[10px] font-semibold px-2 py-0.5 rounded-md tracking-wide;
+    @apply status-badge-base;
     background-color: hsl(var(--status-failed-bg));
     color: hsl(var(--status-failed-foreground));
-    border: 1px solid hsl(var(--status-failed) / 0.2);
+    border: 1px solid hsl(var(--status-failed) / 0.15);
   }
 
   .status-badge-attention {
-    @apply inline-flex items-center text-[10px] font-semibold px-2 py-0.5 rounded-md tracking-wide;
+    @apply status-badge-base;
     background-color: hsl(var(--status-attention-bg));
     color: hsl(var(--status-attention-foreground));
-    border: 1px solid hsl(var(--status-attention) / 0.2);
+    border: 1px solid hsl(var(--status-attention) / 0.15);
   }
 
   .evidence-link-line {
@@ -167,15 +171,15 @@
   /* ─── Card Elevation System ─────────────────── */
   .card-elevated {
     @apply bg-card rounded-xl border border-border;
-    box-shadow: 0 1px 2px 0 rgb(0 0 0 / 0.03), 0 1px 3px -1px rgb(0 0 0 / 0.03);
+    box-shadow: 0 1px 3px 0 rgb(0 0 0 / 0.02), 0 0 0 0.5px rgb(0 0 0 / 0.02);
   }
 
   .card-elevated-hover {
     @apply card-elevated transition-all duration-150;
   }
   .card-elevated-hover:hover {
-    box-shadow: 0 4px 12px 0 rgb(0 0 0 / 0.05), 0 1px 3px -1px rgb(0 0 0 / 0.04);
-    border-color: hsl(var(--border));
+    box-shadow: 0 4px 16px 0 rgb(0 0 0 / 0.05), 0 1px 4px -1px rgb(0 0 0 / 0.04);
+    border-color: hsl(var(--primary) / 0.12);
   }
 
   /* ─── Confidence Dots ──────────────────────── */
@@ -188,46 +192,67 @@
 
   /* ─── Premium Button Variants ──────────────── */
   .btn-primary {
-    @apply inline-flex items-center justify-center gap-1.5 text-xs font-medium px-3.5 py-2 rounded-lg bg-primary text-primary-foreground transition-all duration-150;
-    box-shadow: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+    @apply inline-flex items-center justify-center gap-1.5 text-[11px] font-semibold px-3.5 py-2 rounded-lg bg-primary text-primary-foreground transition-all duration-150;
+    box-shadow: 0 1px 2px 0 rgb(0 0 0 / 0.06), inset 0 1px 0 0 rgb(255 255 255 / 0.08);
   }
   .btn-primary:hover {
     @apply bg-primary/90;
-    box-shadow: 0 2px 4px 0 rgb(0 0 0 / 0.1);
+    box-shadow: 0 2px 6px 0 rgb(0 0 0 / 0.12);
+    transform: translateY(-0.5px);
   }
-  .btn-primary:disabled { @apply opacity-50 cursor-not-allowed; }
+  .btn-primary:active { transform: translateY(0); }
+  .btn-primary:disabled { @apply opacity-50 cursor-not-allowed; transform: none; }
 
   .btn-secondary {
-    @apply inline-flex items-center justify-center gap-1.5 text-xs font-medium px-3.5 py-2 rounded-lg border border-border bg-card text-foreground hover:bg-accent transition-all duration-150;
+    @apply inline-flex items-center justify-center gap-1.5 text-[11px] font-medium px-3.5 py-2 rounded-lg border border-border bg-card text-foreground transition-all duration-150;
+    box-shadow: 0 1px 1px 0 rgb(0 0 0 / 0.02);
+  }
+  .btn-secondary:hover {
+    @apply bg-accent border-border;
+    box-shadow: 0 2px 4px 0 rgb(0 0 0 / 0.04);
   }
 
   .btn-ghost {
-    @apply inline-flex items-center justify-center gap-1.5 text-xs font-medium px-2.5 py-1.5 rounded-lg text-muted-foreground hover:text-foreground hover:bg-accent transition-all duration-150;
+    @apply inline-flex items-center justify-center gap-1.5 text-[11px] font-medium px-2.5 py-1.5 rounded-lg text-muted-foreground hover:text-foreground hover:bg-accent/80 transition-all duration-100;
   }
 
   /* ─── Section Label ────────────────────────── */
   .section-label {
-    @apply text-[10px] font-semibold uppercase tracking-widest text-muted-foreground;
+    @apply text-[9px] font-semibold uppercase tracking-[0.08em] text-muted-foreground;
   }
 
   /* ─── Data Table ───────────────────────────── */
   .data-table {
-    @apply w-full text-sm;
+    @apply w-full text-[12px];
   }
   .data-table thead tr {
     @apply border-b border-border text-left;
   }
   .data-table th {
-    @apply px-4 py-2.5 text-[10px] font-semibold text-muted-foreground uppercase tracking-wider bg-accent/50;
+    @apply px-4 py-2.5 text-[9px] font-semibold text-muted-foreground uppercase tracking-[0.08em] bg-accent/30;
+  }
+  .data-table th:first-child { @apply rounded-tl-md; }
+  .data-table th:last-child { @apply rounded-tr-md; }
+  .data-table thead.sticky-header th {
+    @apply sticky top-0 z-10 bg-card/95 backdrop-blur-sm border-b border-border;
   }
   .data-table tbody {
-    @apply divide-y divide-border;
+    @apply divide-y divide-border/40;
   }
   .data-table td {
     @apply px-4 py-3;
   }
   .data-table tbody tr {
-    @apply hover:bg-accent/30 transition-colors;
+    @apply transition-colors duration-75;
+  }
+  .data-table tbody tr:hover {
+    @apply bg-accent/25;
+  }
+  .data-table tbody tr.row-selected {
+    @apply bg-primary/3;
+  }
+  .data-table tfoot td {
+    @apply px-4 py-2.5 text-[10px] font-semibold text-muted-foreground bg-accent/20 border-t border-border;
   }
 
   /* ─── Filter Bar ───────────────────────────── */
@@ -235,26 +260,28 @@
     @apply flex items-center gap-2 flex-wrap;
   }
   .filter-chip {
-    @apply inline-flex items-center gap-1.5 text-[11px] font-medium px-2.5 py-1.5 rounded-lg border border-border bg-card text-muted-foreground hover:text-foreground hover:bg-accent transition-all cursor-pointer;
+    @apply inline-flex items-center gap-1.5 text-[10px] font-medium px-2.5 py-1.5 rounded-lg border border-border bg-card text-muted-foreground hover:text-foreground hover:bg-accent/80 hover:border-border transition-all duration-100 cursor-pointer;
   }
   .filter-chip-active {
-    @apply filter-chip border-primary/30 bg-primary/5 text-primary;
+    @apply filter-chip border-primary/25 bg-primary/5 text-primary;
   }
 
   /* ─── Search Input ─────────────────────────── */
   .search-input {
-    @apply flex items-center gap-2 text-muted-foreground bg-accent/60 rounded-lg border border-transparent px-3 py-1.5 transition-all duration-150;
+    @apply flex items-center gap-2 text-muted-foreground bg-accent/50 rounded-lg border border-transparent px-3 py-1.5 transition-all duration-150;
   }
   .search-input:focus-within {
-    @apply border-primary/30 bg-card shadow-sm;
+    @apply border-primary/25 bg-card;
+    box-shadow: 0 0 0 3px hsl(var(--primary) / 0.06);
   }
   .search-input input {
-    @apply bg-transparent text-xs text-foreground placeholder:text-muted-foreground outline-none w-full;
+    @apply bg-transparent text-[12px] text-foreground placeholder:text-muted-foreground/50 outline-none w-full;
   }
 
   /* ─── Sticky Toolbar ───────────────────────── */
   .sticky-toolbar {
-    @apply sticky top-0 z-10 bg-background/80 backdrop-blur-sm border-b border-border px-6 py-3 flex items-center gap-3;
+    @apply sticky top-0 z-10 bg-card/95 backdrop-blur-md border-b border-border px-5 py-2.5 flex items-center gap-3;
+    box-shadow: 0 1px 2px 0 rgb(0 0 0 / 0.02);
   }
 
   /* ─── Timeline Item ────────────────────────── */
@@ -279,5 +306,39 @@
   /* ─── Split Pane Divider ───────────────────── */
   .split-divider {
     @apply w-px bg-border hover:bg-primary/30 transition-colors cursor-col-resize shrink-0;
+  }
+
+  /* ─── Interactive row ──────────────────────── */
+  .interactive-row {
+    @apply px-4 py-3 transition-colors duration-75 cursor-pointer;
+  }
+  .interactive-row:hover {
+    @apply bg-accent/25;
+  }
+  .interactive-row.selected {
+    @apply bg-primary/4 border-l-2 border-l-primary;
+  }
+
+  /* ─── Panel header ─────────────────────────── */
+  .panel-header {
+    @apply px-4 py-2.5 border-b border-border flex items-center gap-2 bg-card shrink-0;
+  }
+  .panel-header-title {
+    @apply text-[12px] font-semibold text-foreground leading-none;
+  }
+
+  /* ─── Pill toggle group ────────────────────── */
+  .pill-toggle-group {
+    @apply flex gap-px bg-accent/60 rounded-lg p-0.5;
+  }
+  .pill-toggle {
+    @apply px-2.5 py-1 text-[10px] font-medium rounded-md transition-all duration-100;
+  }
+  .pill-toggle-active {
+    @apply pill-toggle bg-card text-foreground;
+    box-shadow: 0 1px 2px 0 rgb(0 0 0 / 0.04);
+  }
+  .pill-toggle-inactive {
+    @apply pill-toggle text-muted-foreground hover:text-foreground;
   }
 }

@@ -53,13 +53,13 @@ const CaseWorkspaceTabs = ({ active, onChange }: CaseWorkspaceTabsProps) => {
             onClick={() => onChange(tab.key)}
             className={`relative whitespace-nowrap px-3 py-2 text-[11px] font-medium rounded-md transition-all duration-100 ${
               isActive
-                ? "text-primary bg-primary/5"
-                : "text-muted-foreground hover:text-foreground hover:bg-accent/60"
+                ? "text-primary"
+                : "text-muted-foreground hover:text-foreground hover:bg-accent/50"
             }`}
           >
             {tab.label}
             {isActive && (
-              <span className="absolute bottom-0 left-2 right-2 h-[2px] bg-primary rounded-full" />
+              <span className="absolute bottom-0 left-2.5 right-2.5 h-[1.5px] bg-primary rounded-full" />
             )}
           </button>
         );
@@ -69,10 +69,10 @@ const CaseWorkspaceTabs = ({ active, onChange }: CaseWorkspaceTabsProps) => {
       <div className="relative" ref={moreRef}>
         <button
           onClick={() => setMoreOpen(!moreOpen)}
-          className="flex items-center gap-1 whitespace-nowrap px-2.5 py-2 text-[11px] font-medium text-muted-foreground hover:text-foreground hover:bg-accent/60 rounded-md transition-all"
+          className="flex items-center gap-1 whitespace-nowrap px-2.5 py-2 text-[11px] font-medium text-muted-foreground hover:text-foreground hover:bg-accent/50 rounded-md transition-all"
         >
           More
-          <ChevronDown className="h-3 w-3" />
+          <ChevronDown className={`h-2.5 w-2.5 transition-transform ${moreOpen ? "rotate-180" : ""}`} />
         </button>
 
         {moreOpen && (
@@ -81,7 +81,7 @@ const CaseWorkspaceTabs = ({ active, onChange }: CaseWorkspaceTabsProps) => {
               <button
                 key={tab.key}
                 disabled={tab.disabled}
-                className="w-full text-left px-3 py-2 text-[11px] font-medium text-muted-foreground hover:text-foreground hover:bg-accent/60 transition-colors disabled:opacity-40 disabled:cursor-not-allowed flex items-center gap-2"
+                className="w-full text-left px-3 py-2 text-[11px] font-medium text-muted-foreground hover:text-foreground hover:bg-accent/50 transition-colors disabled:opacity-40 disabled:cursor-not-allowed flex items-center gap-2"
               >
                 {tab.label}
                 {tab.disabled && (
