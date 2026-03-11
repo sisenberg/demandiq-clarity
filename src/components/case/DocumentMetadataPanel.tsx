@@ -44,6 +44,7 @@ const DocumentMetadataPanel = ({
   const acceptType = useAcceptTypeSuggestion();
   const correctMeta = useCorrectMetadata();
   const acceptMeta = useAcceptMetadata();
+  const auditLog = useAuditLog();
 
   const [showAllTypes, setShowAllTypes] = useState(false);
   const [editingMeta, setEditingMeta] = useState<string | null>(null);
