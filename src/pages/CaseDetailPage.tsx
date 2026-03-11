@@ -254,11 +254,7 @@ const CaseDetailPage = () => {
 
               {/* ── BILLING ────────────────────────── */}
               {activeSection === "billing" && (
-                <WorkspaceCard icon={FileText} title="Billing Summary">
-                  <div className="p-5">
-                    <EmptyState icon={FileText} title="Billing workspace" description="Billing analysis, UCR comparison, and reduction tracking will appear here." />
-                  </div>
-                </WorkspaceCard>
+                <BillingView />
               )}
 
               {/* ── DOCUMENTS ─────────────────────── */}
