@@ -5,6 +5,7 @@ import { useRetryIntakeJob, useCaseIntakeJobs } from "@/hooks/useIntakeJobs";
 import { useInvokeExtraction, useTriggerCaseExtraction } from "@/hooks/useExtraction";
 import { useCaseDuplicateFlags } from "@/hooks/useDuplicateFlags";
 import { useAuth } from "@/contexts/AuthContext";
+import { useAuditLog } from "@/hooks/useAuditLog";
 import { supabase } from "@/integrations/supabase/client";
 import DocumentReviewWorkspace from "./DocumentReviewWorkspace";
 import {
