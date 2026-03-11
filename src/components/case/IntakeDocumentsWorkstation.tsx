@@ -66,6 +66,7 @@ const IntakeDocumentsWorkstation = ({ documents, loading, caseId }: IntakeDocume
   const [selectedDocId, setSelectedDocId] = useState<string | null>(null);
   const [showUploadZone, setShowUploadZone] = useState(false);
   const [confirmDelete, setConfirmDelete] = useState<string | null>(null);
+  const [reviewDocId, setReviewDocId] = useState<string | null>(null);
 
   const deleteDoc = useDeleteDocument();
   const triggerExtraction = useTriggerCaseExtraction();
