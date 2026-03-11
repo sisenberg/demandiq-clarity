@@ -17,6 +17,7 @@ import {
 import IntakeUploadZone from "./IntakeUploadZone";
 import IntakeSummaryPanel from "./IntakeSummaryPanel";
 import DocumentTypeTag from "./DocumentTypeTag";
+import DocumentMetadataPanel from "./DocumentMetadataPanel";
 import {
   Search,
   X,
