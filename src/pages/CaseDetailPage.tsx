@@ -201,6 +201,9 @@ const CaseDetailPage = () => {
             {/* ── OVERVIEW ────────────────────────── */}
             {activeSection === "overview" && (
               <>
+                {/* Horizontal chronology bar */}
+                <HorizontalTimeline />
+
                 {/* DemandIQ Overview — Case Summary, Injuries, Flags */}
                 <OverviewCards caseData={caseData} documents={documents} />
 
