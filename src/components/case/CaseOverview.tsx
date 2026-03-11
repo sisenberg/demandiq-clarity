@@ -81,7 +81,7 @@ interface CaseOverviewProps {
   onNavigate?: (section: string) => void;
 }
 
-const CaseOverview = ({ caseData, documents }: CaseOverviewProps) => {
+const CaseOverview = ({ caseData, documents, onNavigate }: CaseOverviewProps) => {
   const { pkg } = useCasePackage();
   const billing = getBillingSummary(pkg);
   const stats = getTreatmentStats(pkg);
