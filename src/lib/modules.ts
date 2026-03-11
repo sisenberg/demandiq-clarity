@@ -7,8 +7,8 @@ export interface ModuleDefinition {
   label: string;
   shortLabel: string;
   description: string;
-  enabled: boolean;
-  comingSoon: boolean;
+  /** DemandIQ is the base module included with every tenant */
+  isBase: boolean;
   icon: string; // lucide icon name
   accentHsl: string; // HSL variable reference
 }
