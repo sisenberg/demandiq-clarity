@@ -206,11 +206,32 @@ export enum ModuleId {
   LitIQ = "litiq",
 }
 
+export enum EntitlementStatus {
+  Enabled = "enabled",
+  Disabled = "disabled",
+  Trial = "trial",
+  Suspended = "suspended",
+}
+
 export enum ReviewStatus {
   Draft = "draft",
   InReview = "in_review",
   Approved = "approved",
   Published = "published",
+}
+
+/** Tenant module entitlement record */
+export interface TenantModuleEntitlement {
+  id: string;
+  tenant_id: string;
+  module_id: string;
+  status: EntitlementStatus;
+  trial_ends_at: string | null;
+  enabled_at: string | null;
+  enabled_by: string | null;
+  notes: string;
+  created_at: string;
+  updated_at: string;
 }
 
 // ─── Core Entities ───────────────────────────────────
