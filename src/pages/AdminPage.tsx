@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Settings, Users, ShieldCheck, Check, X, Building2, Blocks } from "lucide-react";
+import { Settings, Users, ShieldCheck, Check, X, Building2, Blocks, ShieldAlert } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/lib/supabase";
 import RoleBadge from "@/components/ui/RoleBadge";
@@ -7,6 +7,7 @@ import { MODULES } from "@/lib/modules";
 import { EntitlementStatus } from "@/types";
 import type { TenantModuleEntitlement } from "@/types";
 import { useModuleEntitlements, useUpsertEntitlement } from "@/hooks/useModuleEntitlements";
+import PhiReadinessPanel from "@/components/admin/PhiReadinessPanel";
 import {
   type AppRole,
   ALL_ROLES,
@@ -40,7 +41,7 @@ const ENTITLEMENT_BADGE: Record<EntitlementStatus, string> = {
 
 const AdminPage = () => {
   const { role, tenantId } = useAuth();
-  const [tab, setTab] = useState<"users" | "permissions" | "modules" | "settings">("users");
+  const [tab, setTab] = useState<"users" | "permissions" | "modules" | "compliance" | "settings">("users");
   const [users, setUsers] = useState<TenantUser[]>([]);
   const [loadingUsers, setLoadingUsers] = useState(true);
   const [tenant, setTenant] = useState<{ name: string; slug: string } | null>(null);
@@ -125,6 +126,7 @@ const AdminPage = () => {
     { key: "users" as const, label: "Users", icon: Users },
     { key: "permissions" as const, label: "Permissions", icon: ShieldCheck },
     { key: "modules" as const, label: "Modules", icon: Blocks },
+    { key: "compliance" as const, label: "Compliance", icon: ShieldAlert },
     { key: "settings" as const, label: "Settings", icon: Settings },
   ];
 
@@ -327,6 +329,11 @@ const AdminPage = () => {
             </table>
           </div>
         </div>
+      )}
+
+      {/* Compliance Tab */}
+      {tab === "compliance" && (
+        <PhiReadinessPanel />
       )}
 
       {/* Settings */}

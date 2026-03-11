@@ -1676,6 +1676,80 @@ export type Database = {
           },
         ]
       }
+      phi_readiness_config: {
+        Row: {
+          ai_retention_confirmed_at: string | null
+          ai_retention_confirmed_by: string | null
+          ai_retention_notes: string
+          ai_retention_terms_finalized: boolean
+          baa_confirmed_at: string | null
+          baa_confirmed_by: string | null
+          baa_executed: boolean
+          baa_vendor_list: string
+          created_at: string
+          environment_designation: Database["public"]["Enums"]["environment_designation"]
+          id: string
+          last_status_change_at: string
+          last_status_change_by: string | null
+          logging_masking_confirmed_at: string | null
+          logging_masking_confirmed_by: string | null
+          logging_masking_hardened: boolean
+          overall_status: Database["public"]["Enums"]["phi_readiness_status"]
+          tenant_id: string
+          updated_at: string
+        }
+        Insert: {
+          ai_retention_confirmed_at?: string | null
+          ai_retention_confirmed_by?: string | null
+          ai_retention_notes?: string
+          ai_retention_terms_finalized?: boolean
+          baa_confirmed_at?: string | null
+          baa_confirmed_by?: string | null
+          baa_executed?: boolean
+          baa_vendor_list?: string
+          created_at?: string
+          environment_designation?: Database["public"]["Enums"]["environment_designation"]
+          id?: string
+          last_status_change_at?: string
+          last_status_change_by?: string | null
+          logging_masking_confirmed_at?: string | null
+          logging_masking_confirmed_by?: string | null
+          logging_masking_hardened?: boolean
+          overall_status?: Database["public"]["Enums"]["phi_readiness_status"]
+          tenant_id: string
+          updated_at?: string
+        }
+        Update: {
+          ai_retention_confirmed_at?: string | null
+          ai_retention_confirmed_by?: string | null
+          ai_retention_notes?: string
+          ai_retention_terms_finalized?: boolean
+          baa_confirmed_at?: string | null
+          baa_confirmed_by?: string | null
+          baa_executed?: boolean
+          baa_vendor_list?: string
+          created_at?: string
+          environment_designation?: Database["public"]["Enums"]["environment_designation"]
+          id?: string
+          last_status_change_at?: string
+          last_status_change_by?: string | null
+          logging_masking_confirmed_at?: string | null
+          logging_masking_confirmed_by?: string | null
+          logging_masking_hardened?: boolean
+          overall_status?: Database["public"]["Enums"]["phi_readiness_status"]
+          tenant_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "phi_readiness_config_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: true
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       profiles: {
         Row: {
           created_at: string
@@ -1991,6 +2065,7 @@ export type Database = {
         | "photograph"
         | "other"
       duplicate_flag_status: "flagged" | "dismissed" | "confirmed"
+      environment_designation: "development" | "staging" | "production"
       fact_type:
         | "medical_diagnosis"
         | "treatment"
@@ -2055,6 +2130,10 @@ export type Database = {
         | "expert"
         | "attorney"
         | "adjuster"
+      phi_readiness_status:
+        | "development_test_allowed"
+        | "production_phi_blocked"
+        | "production_phi_ready"
       pipeline_stage:
         | "upload_received"
         | "ocr_queued"
@@ -2284,6 +2363,7 @@ export const Constants = {
         "other",
       ],
       duplicate_flag_status: ["flagged", "dismissed", "confirmed"],
+      environment_designation: ["development", "staging", "production"],
       fact_type: [
         "medical_diagnosis",
         "treatment",
@@ -2349,6 +2429,11 @@ export const Constants = {
         "expert",
         "attorney",
         "adjuster",
+      ],
+      phi_readiness_status: [
+        "development_test_allowed",
+        "production_phi_blocked",
+        "production_phi_ready",
       ],
       pipeline_stage: [
         "upload_received",
