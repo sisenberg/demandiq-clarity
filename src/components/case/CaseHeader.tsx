@@ -26,7 +26,7 @@ const CASE_STATUS_BADGE: Record<string, string> = {
   intake_complete: "status-badge-approved",
   processing_in_progress: "status-badge-processing",
   complete: "status-badge-approved",
-  exported: "status-badge-draft",
+  exported: "status-badge-approved",
   closed: "status-badge-draft",
   failed: "status-badge-failed",
 };

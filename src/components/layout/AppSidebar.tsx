@@ -36,7 +36,7 @@ const coreNavItems = [
   { label: "Dashboard", path: "/", icon: LayoutDashboard },
   { label: "Cases", path: "/cases", icon: Briefcase },
   { label: "Documents", path: "/documents", icon: FileText },
-  { label: "Exports", path: "/exports", icon: Download },
+  { label: "Downloads", path: "/exports", icon: Download },
 ];
 
 const adminNavItems = [
