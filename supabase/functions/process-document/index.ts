@@ -382,6 +382,8 @@ Deno.serve(async (req: Request) => {
     const fullText = pages.map((p) => p.text).join("\n\n--- Page Break ---\n\n");
 
     // 10. Update document record
+    // process-document owns: text_extracted + ocr_complete
+    // classify-document will later advance pipeline_stage to document_classified
     await supabase
       .from("case_documents")
       .update({
