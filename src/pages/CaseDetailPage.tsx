@@ -17,9 +17,12 @@ import WorkspaceCard from "@/components/case/WorkspaceCard";
 import OverviewCards from "@/components/case/OverviewCards";
 import BodyMap from "@/components/case/BodyMap";
 import ChronologyPanel from "@/components/case/ChronologyPanel";
+import HorizontalTimeline from "@/components/case/HorizontalTimeline";
 import CaseNotesPanel from "@/components/case/CaseNotesPanel";
 import AnalysisCard from "@/components/case/AnalysisCard";
 import type { AnalysisSection } from "@/components/case/AnalysisCard";
+import SourcePagesPanel from "@/components/case/SourcePagesPanel";
+import { SourceDrawerProvider, SourceDrawer } from "@/components/case/SourceDrawer";
 import {
   ArrowLeft,
   FileText,
@@ -163,6 +166,7 @@ const CaseDetailPage = () => {
   const completeDocs = documents.filter((d) => d.document_status === "complete" || d.document_status === "extracted").length;
 
   return (
+    <SourceDrawerProvider>
     <div className="flex flex-col h-full">
       {/* Top case header */}
       <CaseHeader caseData={caseData} />
@@ -197,6 +201,9 @@ const CaseDetailPage = () => {
             {/* ── OVERVIEW ────────────────────────── */}
             {activeSection === "overview" && (
               <>
+                {/* Horizontal chronology bar */}
+                <HorizontalTimeline />
+
                 {/* DemandIQ Overview — Case Summary, Injuries, Flags */}
                 <OverviewCards caseData={caseData} documents={documents} />
 
@@ -414,28 +421,7 @@ const CaseDetailPage = () => {
 
             {/* ── SOURCES ────────────────────────── */}
             {activeSection === "sources" && (
-              <WorkspaceCard
-                icon={BookOpen}
-                title="Source Citations"
-                count={MOCK_SOURCES.length}
-              >
-                <div className="divide-y divide-border">
-                  {MOCK_SOURCES.map((src, idx) => (
-                    <div key={idx} className="px-5 py-4">
-                      <div className="flex items-center gap-2 mb-2">
-                        <span className="text-[10px] font-semibold bg-primary/10 text-primary px-2 py-0.5 rounded-full">
-                          {src.page}
-                        </span>
-                        <span className="text-xs font-medium text-foreground">{src.doc}</span>
-                        <ExternalLink className="h-3 w-3 text-muted-foreground ml-auto cursor-pointer hover:text-primary transition-colors" />
-                      </div>
-                      <blockquote className="text-sm text-foreground leading-relaxed pl-3 border-l-2 border-primary/30 evidence-text">
-                        "{src.excerpt}"
-                      </blockquote>
-                    </div>
-                  ))}
-                </div>
-              </WorkspaceCard>
+              <SourcePagesPanel />
             )}
 
             {/* ── WORKFLOWS ────────────────────────── */}
@@ -492,7 +478,9 @@ const CaseDetailPage = () => {
       </div>
 
       <DocumentUpload caseId={caseData.id} open={showUpload} onClose={() => setShowUpload(false)} />
+      <SourceDrawer />
     </div>
+    </SourceDrawerProvider>
   );
 };
 

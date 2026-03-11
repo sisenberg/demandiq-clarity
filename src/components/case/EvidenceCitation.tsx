@@ -1,4 +1,5 @@
 import { BookOpen, ExternalLink } from "lucide-react";
+import { useSourceDrawer } from "./SourceDrawer";
 
 export interface CitationSource {
   docName: string;
@@ -15,12 +16,18 @@ const RELEVANCE_STYLE: Record<string, string> = {
 };
 
 /**
- * Inline citation badge — renders like [Source: doc, pg. X]
+ * Inline citation badge — clickable, opens source drawer
  */
 export const CitationBadge = ({ source }: { source: CitationSource }) => {
+  const { openSource } = useSourceDrawer();
+
   return (
     <span
-      className="inline-flex items-center gap-1 text-[10px] font-medium px-1.5 py-0.5 rounded border bg-primary/5 text-primary border-primary/15 cursor-pointer hover:bg-primary/10 transition-colors ml-1"
+      onClick={(e) => {
+        e.stopPropagation();
+        openSource(source);
+      }}
+      className="inline-flex items-center gap-1 text-[10px] font-medium px-1.5 py-0.5 rounded border bg-primary/5 text-primary border-primary/15 cursor-pointer hover:bg-primary/10 active:bg-primary/15 transition-colors ml-1"
       title={`${source.docName} — ${source.page}${source.excerpt ? `\n"${source.excerpt}"` : ""}`}
     >
       <BookOpen className="h-2.5 w-2.5" />
@@ -33,10 +40,14 @@ export const CitationBadge = ({ source }: { source: CitationSource }) => {
  * Full citation block — source reference with optional excerpt
  */
 export const CitationBlock = ({ source }: { source: CitationSource }) => {
+  const { openSource } = useSourceDrawer();
   const relStyle = RELEVANCE_STYLE[source.relevance ?? "direct"];
 
   return (
-    <div className="rounded-lg border border-border bg-background p-3">
+    <div
+      className="rounded-lg border border-border bg-background p-3 cursor-pointer hover:border-primary/30 transition-colors"
+      onClick={() => openSource(source)}
+    >
       <div className="flex items-center gap-2 mb-1.5">
         <span className={`text-[9px] font-semibold uppercase tracking-wider px-1.5 py-0.5 rounded border ${relStyle}`}>
           {source.relevance ?? "direct"}
@@ -45,7 +56,7 @@ export const CitationBlock = ({ source }: { source: CitationSource }) => {
           {source.page}
         </span>
         <span className="text-xs font-medium text-foreground truncate flex-1">{source.docName}</span>
-        <ExternalLink className="h-3 w-3 text-muted-foreground shrink-0 cursor-pointer hover:text-primary transition-colors" />
+        <ExternalLink className="h-3 w-3 text-muted-foreground shrink-0 hover:text-primary transition-colors" />
       </div>
       {source.excerpt && (
         <blockquote className="text-xs text-foreground leading-relaxed pl-3 border-l-2 border-primary/30 mt-2 font-mono">
