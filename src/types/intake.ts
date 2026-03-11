@@ -1,33 +1,14 @@
 /**
  * Intake pipeline types for document OCR + extraction foundation.
  * These map directly to the Supabase schema created in the intake migration.
+ *
+ * NOTE: Status enums & display labels are centralized in @/lib/statuses.ts.
+ *       This file contains row type definitions only.
  */
 
-// ── Enums ──────────────────────────────────────────────────────
-
-export type IntakeStatus =
-  | "uploaded"
-  | "queued_for_text_extraction"
-  | "extracting_text"
-  | "text_extracted"
-  | "queued_for_parsing"
-  | "parsing"
-  | "parsed"
-  | "needs_review"
-  | "failed";
-
-export type IntakeJobType =
-  | "text_extraction"
-  | "document_parsing"
-  | "fact_extraction"
-  | "duplicate_detection";
-
-export type IntakeJobStatus =
-  | "queued"
-  | "running"
-  | "completed"
-  | "failed"
-  | "cancelled";
+// Re-export status types/labels from centralized module for backward compatibility
+export type { IntakeStatus, IntakeJobStatus, IntakeJobType } from "@/lib/statuses";
+export { INTAKE_STATUS_LABEL, JOB_TYPE_LABEL as INTAKE_JOB_TYPE_LABEL } from "@/lib/statuses";
 
 export type FactType =
   | "medical_diagnosis"
@@ -66,8 +47,8 @@ export interface IntakeJobRow {
   tenant_id: string;
   case_id: string;
   document_id: string | null;
-  job_type: IntakeJobType;
-  status: IntakeJobStatus;
+  job_type: string;
+  status: string;
   started_at: string | null;
   completed_at: string | null;
   error_message: string | null;
@@ -124,26 +105,7 @@ export interface DuplicateDocumentFlagRow {
   created_at: string;
 }
 
-// ── Display helpers ────────────────────────────────────────────
-
-export const INTAKE_STATUS_LABEL: Record<IntakeStatus, string> = {
-  uploaded: "Uploaded",
-  queued_for_text_extraction: "Queued for OCR",
-  extracting_text: "Extracting Text",
-  text_extracted: "Text Extracted",
-  queued_for_parsing: "Queued for Parsing",
-  parsing: "Parsing",
-  parsed: "Parsed",
-  needs_review: "Needs Review",
-  failed: "Failed",
-};
-
-export const INTAKE_JOB_TYPE_LABEL: Record<IntakeJobType, string> = {
-  text_extraction: "Text Extraction (OCR)",
-  document_parsing: "Document Parsing",
-  fact_extraction: "Fact Extraction",
-  duplicate_detection: "Duplicate Detection",
-};
+// ── Display helpers (kept for backward compat, prefer @/lib/statuses) ──
 
 export const FACT_TYPE_LABEL: Record<FactType, string> = {
   medical_diagnosis: "Medical Diagnosis",
