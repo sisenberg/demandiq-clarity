@@ -125,6 +125,7 @@ const AdminPage = () => {
     { key: "users" as const, label: "Users", icon: Users },
     { key: "permissions" as const, label: "Permissions", icon: ShieldCheck },
     { key: "modules" as const, label: "Modules", icon: Blocks },
+    { key: "compliance" as const, label: "Compliance", icon: ShieldAlert },
     { key: "settings" as const, label: "Settings", icon: Settings },
   ];
 
