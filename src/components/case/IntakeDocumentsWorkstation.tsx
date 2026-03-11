@@ -124,7 +124,17 @@ const IntakeDocumentsWorkstation = ({ documents, loading, caseId }: IntakeDocume
   const handleViewOriginal = async (doc: DocumentRow) => {
     if (!doc.storage_path) return;
     const { data } = await supabase.storage.from("case-documents").createSignedUrl(doc.storage_path, 120);
-    if (data?.signedUrl) window.open(data.signedUrl, "_blank");
+    if (data?.signedUrl) {
+      window.open(data.signedUrl, "_blank");
+      // Audit: track document access / signed URL for compliance evidence
+      auditLog.mutate({
+        actionType: "signed_url_generated",
+        entityType: "case_document",
+        entityId: doc.id,
+        caseId,
+        afterValue: { ttl: 120, purpose: "view_original" },
+      });
+    }
   };
 
   // If reviewing a document, show the review workspace full-width
