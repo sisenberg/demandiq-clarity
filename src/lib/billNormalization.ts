@@ -8,7 +8,6 @@
  * Supports: UB-04, CMS-1500, provider ledger, pharmacy, and unknown formats.
  */
 
-import { v4 as uuidV4 } from "crypto";
 import type {
   RawBillInput,
   RawBillLineInput,
