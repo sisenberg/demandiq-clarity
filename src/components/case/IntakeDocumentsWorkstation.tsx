@@ -380,18 +380,46 @@ const IntakeDocumentsWorkstation = ({ documents, loading, caseId }: IntakeDocume
                   </div>
                 )}
 
-                {/* Failed error state */}
-                {selectedDoc.intake_status === "failed" && (
-                  <div className="rounded-lg border border-destructive/30 bg-[hsl(var(--status-failed-bg))] px-4 py-3 flex items-start gap-2.5">
-                    <AlertTriangle className="h-4 w-4 text-destructive shrink-0 mt-0.5" />
-                    <div>
-                      <p className="text-xs font-medium text-foreground">Processing Failed</p>
-                      <p className="text-[10px] text-muted-foreground mt-0.5">
-                        Text extraction or parsing failed for this document. You can retry the process or upload a new version.
-                      </p>
+                {/* Failed error state with retry */}
+                {selectedDoc.intake_status === "failed" && (() => {
+                  const failedJob = intakeJobs.find(
+                    (j) => j.document_id === selectedDoc.id && j.status === "failed"
+                  );
+                  return (
+                    <div className="rounded-lg border border-destructive/30 bg-[hsl(var(--status-failed-bg))] px-4 py-3">
+                      <div className="flex items-start gap-2.5">
+                        <AlertTriangle className="h-4 w-4 text-destructive shrink-0 mt-0.5" />
+                        <div className="flex-1">
+                          <p className="text-xs font-medium text-foreground">Processing Failed</p>
+                          <p className="text-[10px] text-muted-foreground mt-0.5">
+                            {failedJob?.error_message || "Text extraction failed. You can retry or upload a new version."}
+                          </p>
+                        </div>
+                      </div>
+                      {failedJob && (
+                        <div className="mt-3 flex items-center gap-2">
+                          <button
+                            onClick={() => {
+                              retryIntakeJob.mutate(failedJob.id, {
+                                onSuccess: () => {
+                                  // Re-invoke extraction after retry
+                                  setTimeout(() => invokeExtraction.mutate(failedJob.id), 500);
+                                },
+                              });
+                            }}
+                            disabled={retryIntakeJob.isPending}
+                            className="flex items-center gap-1 text-[10px] font-medium px-3 py-1.5 rounded-lg bg-primary text-primary-foreground hover:bg-primary/90 transition-colors disabled:opacity-50"
+                          >
+                            <RotateCcw className="h-3 w-3" /> Retry Extraction
+                          </button>
+                          <span className="text-[9px] text-muted-foreground">
+                            {failedJob.retry_count}/{failedJob.max_retries} retries used
+                          </span>
+                        </div>
+                      )}
                     </div>
-                  </div>
-                )}
+                  );
+                })()}
 
                 {/* Hash */}
                 {selectedDoc.file_hash && (
