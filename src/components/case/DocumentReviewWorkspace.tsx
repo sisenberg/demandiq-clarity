@@ -88,10 +88,20 @@ const DocumentReviewWorkspace = ({ documentId, caseId, onBack }: DocumentReviewW
 
   const signPdfUrl = useCallback(async (storagePath: string) => {
     const { data } = await supabase.storage.from("case-documents").createSignedUrl(storagePath, SIGNED_URL_TTL);
-    if (data?.signedUrl) setPdfUrl(data.signedUrl);
+    if (data?.signedUrl) {
+      setPdfUrl(data.signedUrl);
+      // Audit: track signed URL generation for compliance evidence
+      auditLog.mutate({
+        actionType: "signed_url_generated",
+        entityType: "case_document",
+        entityId: documentId,
+        caseId,
+        afterValue: { ttl: SIGNED_URL_TTL, purpose: "document_viewer" },
+      });
+    }
     if (pdfRefreshTimer.current) clearTimeout(pdfRefreshTimer.current);
     pdfRefreshTimer.current = setTimeout(() => signPdfUrl(storagePath), SIGNED_URL_REFRESH);
-  }, []);
+  }, [documentId, caseId]);
 
   useEffect(() => {
     if (!doc?.storage_path) return;

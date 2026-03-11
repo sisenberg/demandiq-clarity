@@ -5,6 +5,7 @@ import { useRetryIntakeJob, useCaseIntakeJobs } from "@/hooks/useIntakeJobs";
 import { useInvokeExtraction, useTriggerCaseExtraction } from "@/hooks/useExtraction";
 import { useCaseDuplicateFlags } from "@/hooks/useDuplicateFlags";
 import { useAuth } from "@/contexts/AuthContext";
+import { useAuditLog } from "@/hooks/useAuditLog";
 import { supabase } from "@/integrations/supabase/client";
 import DocumentReviewWorkspace from "./DocumentReviewWorkspace";
 import {
@@ -69,6 +70,7 @@ const IntakeDocumentsWorkstation = ({ documents, loading, caseId }: IntakeDocume
   const [confirmDelete, setConfirmDelete] = useState<string | null>(null);
   const [reviewDocId, setReviewDocId] = useState<string | null>(null);
 
+  const auditLog = useAuditLog();
   const deleteDoc = useDeleteDocument();
   const triggerExtraction = useTriggerCaseExtraction();
   const invokeExtraction = useInvokeExtraction();
@@ -124,7 +126,17 @@ const IntakeDocumentsWorkstation = ({ documents, loading, caseId }: IntakeDocume
   const handleViewOriginal = async (doc: DocumentRow) => {
     if (!doc.storage_path) return;
     const { data } = await supabase.storage.from("case-documents").createSignedUrl(doc.storage_path, 120);
-    if (data?.signedUrl) window.open(data.signedUrl, "_blank");
+    if (data?.signedUrl) {
+      window.open(data.signedUrl, "_blank");
+      // Audit: track document access / signed URL for compliance evidence
+      auditLog.mutate({
+        actionType: "signed_url_generated",
+        entityType: "case_document",
+        entityId: doc.id,
+        caseId,
+        afterValue: { ttl: 120, purpose: "view_original" },
+      });
+    }
   };
 
   // If reviewing a document, show the review workspace full-width
