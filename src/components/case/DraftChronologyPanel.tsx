@@ -62,6 +62,10 @@ const CATEGORY_DOT: Record<string, string> = {
 const DraftChronologyPanel = ({ caseId }: DraftChronologyPanelProps) => {
   const { data: candidates = [], isLoading } = useCaseChronologyCandidates(caseId);
   const generateChronology = useGenerateChronology();
+  const updateStatus = useUpdateCandidateStatus();
+  const editCandidate = useEditCandidate();
+  const mergeCandidates = useMergeCandidates();
+  const auditLog = useAuditLog();
   const [statusFilter, setStatusFilter] = useState("all");
   const [mergeMode, setMergeMode] = useState<string | null>(null);
 
