@@ -438,6 +438,12 @@ const IntakeDocumentsWorkstation = ({ documents, loading, caseId }: IntakeDocume
                 {/* Actions */}
                 <div className="flex flex-wrap gap-2">
                   <button
+                    onClick={() => setReviewDocId(selectedDoc.id)}
+                    className="flex items-center gap-1.5 text-[10px] font-medium px-3 py-1.5 rounded-lg bg-primary text-primary-foreground hover:bg-primary/90 transition-colors shadow-sm"
+                  >
+                    <Pencil className="h-3 w-3" /> Review & Correct
+                  </button>
+                  <button
                     onClick={() => handleViewOriginal(selectedDoc)}
                     disabled={!selectedDoc.storage_path}
                     className="flex items-center gap-1.5 text-[10px] font-medium px-3 py-1.5 rounded-lg border border-border bg-card text-foreground hover:bg-accent transition-colors disabled:opacity-50"
