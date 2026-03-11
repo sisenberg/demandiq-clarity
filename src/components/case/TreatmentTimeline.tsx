@@ -150,7 +150,7 @@ export default function TreatmentTimeline({ caseId }: TreatmentTimelineProps) {
   }, [filtered]);
 
   const metrics = useMemo(() => computeMetrics(records), [records]);
-  const activeFilterCount = Object.entries(filters).filter(([k, v]) => k !== "search" && v && v !== false).length;
+  const activeFilterCount = Object.entries(filters).filter(([k, v]) => k !== "search" && v !== "" && v !== false).length;
 
   const toggleGroup = (key: string) => {
     setExpandedGroups((prev) => {
