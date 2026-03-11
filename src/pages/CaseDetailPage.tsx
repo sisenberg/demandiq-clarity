@@ -483,6 +483,7 @@ const CaseDetailPage = () => {
       <SourceDrawer />
     </div>
     </SourceDrawerProvider>
+    </CasePackageProvider>
   );
 };
 
