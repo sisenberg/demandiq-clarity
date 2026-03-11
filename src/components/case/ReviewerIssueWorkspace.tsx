@@ -60,13 +60,14 @@ export default function ReviewerIssueWorkspace({ issues, onDisposition }: Review
       if (showPendingOnly && i.disposition !== "pending") return false;
       if (severityFilter && i.severity !== severityFilter) return false;
       if (typeFilter && i.issue_type !== typeFilter) return false;
+      if (categoryFilter && ISSUE_CATEGORY_MAP[i.issue_type] !== categoryFilter) return false;
       if (search) {
         const q = search.toLowerCase();
         if (!`${i.title} ${i.description} ${i.affected_provider || ""}`.toLowerCase().includes(q)) return false;
       }
       return true;
     });
-  }, [issues, search, severityFilter, typeFilter, showPendingOnly]);
+  }, [issues, search, severityFilter, typeFilter, categoryFilter, showPendingOnly]);
 
   // Group by provider
   const grouped = useMemo(() => {
