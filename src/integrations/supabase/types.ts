@@ -793,6 +793,94 @@ export type Database = {
           },
         ]
       }
+      module_dependencies: {
+        Row: {
+          created_at: string
+          downstream_module_id: string
+          id: string
+          upstream_module_id: string
+        }
+        Insert: {
+          created_at?: string
+          downstream_module_id: string
+          id?: string
+          upstream_module_id: string
+        }
+        Update: {
+          created_at?: string
+          downstream_module_id?: string
+          id?: string
+          upstream_module_id?: string
+        }
+        Relationships: []
+      }
+      module_dependency_state: {
+        Row: {
+          case_id: string
+          created_at: string
+          dependency_status: Database["public"]["Enums"]["dependency_status"]
+          downstream_module_id: string
+          id: string
+          last_synced_at: string | null
+          stale_since: string | null
+          tenant_id: string
+          updated_at: string
+          upstream_module_id: string
+          upstream_snapshot_id: string | null
+          upstream_snapshot_version: number | null
+        }
+        Insert: {
+          case_id: string
+          created_at?: string
+          dependency_status?: Database["public"]["Enums"]["dependency_status"]
+          downstream_module_id: string
+          id?: string
+          last_synced_at?: string | null
+          stale_since?: string | null
+          tenant_id: string
+          updated_at?: string
+          upstream_module_id: string
+          upstream_snapshot_id?: string | null
+          upstream_snapshot_version?: number | null
+        }
+        Update: {
+          case_id?: string
+          created_at?: string
+          dependency_status?: Database["public"]["Enums"]["dependency_status"]
+          downstream_module_id?: string
+          id?: string
+          last_synced_at?: string | null
+          stale_since?: string | null
+          tenant_id?: string
+          updated_at?: string
+          upstream_module_id?: string
+          upstream_snapshot_id?: string | null
+          upstream_snapshot_version?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "module_dependency_state_case_id_fkey"
+            columns: ["case_id"]
+            isOneToOne: false
+            referencedRelation: "cases"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "module_dependency_state_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "module_dependency_state_upstream_snapshot_id_fkey"
+            columns: ["upstream_snapshot_id"]
+            isOneToOne: false
+            referencedRelation: "module_completion_snapshots"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       profiles: {
         Row: {
           created_at: string
@@ -1061,6 +1149,10 @@ export type Database = {
         | "exported"
         | "closed"
         | "failed"
+      dependency_status:
+        | "current"
+        | "stale_due_to_upstream_change"
+        | "refresh_needed"
       document_status:
         | "uploaded"
         | "queued"
@@ -1288,6 +1380,11 @@ export const Constants = {
         "exported",
         "closed",
         "failed",
+      ],
+      dependency_status: [
+        "current",
+        "stale_due_to_upstream_change",
+        "refresh_needed",
       ],
       document_status: [
         "uploaded",
