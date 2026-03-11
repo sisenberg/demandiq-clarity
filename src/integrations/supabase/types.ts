@@ -357,6 +357,73 @@ export type Database = {
           },
         ]
       }
+      document_metadata_extractions: {
+        Row: {
+          case_id: string
+          confidence: number | null
+          created_at: string
+          document_id: string
+          extracted_value: string
+          field_type: string
+          id: string
+          is_accepted: boolean
+          source_page: number | null
+          source_snippet: string
+          tenant_id: string
+          user_corrected_value: string | null
+        }
+        Insert: {
+          case_id: string
+          confidence?: number | null
+          created_at?: string
+          document_id: string
+          extracted_value: string
+          field_type: string
+          id?: string
+          is_accepted?: boolean
+          source_page?: number | null
+          source_snippet?: string
+          tenant_id: string
+          user_corrected_value?: string | null
+        }
+        Update: {
+          case_id?: string
+          confidence?: number | null
+          created_at?: string
+          document_id?: string
+          extracted_value?: string
+          field_type?: string
+          id?: string
+          is_accepted?: boolean
+          source_page?: number | null
+          source_snippet?: string
+          tenant_id?: string
+          user_corrected_value?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "document_metadata_extractions_case_id_fkey"
+            columns: ["case_id"]
+            isOneToOne: false
+            referencedRelation: "cases"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "document_metadata_extractions_document_id_fkey"
+            columns: ["document_id"]
+            isOneToOne: false
+            referencedRelation: "case_documents"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "document_metadata_extractions_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       document_pages: {
         Row: {
           case_id: string
@@ -414,6 +481,70 @@ export type Database = {
           },
           {
             foreignKeyName: "document_pages_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      document_type_suggestions: {
+        Row: {
+          case_id: string
+          confidence: number | null
+          created_at: string
+          document_id: string
+          id: string
+          is_accepted: boolean
+          reasoning: string
+          source_page: number | null
+          source_snippet: string
+          suggested_type: string
+          tenant_id: string
+        }
+        Insert: {
+          case_id: string
+          confidence?: number | null
+          created_at?: string
+          document_id: string
+          id?: string
+          is_accepted?: boolean
+          reasoning?: string
+          source_page?: number | null
+          source_snippet?: string
+          suggested_type: string
+          tenant_id: string
+        }
+        Update: {
+          case_id?: string
+          confidence?: number | null
+          created_at?: string
+          document_id?: string
+          id?: string
+          is_accepted?: boolean
+          reasoning?: string
+          source_page?: number | null
+          source_snippet?: string
+          suggested_type?: string
+          tenant_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "document_type_suggestions_case_id_fkey"
+            columns: ["case_id"]
+            isOneToOne: false
+            referencedRelation: "cases"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "document_type_suggestions_document_id_fkey"
+            columns: ["document_id"]
+            isOneToOne: false
+            referencedRelation: "case_documents"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "document_type_suggestions_tenant_id_fkey"
             columns: ["tenant_id"]
             isOneToOne: false
             referencedRelation: "tenants"

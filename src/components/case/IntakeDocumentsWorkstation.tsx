@@ -17,6 +17,7 @@ import {
 import IntakeUploadZone from "./IntakeUploadZone";
 import IntakeSummaryPanel from "./IntakeSummaryPanel";
 import DocumentTypeTag from "./DocumentTypeTag";
+import DocumentMetadataPanel from "./DocumentMetadataPanel";
 import {
   Search,
   X,
@@ -349,6 +350,13 @@ const IntakeDocumentsWorkstation = ({ documents, loading, caseId }: IntakeDocume
                   <MetaItem label="Uploaded" value={formatDate(selectedDoc.created_at)} />
                   <MetaItem label="Pages" value={selectedDoc.page_count?.toString() ?? "—"} />
                 </div>
+
+                {/* AI Classification & Metadata Panel */}
+                <DocumentMetadataPanel
+                  documentId={selectedDoc.id}
+                  currentDocumentType={selectedDoc.document_type}
+                  intakeStatus={selectedDoc.intake_status}
+                />
 
                 {/* Duplicate warning */}
                 {duplicateDocIds.has(selectedDoc.id) && (
