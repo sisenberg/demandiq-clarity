@@ -1,5 +1,5 @@
 // ===================================================
-// DemandIQ v1 — Role-Based Permissions System
+// CasualtyIQ — Platform-Wide Role-Based Permissions
 // ===================================================
 
 export type AppRole = "admin" | "manager" | "reviewer" | "adjuster" | "readonly";

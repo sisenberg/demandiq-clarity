@@ -96,7 +96,7 @@ const AdminPage = () => {
       <div className="mb-6">
         <h1 className="text-lg font-semibold text-foreground">Admin</h1>
         <p className="text-sm text-muted-foreground mt-0.5">
-          Tenant administration and system settings
+          CasualtyIQ platform administration
         </p>
       </div>
 

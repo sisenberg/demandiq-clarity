@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/lib/supabase";
 import { useAuth } from "@/contexts/AuthContext";
-import { Shield } from "lucide-react";
+import { Zap } from "lucide-react";
 
 const SignIn = () => {
   const navigate = useNavigate();
@@ -70,11 +70,11 @@ const SignIn = () => {
       <div className="w-full max-w-sm">
         <div className="flex flex-col items-center mb-8">
           <div className="h-12 w-12 rounded-lg bg-primary flex items-center justify-center mb-4">
-            <Shield className="h-6 w-6 text-primary-foreground" />
+            <Zap className="h-6 w-6 text-primary-foreground" />
           </div>
-          <h1 className="text-xl font-semibold text-foreground">DemandIQ</h1>
+          <h1 className="text-xl font-semibold text-foreground">CasualtyIQ</h1>
           <p className="text-sm text-muted-foreground mt-1">
-            {step === "onboarding" ? "Complete your profile" : "Claims Intelligence Platform"}
+            {step === "onboarding" ? "Complete your profile" : "Casualty Claims Intelligence Platform"}
           </p>
         </div>
 
