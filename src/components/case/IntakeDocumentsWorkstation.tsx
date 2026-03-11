@@ -6,6 +6,7 @@ import { useInvokeExtraction, useTriggerCaseExtraction } from "@/hooks/useExtrac
 import { useCaseDuplicateFlags } from "@/hooks/useDuplicateFlags";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
+import DocumentReviewWorkspace from "./DocumentReviewWorkspace";
 import {
   getIntakeBadge,
   INTAKE_STATUS_LABEL,
@@ -36,6 +37,7 @@ import {
   Inbox,
   Upload,
   Zap,
+  Pencil,
 } from "lucide-react";
 
 function formatBytes(bytes: number): string {
@@ -65,6 +67,7 @@ const IntakeDocumentsWorkstation = ({ documents, loading, caseId }: IntakeDocume
   const [selectedDocId, setSelectedDocId] = useState<string | null>(null);
   const [showUploadZone, setShowUploadZone] = useState(false);
   const [confirmDelete, setConfirmDelete] = useState<string | null>(null);
+  const [reviewDocId, setReviewDocId] = useState<string | null>(null);
 
   const deleteDoc = useDeleteDocument();
   const triggerExtraction = useTriggerCaseExtraction();
@@ -120,6 +123,19 @@ const IntakeDocumentsWorkstation = ({ documents, loading, caseId }: IntakeDocume
     const { data } = await supabase.storage.from("case-documents").createSignedUrl(doc.storage_path, 300);
     if (data?.signedUrl) window.open(data.signedUrl, "_blank");
   };
+
+  // If reviewing a document, show the review workspace full-width
+  if (reviewDocId) {
+    return (
+      <div className="card-elevated overflow-hidden" style={{ height: "calc(100vh - 180px)" }}>
+        <DocumentReviewWorkspace
+          documentId={reviewDocId}
+          caseId={caseId}
+          onBack={() => setReviewDocId(null)}
+        />
+      </div>
+    );
+  }
 
   return (
     <div className="flex flex-col gap-4">
@@ -422,6 +438,12 @@ const IntakeDocumentsWorkstation = ({ documents, loading, caseId }: IntakeDocume
 
                 {/* Actions */}
                 <div className="flex flex-wrap gap-2">
+                  <button
+                    onClick={() => setReviewDocId(selectedDoc.id)}
+                    className="flex items-center gap-1.5 text-[10px] font-medium px-3 py-1.5 rounded-lg bg-primary text-primary-foreground hover:bg-primary/90 transition-colors shadow-sm"
+                  >
+                    <Pencil className="h-3 w-3" /> Review & Correct
+                  </button>
                   <button
                     onClick={() => handleViewOriginal(selectedDoc)}
                     disabled={!selectedDoc.storage_path}
