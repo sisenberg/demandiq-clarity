@@ -14,6 +14,9 @@ import CaseNavRail, { type CaseSection } from "@/components/case/CaseNavRail";
 import CaseHeader from "@/components/case/CaseHeader";
 import CaseRightRail from "@/components/case/CaseRightRail";
 import WorkspaceCard from "@/components/case/WorkspaceCard";
+import OverviewCards from "@/components/case/OverviewCards";
+import BodyMap from "@/components/case/BodyMap";
+import ChronologyPanel from "@/components/case/ChronologyPanel";
 import {
   ArrowLeft,
   FileText,
