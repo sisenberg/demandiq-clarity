@@ -58,6 +58,7 @@ export function useDocumentTypeSuggestions(documentId: string | undefined) {
   return useQuery({
     queryKey: ["type-suggestions", documentId],
     enabled: !!documentId,
+    staleTime: 30_000,
     queryFn: async () => {
       const { data, error } = await (supabase.from("document_type_suggestions") as any)
         .select("*")
