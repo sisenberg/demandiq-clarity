@@ -99,6 +99,7 @@ export interface UploadFileProgress {
 export function useUploadDocuments() {
   const queryClient = useQueryClient();
   const { tenantId, user } = useAuth();
+  const auditLog = useAuditLog();
 
   return useMutation({
     mutationFn: async ({
