@@ -1,8 +1,12 @@
 import { useState, useEffect } from "react";
-import { Settings, Users, ShieldCheck, Check, X, Building2 } from "lucide-react";
+import { Settings, Users, ShieldCheck, Check, X, Building2, Blocks } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/lib/supabase";
 import RoleBadge from "@/components/ui/RoleBadge";
+import { MODULES } from "@/lib/modules";
+import { EntitlementStatus } from "@/types";
+import type { TenantModuleEntitlement } from "@/types";
+import { useModuleEntitlements, useUpsertEntitlement } from "@/hooks/useModuleEntitlements";
 import {
   type AppRole,
   ALL_ROLES,
@@ -20,12 +24,29 @@ interface TenantUser {
   role: AppRole;
 }
 
+const ENTITLEMENT_LABELS: Record<EntitlementStatus, string> = {
+  [EntitlementStatus.Enabled]: "Enabled",
+  [EntitlementStatus.Disabled]: "Disabled",
+  [EntitlementStatus.Trial]: "Trial",
+  [EntitlementStatus.Suspended]: "Suspended",
+};
+
+const ENTITLEMENT_BADGE: Record<EntitlementStatus, string> = {
+  [EntitlementStatus.Enabled]: "bg-[hsl(var(--status-approved)/0.12)] text-[hsl(var(--status-approved-foreground))]",
+  [EntitlementStatus.Disabled]: "bg-muted text-muted-foreground",
+  [EntitlementStatus.Trial]: "bg-[hsl(var(--status-attention)/0.12)] text-[hsl(var(--status-attention-foreground))]",
+  [EntitlementStatus.Suspended]: "bg-destructive/10 text-destructive",
+};
+
 const AdminPage = () => {
   const { role, tenantId } = useAuth();
-  const [tab, setTab] = useState<"users" | "permissions" | "settings">("users");
+  const [tab, setTab] = useState<"users" | "permissions" | "modules" | "settings">("users");
   const [users, setUsers] = useState<TenantUser[]>([]);
   const [loadingUsers, setLoadingUsers] = useState(true);
   const [tenant, setTenant] = useState<{ name: string; slug: string } | null>(null);
+
+  const { data: entitlements = [], isLoading: entLoading } = useModuleEntitlements();
+  const upsertEntitlement = useUpsertEntitlement();
 
   useEffect(() => {
     loadUsers();
@@ -83,9 +104,27 @@ const AdminPage = () => {
     }
   };
 
+  const handleEntitlementChange = (moduleId: string, newStatus: EntitlementStatus) => {
+    if (!tenantId) return;
+    upsertEntitlement.mutate({
+      tenantId,
+      moduleId,
+      status: newStatus,
+      trialEndsAt: newStatus === EntitlementStatus.Trial
+        ? new Date(Date.now() + 30 * 86400000).toISOString()
+        : null,
+    });
+  };
+
+  const getModuleStatus = (moduleId: string): EntitlementStatus => {
+    const e = entitlements.find((x) => x.module_id === moduleId);
+    return (e?.status as EntitlementStatus) ?? EntitlementStatus.Disabled;
+  };
+
   const tabs = [
     { key: "users" as const, label: "Users", icon: Users },
     { key: "permissions" as const, label: "Permissions", icon: ShieldCheck },
+    { key: "modules" as const, label: "Modules", icon: Blocks },
     { key: "settings" as const, label: "Settings", icon: Settings },
   ];
 
@@ -215,6 +254,78 @@ const AdminPage = () => {
               ))}
             </tbody>
           </table>
+        </div>
+      )}
+
+      {/* Modules Tab */}
+      {tab === "modules" && (
+        <div className="space-y-4">
+          <p className="text-xs text-muted-foreground">
+            Manage which CasualtyIQ modules are active for your organization. DemandIQ is included as the base module.
+          </p>
+          <div className="card-elevated overflow-hidden">
+            <table className="w-full text-sm">
+              <thead>
+                <tr className="border-b border-border text-left bg-muted/30">
+                  <th className="px-5 py-3 text-xs font-medium text-muted-foreground uppercase tracking-wider">Module</th>
+                  <th className="px-5 py-3 text-xs font-medium text-muted-foreground uppercase tracking-wider">Description</th>
+                  <th className="px-5 py-3 text-xs font-medium text-muted-foreground uppercase tracking-wider">Status</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-border">
+                {entLoading ? (
+                  <tr>
+                    <td colSpan={3} className="px-5 py-10 text-center text-sm text-muted-foreground">
+                      Loading modules…
+                    </td>
+                  </tr>
+                ) : (
+                  MODULES.map((mod) => {
+                    const status = getModuleStatus(mod.id);
+                    const isBase = mod.isBase;
+                    return (
+                      <tr key={mod.id} className="hover:bg-accent/30 transition-colors">
+                        <td className="px-5 py-3.5">
+                          <div className="flex items-center gap-2">
+                            <span className="font-medium text-foreground">{mod.label}</span>
+                            {isBase && (
+                              <span className="text-[9px] font-semibold uppercase tracking-wider px-1.5 py-0.5 rounded-full bg-primary/10 text-primary">
+                                Base
+                              </span>
+                            )}
+                          </div>
+                        </td>
+                        <td className="px-5 py-3.5 text-muted-foreground text-xs max-w-xs">
+                          {mod.description}
+                        </td>
+                        <td className="px-5 py-3.5">
+                          {isBase ? (
+                            <span className={`inline-block text-[10px] font-semibold uppercase tracking-wider px-2 py-0.5 rounded-full ${ENTITLEMENT_BADGE[EntitlementStatus.Enabled]}`}>
+                              {ENTITLEMENT_LABELS[EntitlementStatus.Enabled]}
+                            </span>
+                          ) : hasPermission(role, "manage_users") ? (
+                            <select
+                              value={status}
+                              onChange={(e) => handleEntitlementChange(mod.id, e.target.value as EntitlementStatus)}
+                              className="text-xs border border-input rounded-lg bg-card text-foreground px-2.5 py-1.5 focus:outline-none focus:ring-2 focus:ring-ring/40"
+                            >
+                              {Object.values(EntitlementStatus).map((s) => (
+                                <option key={s} value={s}>{ENTITLEMENT_LABELS[s]}</option>
+                              ))}
+                            </select>
+                          ) : (
+                            <span className={`inline-block text-[10px] font-semibold uppercase tracking-wider px-2 py-0.5 rounded-full ${ENTITLEMENT_BADGE[status]}`}>
+                              {ENTITLEMENT_LABELS[status]}
+                            </span>
+                          )}
+                        </td>
+                      </tr>
+                    );
+                  })
+                )}
+              </tbody>
+            </table>
+          </div>
         </div>
       )}
 

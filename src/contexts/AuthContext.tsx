@@ -9,7 +9,8 @@ import {
 import type { User, Session } from "@supabase/supabase-js";
 import { supabase } from "@/lib/supabase";
 import type { AppRole } from "@/lib/permissions";
-import { ModuleId } from "@/types";
+import type { TenantModuleEntitlement } from "@/types";
+import { EntitlementStatus } from "@/types";
 
 interface Profile {
   display_name: string;
@@ -23,8 +24,10 @@ interface AuthContextValue {
   loading: boolean;
   role: AppRole | null;
   tenantId: string | null;
-  /** Module IDs the tenant has licensed (DemandIQ always included) */
+  /** Module IDs the tenant has active (enabled or valid trial) */
   tenantModules: string[];
+  /** Full entitlement records for richer status checks */
+  entitlements: TenantModuleEntitlement[];
   profile: Profile | null;
   needsOnboarding: boolean;
   completeSignup: (displayName: string, orgName: string, orgCode?: string) => Promise<void>;
@@ -37,7 +40,8 @@ const AuthContext = createContext<AuthContextValue>({
   loading: true,
   role: null,
   tenantId: null,
-  tenantModules: [ModuleId.DemandIQ],
+  tenantModules: [],
+  entitlements: [],
   profile: null,
   needsOnboarding: false,
   completeSignup: async () => {},
@@ -54,9 +58,16 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [tenantId, setTenantId] = useState<string | null>(null);
   const [profile, setProfile] = useState<Profile | null>(null);
   const [needsOnboarding, setNeedsOnboarding] = useState(false);
+  const [entitlements, setEntitlements] = useState<TenantModuleEntitlement[]>([]);
+
+  const fetchEntitlements = useCallback(async () => {
+    const { data } = await supabase
+      .from("tenant_module_entitlements")
+      .select("*");
+    setEntitlements((data ?? []) as TenantModuleEntitlement[]);
+  }, []);
 
   const fetchProfile = useCallback(async (userId: string) => {
-    // Fetch profile
     const { data: profileData } = await supabase
       .from("profiles")
       .select("display_name, email, tenant_id")
@@ -75,15 +86,14 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     setTenantId(profileData.tenant_id);
     setNeedsOnboarding(false);
 
-    // Fetch role
-    const { data: roleData } = await supabase
-      .from("user_roles")
-      .select("role")
-      .eq("user_id", userId)
-      .maybeSingle();
+    // Fetch role + entitlements in parallel
+    const [roleRes] = await Promise.all([
+      supabase.from("user_roles").select("role").eq("user_id", userId).maybeSingle(),
+      fetchEntitlements(),
+    ]);
 
-    setRole((roleData?.role as AppRole) ?? null);
-  }, []);
+    setRole((roleRes.data?.role as AppRole) ?? null);
+  }, [fetchEntitlements]);
 
   useEffect(() => {
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
@@ -91,13 +101,13 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         setSession(newSession);
         setUser(newSession?.user ?? null);
         if (newSession?.user) {
-          // Defer to avoid Supabase auth deadlock
           setTimeout(() => fetchProfile(newSession.user.id), 0);
         } else {
           setProfile(null);
           setRole(null);
           setTenantId(null);
           setNeedsOnboarding(false);
+          setEntitlements([]);
         }
         setLoading(false);
       }
@@ -131,8 +141,20 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     await supabase.auth.signOut();
   }, []);
 
+  // Compute active module IDs from entitlements
+  const tenantModules = entitlements
+    .filter((e) => {
+      if (e.status === EntitlementStatus.Enabled) return true;
+      if (e.status === EntitlementStatus.Trial) {
+        if (!e.trial_ends_at) return true;
+        return new Date(e.trial_ends_at) > new Date();
+      }
+      return false;
+    })
+    .map((e) => e.module_id);
+
   return (
-    <AuthContext.Provider value={{ user, session, loading, role, tenantId, tenantModules: [ModuleId.DemandIQ], profile, needsOnboarding, completeSignup, signOut }}>
+    <AuthContext.Provider value={{ user, session, loading, role, tenantId, tenantModules, entitlements, profile, needsOnboarding, completeSignup, signOut }}>
       {children}
     </AuthContext.Provider>
   );

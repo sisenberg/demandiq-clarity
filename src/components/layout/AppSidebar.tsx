@@ -20,7 +20,9 @@ import {
 } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { canAccessRoute } from "@/lib/permissions";
-import { MODULES, getLockedModules } from "@/lib/modules";
+import { MODULES } from "@/lib/modules";
+import { EntitlementStatus } from "@/types";
+import { getEntitlementStatus } from "@/hooks/useModuleEntitlements";
 
 const MODULE_ICONS: Record<string, React.ElementType> = {
   Stethoscope,
@@ -44,7 +46,7 @@ const adminNavItems = [
 
 const AppSidebar = () => {
   const location = useLocation();
-  const { role, profile, tenantModules } = useAuth();
+  const { role, profile, tenantModules, entitlements } = useAuth();
   const [collapsed, setCollapsed] = useState(false);
 
   const isActive = (path: string) => {
@@ -54,7 +56,7 @@ const AppSidebar = () => {
 
   const visibleCore = coreNavItems.filter((item) => canAccessRoute(role, item.path));
   const visibleAdmin = adminNavItems.filter((item) => canAccessRoute(role, item.path));
-  const lockedModules = getLockedModules(tenantModules);
+  const addOnModules = MODULES.filter((m) => !m.isBase);
 
   return (
     <aside className={`h-screen bg-sidebar flex flex-col shrink-0 transition-all duration-200 ${collapsed ? "w-16" : "w-[var(--sidebar-width)]"}`}>
@@ -142,8 +144,8 @@ const AppSidebar = () => {
           </div>
         )}
 
-        {/* Locked add-on modules */}
-        {lockedModules.length > 0 && (
+        {/* Add-on modules */}
+        {addOnModules.length > 0 && (
           <div>
             {!collapsed && (
               <p className="px-3 mb-2 text-[10px] font-semibold uppercase tracking-widest" style={{ color: "hsl(var(--sidebar-muted))" }}>
@@ -151,24 +153,33 @@ const AppSidebar = () => {
               </p>
             )}
             <div className="flex flex-col gap-0.5">
-              {lockedModules.map((mod) => {
+              {addOnModules.map((mod) => {
                 const Icon = MODULE_ICONS[mod.icon] ?? FileText;
+                const status = getEntitlementStatus(entitlements, mod.id);
+                const isActive = status === EntitlementStatus.Enabled || status === EntitlementStatus.Trial;
+                const badgeLabel = status === EntitlementStatus.Trial ? "Trial"
+                  : status === EntitlementStatus.Suspended ? "Suspended"
+                  : isActive ? "Active" : "Add-on";
                 return (
                   <div
                     key={mod.id}
-                    className={`flex items-center gap-3 rounded-lg text-[13px] cursor-default opacity-50 ${
-                      collapsed ? "justify-center px-2 py-2.5" : "px-3 py-2"
-                    }`}
-                    style={{ color: "hsl(var(--sidebar-muted))" }}
-                    title={collapsed ? `${mod.label} — Available Add-on` : mod.description}
+                    className={`flex items-center gap-3 rounded-lg text-[13px] cursor-default ${
+                      isActive ? "" : "opacity-50"
+                    } ${collapsed ? "justify-center px-2 py-2.5" : "px-3 py-2"}`}
+                    style={{ color: isActive ? undefined : "hsl(var(--sidebar-muted))" }}
+                    title={collapsed ? `${mod.label} — ${badgeLabel}` : mod.description}
                   >
                     <Icon className="h-4 w-4 shrink-0" />
                     {!collapsed && (
                       <>
-                        <span>{mod.label}</span>
-                        <span className="ml-auto inline-flex items-center gap-1 text-[9px] font-semibold px-1.5 py-0.5 rounded-full bg-sidebar-accent uppercase tracking-wider" style={{ color: "hsl(var(--sidebar-muted))" }}>
-                          <Lock className="h-2.5 w-2.5" />
-                          Add-on
+                        <span className={isActive ? "text-sidebar-foreground" : ""}>{mod.label}</span>
+                        <span className={`ml-auto inline-flex items-center gap-1 text-[9px] font-semibold px-1.5 py-0.5 rounded-full uppercase tracking-wider ${
+                          isActive
+                            ? "bg-sidebar-primary/20 text-sidebar-primary"
+                            : "bg-sidebar-accent"
+                        }`} style={isActive ? undefined : { color: "hsl(var(--sidebar-muted))" }}>
+                          {!isActive && <Lock className="h-2.5 w-2.5" />}
+                          {badgeLabel}
                         </span>
                       </>
                     )}
