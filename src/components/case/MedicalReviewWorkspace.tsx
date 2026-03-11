@@ -1,13 +1,14 @@
 /**
  * ReviewerIQ — Medical Review Workspace
  * Top-level container for the medical review section.
- * Integrates treatment timeline, issue workspace, financial summary, and bill review.
+ * Integrates treatment timeline, issue workspace, financial summary, bill review,
+ * specialty review, and completion workflow.
  */
 
 import { useState, useMemo, useCallback } from "react";
 import {
   Stethoscope, DollarSign, AlertTriangle, FileText, BarChart3,
-  CheckCircle2, ClipboardList, Microscope,
+  CheckCircle2, ClipboardList, Microscope, Package,
 } from "lucide-react";
 import TreatmentTimeline from "@/components/case/TreatmentTimeline";
 import ReviewerIssueWorkspace from "@/components/case/ReviewerIssueWorkspace";
