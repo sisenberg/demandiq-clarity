@@ -136,7 +136,7 @@ const CaseOverview = ({ caseData, documents, onNavigate }: CaseOverviewProps) =>
             {/* Quick facts row */}
             <div className="flex flex-wrap gap-x-5 gap-y-1.5 mt-3 pt-3 border-t border-border">
               <MiniStat label="DOI" value={formatDate(caseData.date_of_loss)} />
-              <MiniStat label="Claim #" value={caseData.claim_number} mono />
+              <MiniStat label="Claim #" value={maskClaimNumber(caseData.claim_number)} mono />
               <MiniStat label="Jurisdiction" value={caseData.jurisdiction_state} />
               <MiniStat label="Defendant" value={caseData.defendant} />
             </div>
