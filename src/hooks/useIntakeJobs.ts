@@ -8,6 +8,14 @@ export function useCaseIntakeJobs(caseId: string | undefined) {
   return useQuery({
     queryKey: ["intake-jobs", caseId],
     enabled: !!caseId,
+    refetchInterval: (query) => {
+      // Poll every 3s if any jobs are queued or running
+      const jobs = query.state.data as IntakeJobRow[] | undefined;
+      if (jobs?.some((j) => j.status === "queued" || j.status === "running")) {
+        return 3000;
+      }
+      return false;
+    },
     queryFn: async () => {
       const { data, error } = await (supabase.from("intake_jobs") as any)
         .select("*")
