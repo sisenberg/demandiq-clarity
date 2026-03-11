@@ -44,6 +44,25 @@ export default function MedicalReviewWorkspace({ caseId }: MedicalReviewWorkspac
     return runMedicalReviewRules(MOCK_TREATMENT_RECORDS, billLines);
   }, [billLines]);
 
+  // Run specialty review
+  const specialtyResult = useMemo(() => {
+    return runSpecialtyReview(MOCK_TREATMENT_RECORDS, billLines);
+  }, [billLines]);
+
+  const [specialtyRecs, setSpecialtyRecs] = useState(specialtyResult.recommendations);
+
+  useMemo(() => {
+    setSpecialtyRecs(specialtyResult.recommendations);
+  }, [specialtyResult]);
+
+  const handleSpecialtyOverride = useCallback((recId: string, override: ReviewerOverride) => {
+    setSpecialtyRecs(prev => prev.map(r =>
+      r.id === recId
+        ? { ...r, reviewer_override: override, support_level: override.override_support_level, updated_at: new Date().toISOString() }
+        : r
+    ));
+  }, []);
+
   const [reviewIssues, setReviewIssues] = useState(issues);
 
   // Update issues when computed issues change
