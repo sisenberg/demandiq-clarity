@@ -142,16 +142,16 @@ const AppSidebar = () => {
           </div>
         )}
 
-        {/* Coming soon modules */}
-        {comingSoonModules.length > 0 && (
+        {/* Locked add-on modules */}
+        {lockedModules.length > 0 && (
           <div>
             {!collapsed && (
               <p className="px-3 mb-2 text-[10px] font-semibold uppercase tracking-widest" style={{ color: "hsl(var(--sidebar-muted))" }}>
-                Modules
+                Add-on Modules
               </p>
             )}
             <div className="flex flex-col gap-0.5">
-              {comingSoonModules.map((mod) => {
+              {lockedModules.map((mod) => {
                 const Icon = MODULE_ICONS[mod.icon] ?? FileText;
                 return (
                   <div
@@ -160,7 +160,7 @@ const AppSidebar = () => {
                       collapsed ? "justify-center px-2 py-2.5" : "px-3 py-2"
                     }`}
                     style={{ color: "hsl(var(--sidebar-muted))" }}
-                    title={collapsed ? `${mod.label} — Coming Soon` : mod.description}
+                    title={collapsed ? `${mod.label} — Available Add-on` : mod.description}
                   >
                     <Icon className="h-4 w-4 shrink-0" />
                     {!collapsed && (
@@ -168,7 +168,7 @@ const AppSidebar = () => {
                         <span>{mod.label}</span>
                         <span className="ml-auto inline-flex items-center gap-1 text-[9px] font-semibold px-1.5 py-0.5 rounded-full bg-sidebar-accent uppercase tracking-wider" style={{ color: "hsl(var(--sidebar-muted))" }}>
                           <Lock className="h-2.5 w-2.5" />
-                          Soon
+                          Add-on
                         </span>
                       </>
                     )}
