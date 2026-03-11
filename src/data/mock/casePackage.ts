@@ -596,6 +596,7 @@ const martinezCase = mockCases.find((c) => c.id === "case-001")!;
 const martinezDocs = mockDocuments.filter((d) => d.case_id === "case-001");
 
 export const MARTINEZ_CASE_PACKAGE: CasePackage = {
+  contract_version: "1.0.0",
   case_record: martinezCase,
   parties,
   documents: martinezDocs,
@@ -619,6 +620,10 @@ export const MARTINEZ_CASE_PACKAGE: CasePackage = {
   liability_facts: liabilityFacts,
   issue_flags: mockIssueFlags.filter((f) => f.case_id === "case-001"),
   demand_summary: demandSummary,
+  modules: {
+    // DemandIQ output populated below via getDemandIQOutput()
+    // Other module sections omitted — not entitled / not yet run in mock data
+  },
   module_runs: moduleRuns,
   module_outputs: moduleOutputs,
 };
@@ -676,7 +681,7 @@ export function getDemandIQOutput(): DemandIQOutput {
     },
   ];
 
-  return {
+  const output: DemandIQOutput = {
     claim_assessment: claimAssessment,
     chronological_summary: timelineEvents.map((e) => `${e.event_date} — ${e.label}: ${e.description}`),
     medical_codes: [
@@ -713,6 +718,11 @@ export function getDemandIQOutput(): DemandIQOutput {
     last_edited_by: "Ana García",
     last_edited_at: "2025-03-10T16:42:00Z",
   };
+
+  // Populate the modules.demandiq section on the package
+  MARTINEZ_CASE_PACKAGE.modules.demandiq = output;
+
+  return output;
 }
 
 // ─── Computed helpers for UI consumption ────────────

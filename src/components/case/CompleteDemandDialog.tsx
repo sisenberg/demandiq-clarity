@@ -51,15 +51,25 @@ const CompleteDemandDialog = ({
   const handleComplete = async () => {
     if (!validation.valid || !canComplete) return;
 
-    // Build snapshot data
+    // Build typed snapshot payload
     const snapshotData = {
-      case_status: caseStatus,
-      document_count: documents.length,
-      completed_documents: documents.filter(
-        (d) => d.document_status === "complete" || d.document_status === "extracted"
-      ).length,
-      document_names: documents.map((d) => d.file_name),
+      contract_version: "1.0.0",
+      module_id: moduleId,
       completed_at: new Date().toISOString(),
+      case_summary: {
+        case_status: caseStatus,
+        document_count: documents.length,
+        completed_documents: documents.filter(
+          (d) => d.document_status === "complete" || d.document_status === "extracted"
+        ).length,
+        injury_count: 0,
+        provider_count: 0,
+        total_billed: 0,
+        total_paid: 0,
+      },
+      module_output: {
+        document_names: documents.map((d) => d.file_name),
+      },
     };
 
     await completeModule.mutateAsync({ caseId, moduleId, snapshotData });
