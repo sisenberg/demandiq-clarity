@@ -1949,6 +1949,79 @@ export type Database = {
           },
         ]
       }
+      reviewer_extraction_jobs: {
+        Row: {
+          case_id: string
+          completed_at: string | null
+          created_at: string
+          document_id: string | null
+          duplicates_flagged: number
+          error_message: string | null
+          extraction_model: string
+          id: string
+          metadata: Json
+          records_extracted: number
+          started_at: string | null
+          status: string
+          tenant_id: string
+          updated_at: string
+        }
+        Insert: {
+          case_id: string
+          completed_at?: string | null
+          created_at?: string
+          document_id?: string | null
+          duplicates_flagged?: number
+          error_message?: string | null
+          extraction_model?: string
+          id?: string
+          metadata?: Json
+          records_extracted?: number
+          started_at?: string | null
+          status?: string
+          tenant_id: string
+          updated_at?: string
+        }
+        Update: {
+          case_id?: string
+          completed_at?: string | null
+          created_at?: string
+          document_id?: string | null
+          duplicates_flagged?: number
+          error_message?: string | null
+          extraction_model?: string
+          id?: string
+          metadata?: Json
+          records_extracted?: number
+          started_at?: string | null
+          status?: string
+          tenant_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "reviewer_extraction_jobs_case_id_fkey"
+            columns: ["case_id"]
+            isOneToOne: false
+            referencedRelation: "cases"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "reviewer_extraction_jobs_document_id_fkey"
+            columns: ["document_id"]
+            isOneToOne: false
+            referencedRelation: "case_documents"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "reviewer_extraction_jobs_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       reviewer_medical_flags: {
         Row: {
           case_id: string
@@ -2096,6 +2169,191 @@ export type Database = {
           },
           {
             foreignKeyName: "reviewer_provider_reviews_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      reviewer_treatment_records: {
+        Row: {
+          assessment_summary: string
+          body_parts: Json
+          case_id: string
+          confidence_details: Json
+          confidence_tier: Database["public"]["Enums"]["extraction_confidence_tier"]
+          created_at: string
+          diagnoses: Json
+          duplicate_of_record_id: string | null
+          duplicate_reason: string
+          duplicate_similarity: number | null
+          extracted_at: string
+          extraction_model: string
+          extraction_version: string
+          facility_name: string
+          follow_up_recommendations: string
+          id: string
+          is_date_ambiguous: boolean
+          is_duplicate_suspect: boolean
+          medications: Json
+          objective_findings: string
+          overall_confidence: number | null
+          plan_summary: string
+          procedures: Json
+          provider_name_normalized: string | null
+          provider_name_raw: string
+          provider_npi: string | null
+          provider_specialty: string
+          restrictions: Json
+          review_state: Database["public"]["Enums"]["extraction_review_state"]
+          reviewed_at: string | null
+          reviewed_by: string | null
+          reviewer_notes: string
+          service_date_end: string | null
+          service_date_start: string | null
+          source_document_id: string | null
+          source_page_end: number | null
+          source_page_start: number | null
+          source_snippet: string
+          subjective_summary: string
+          tenant_id: string
+          total_billed: number | null
+          total_paid: number | null
+          updated_at: string
+          upstream_bill_ids: string[]
+          upstream_injury_ids: string[]
+          upstream_provider_id: string | null
+          visit_date: string | null
+          visit_date_text: string
+          visit_type: Database["public"]["Enums"]["reviewer_visit_type"]
+        }
+        Insert: {
+          assessment_summary?: string
+          body_parts?: Json
+          case_id: string
+          confidence_details?: Json
+          confidence_tier?: Database["public"]["Enums"]["extraction_confidence_tier"]
+          created_at?: string
+          diagnoses?: Json
+          duplicate_of_record_id?: string | null
+          duplicate_reason?: string
+          duplicate_similarity?: number | null
+          extracted_at?: string
+          extraction_model?: string
+          extraction_version?: string
+          facility_name?: string
+          follow_up_recommendations?: string
+          id?: string
+          is_date_ambiguous?: boolean
+          is_duplicate_suspect?: boolean
+          medications?: Json
+          objective_findings?: string
+          overall_confidence?: number | null
+          plan_summary?: string
+          procedures?: Json
+          provider_name_normalized?: string | null
+          provider_name_raw?: string
+          provider_npi?: string | null
+          provider_specialty?: string
+          restrictions?: Json
+          review_state?: Database["public"]["Enums"]["extraction_review_state"]
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          reviewer_notes?: string
+          service_date_end?: string | null
+          service_date_start?: string | null
+          source_document_id?: string | null
+          source_page_end?: number | null
+          source_page_start?: number | null
+          source_snippet?: string
+          subjective_summary?: string
+          tenant_id: string
+          total_billed?: number | null
+          total_paid?: number | null
+          updated_at?: string
+          upstream_bill_ids?: string[]
+          upstream_injury_ids?: string[]
+          upstream_provider_id?: string | null
+          visit_date?: string | null
+          visit_date_text?: string
+          visit_type?: Database["public"]["Enums"]["reviewer_visit_type"]
+        }
+        Update: {
+          assessment_summary?: string
+          body_parts?: Json
+          case_id?: string
+          confidence_details?: Json
+          confidence_tier?: Database["public"]["Enums"]["extraction_confidence_tier"]
+          created_at?: string
+          diagnoses?: Json
+          duplicate_of_record_id?: string | null
+          duplicate_reason?: string
+          duplicate_similarity?: number | null
+          extracted_at?: string
+          extraction_model?: string
+          extraction_version?: string
+          facility_name?: string
+          follow_up_recommendations?: string
+          id?: string
+          is_date_ambiguous?: boolean
+          is_duplicate_suspect?: boolean
+          medications?: Json
+          objective_findings?: string
+          overall_confidence?: number | null
+          plan_summary?: string
+          procedures?: Json
+          provider_name_normalized?: string | null
+          provider_name_raw?: string
+          provider_npi?: string | null
+          provider_specialty?: string
+          restrictions?: Json
+          review_state?: Database["public"]["Enums"]["extraction_review_state"]
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          reviewer_notes?: string
+          service_date_end?: string | null
+          service_date_start?: string | null
+          source_document_id?: string | null
+          source_page_end?: number | null
+          source_page_start?: number | null
+          source_snippet?: string
+          subjective_summary?: string
+          tenant_id?: string
+          total_billed?: number | null
+          total_paid?: number | null
+          updated_at?: string
+          upstream_bill_ids?: string[]
+          upstream_injury_ids?: string[]
+          upstream_provider_id?: string | null
+          visit_date?: string | null
+          visit_date_text?: string
+          visit_type?: Database["public"]["Enums"]["reviewer_visit_type"]
+        }
+        Relationships: [
+          {
+            foreignKeyName: "reviewer_treatment_records_case_id_fkey"
+            columns: ["case_id"]
+            isOneToOne: false
+            referencedRelation: "cases"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "reviewer_treatment_records_duplicate_of_record_id_fkey"
+            columns: ["duplicate_of_record_id"]
+            isOneToOne: false
+            referencedRelation: "reviewer_treatment_records"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "reviewer_treatment_records_source_document_id_fkey"
+            columns: ["source_document_id"]
+            isOneToOne: false
+            referencedRelation: "case_documents"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "reviewer_treatment_records_tenant_id_fkey"
             columns: ["tenant_id"]
             isOneToOne: false
             referencedRelation: "tenants"
@@ -2474,6 +2732,13 @@ export type Database = {
         | "other"
       duplicate_flag_status: "flagged" | "dismissed" | "confirmed"
       environment_designation: "development" | "staging" | "production"
+      extraction_confidence_tier: "high" | "medium" | "low" | "unknown"
+      extraction_review_state:
+        | "draft"
+        | "needs_review"
+        | "accepted"
+        | "corrected"
+        | "rejected"
       fact_type:
         | "medical_diagnosis"
         | "treatment"
@@ -2576,6 +2841,23 @@ export type Database = {
         | "provider_review"
         | "flagging"
         | "completed"
+      reviewer_visit_type:
+        | "emergency"
+        | "ems"
+        | "inpatient"
+        | "outpatient"
+        | "surgery"
+        | "physical_therapy"
+        | "chiropractic"
+        | "pain_management"
+        | "radiology"
+        | "primary_care"
+        | "specialist"
+        | "mental_health"
+        | "operative"
+        | "follow_up"
+        | "ime"
+        | "other"
       treatment_review_decision:
         | "pending"
         | "reasonable"
@@ -2811,6 +3093,14 @@ export const Constants = {
       ],
       duplicate_flag_status: ["flagged", "dismissed", "confirmed"],
       environment_designation: ["development", "staging", "production"],
+      extraction_confidence_tier: ["high", "medium", "low", "unknown"],
+      extraction_review_state: [
+        "draft",
+        "needs_review",
+        "accepted",
+        "corrected",
+        "rejected",
+      ],
       fact_type: [
         "medical_diagnosis",
         "treatment",
@@ -2919,6 +3209,24 @@ export const Constants = {
         "provider_review",
         "flagging",
         "completed",
+      ],
+      reviewer_visit_type: [
+        "emergency",
+        "ems",
+        "inpatient",
+        "outpatient",
+        "surgery",
+        "physical_therapy",
+        "chiropractic",
+        "pain_management",
+        "radiology",
+        "primary_care",
+        "specialist",
+        "mental_health",
+        "operative",
+        "follow_up",
+        "ime",
+        "other",
       ],
       treatment_review_decision: [
         "pending",
