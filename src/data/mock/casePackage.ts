@@ -596,6 +596,7 @@ const martinezCase = mockCases.find((c) => c.id === "case-001")!;
 const martinezDocs = mockDocuments.filter((d) => d.case_id === "case-001");
 
 export const MARTINEZ_CASE_PACKAGE: CasePackage = {
+  contract_version: "1.0.0",
   case_record: martinezCase,
   parties,
   documents: martinezDocs,
@@ -619,6 +620,10 @@ export const MARTINEZ_CASE_PACKAGE: CasePackage = {
   liability_facts: liabilityFacts,
   issue_flags: mockIssueFlags.filter((f) => f.case_id === "case-001"),
   demand_summary: demandSummary,
+  modules: {
+    // DemandIQ output populated below via getDemandIQOutput()
+    // Other module sections omitted — not entitled / not yet run in mock data
+  },
   module_runs: moduleRuns,
   module_outputs: moduleOutputs,
 };
