@@ -558,7 +558,7 @@ function runRadiologyLogic(
     const daysFromOnset = differenceInDays(parseISO(recs[0].visit_date), parseISO(earliestTreatment.visit_date!));
     if (daysFromOnset <= 14) {
       const hasRedFlags = allTreatments.some(t =>
-        /fracture|neuro|cauda|weakness|bowel|bladder|progressive/i.test((t.objective_findings || "") + " " + (t.assessment_summary || ""))
+        /fracture|cauda equina|weakness|bowel|bladder|progressive deficit/i.test((t.objective_findings || "") + " " + (t.assessment_summary || ""))
       );
       if (!hasRedFlags) {
         tags.push({ type: "timing", label: "Early advanced imaging", detail: `Advanced imaging performed ${daysFromOnset} days from onset without documented red flags. Guidelines typically recommend conservative trial first.`, severity: "medium" });
