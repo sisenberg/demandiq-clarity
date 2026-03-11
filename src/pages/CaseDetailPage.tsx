@@ -323,13 +323,13 @@ const CaseDetailPage = () => {
                      </button>
                   )}
                   {hasPermission(role, "trigger_processing") && pendingDocs > 0 && (
-                    <button
-                      onClick={() => triggerProcessing.mutate({ caseId: caseData.id })}
-                      disabled={triggerProcessing.isPending}
-                      className="flex items-center gap-1.5 text-xs font-medium px-3.5 py-2 rounded-lg bg-primary text-primary-foreground hover:bg-primary/90 transition-colors disabled:opacity-50 shadow-sm"
-                    >
-                      <Play className="h-3.5 w-3.5" /> Trigger Processing
-                    </button>
+                     <button
+                       onClick={() => triggerProcessing.mutate({ caseId: caseData.id })}
+                       disabled={triggerProcessing.isPending}
+                       className="btn-primary"
+                     >
+                       <Play className="h-3.5 w-3.5" /> Trigger Processing
+                     </button>
                   )}
                 </div>
                 <WorkspaceCard icon={FileText} title="All Documents" count={documents.length}>
