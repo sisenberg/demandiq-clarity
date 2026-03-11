@@ -23,6 +23,7 @@ import DocumentsWorkstation from "@/components/case/DocumentsWorkstation";
 import IntakeDocumentsWorkstation from "@/components/case/IntakeDocumentsWorkstation";
 import SourcePagesWorkstation from "@/components/case/SourcePagesWorkstation";
 import DetectedEntitiesPanel from "@/components/case/DetectedEntitiesPanel";
+import TreatmentTimeline from "@/components/case/TreatmentTimeline";
 import DocumentUpload from "@/components/case/DocumentUpload";
 import JobsPanel from "@/components/case/JobsPanel";
 import DocumentTypeTag from "@/components/case/DocumentTypeTag";
@@ -248,6 +249,11 @@ const CaseDetailPage = () => {
               {/* ── ENTITIES ──────────────────────── */}
               {activeSection === "entities" && (
                 <DetectedEntitiesPanel caseId={caseData.id} />
+              )}
+
+              {/* ── MEDICAL REVIEW ────────────────── */}
+              {activeSection === "medical-review" && (
+                <TreatmentTimeline caseId={caseData.id} />
               )}
 
               {/* ── CHAT ──────────────────────────── */}
