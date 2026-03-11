@@ -6,10 +6,9 @@ import { useCaseJobs } from "@/hooks/useJobs";
 import { useTriggerProcessing } from "@/hooks/useJobs";
 import { useAuth } from "@/contexts/AuthContext";
 import { hasPermission } from "@/lib/permissions";
-import { CasePackageProvider } from "@/hooks/useCasePackage";
+import { CasePackageProvider, useCasePackage } from "@/hooks/useCasePackage";
 import DocumentUpload from "@/components/case/DocumentUpload";
 import JobsPanel from "@/components/case/JobsPanel";
-import ProcessingPipeline from "@/components/case/ProcessingPipeline";
 import DocumentTypeTag from "@/components/case/DocumentTypeTag";
 import CaseNavRail, { type CaseSection } from "@/components/case/CaseNavRail";
 import CaseHeader from "@/components/case/CaseHeader";
@@ -24,24 +23,23 @@ import AnalysisCard from "@/components/case/AnalysisCard";
 import type { AnalysisSection } from "@/components/case/AnalysisCard";
 import SourcePagesPanel from "@/components/case/SourcePagesPanel";
 import { SourceDrawerProvider, SourceDrawer } from "@/components/case/SourceDrawer";
+import EmptyState from "@/components/ui/EmptyState";
+import { PageLoading, WorkspaceSkeleton } from "@/components/ui/LoadingSkeleton";
+import ComingSoonBadge from "@/components/ui/ComingSoonBadge";
 import {
   ArrowLeft,
   FileText,
-  Cog,
   Play,
   Upload,
   Clock,
-  StickyNote,
-  BookOpen,
   GitBranch,
-  AlertTriangle,
-  Briefcase,
-  TrendingUp,
-  CheckCircle,
-  ExternalLink,
   ClipboardCheck,
+  PanelRightClose,
+  PanelRightOpen,
+  Inbox,
 } from "lucide-react";
 
+// ─── Status lookups ─────────────────────────────────
 const DOC_STATUS_BADGE: Record<string, string> = {
   uploaded: "status-badge-draft",
   queued: "status-badge-draft",
@@ -70,31 +68,7 @@ function formatBytes(bytes: number): string {
   return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
 }
 
-// ─── Mock data for timeline / notes ──────────────────
-const MOCK_TIMELINE = [
-  { date: "2024-11-15", event: "Motor vehicle accident on I-95 northbound", type: "Incident", source: "Police Report #PR-2024-8812" },
-  { date: "2024-11-15", event: "Emergency room visit at Mercy General Hospital", type: "Medical", source: "ER Records — Mercy General" },
-  { date: "2024-11-18", event: "Follow-up visit with Dr. Sarah Chen, orthopedic evaluation", type: "Medical", source: "Medical Record — Dr. Chen" },
-  { date: "2024-12-02", event: "MRI of cervical spine completed — disc herniation C5-C6", type: "Diagnostic", source: "Imaging Report — Regional Radiology" },
-  { date: "2024-12-10", event: "Physical therapy initiated — 3x/week for 8 weeks", type: "Treatment", source: "PT Records — Advanced Rehab" },
-  { date: "2025-01-05", event: "Insurance demand letter sent to carrier", type: "Legal", source: "Correspondence — Demand Letter v1" },
-  { date: "2025-02-15", event: "Independent medical examination by Dr. Roberts", type: "Medical", source: "IME Report — Dr. Roberts" },
-  { date: "2025-03-01", event: "Settlement negotiation round 1 — $45,000 offered", type: "Negotiation", source: "Carrier Correspondence" },
-];
-
-const MOCK_NOTES = [
-  { author: "Sarah Mitchell", time: "2 hours ago", text: "Reviewed the MRI report — C5-C6 herniation is well-documented. Need to cross-reference with PT progress notes for causation argument." },
-  { author: "David Park", time: "Yesterday", text: "Police report confirms defendant ran red light. Liability should be straightforward. Requesting dash cam footage." },
-  { author: "Sarah Mitchell", time: "3 days ago", text: "Initial document review complete. 12 medical records, 2 billing statements, 1 police report uploaded. Flagged potential pre-existing condition in lumbar region." },
-];
-
-const MOCK_SOURCES = [
-  { page: "pg. 3", doc: "Police Report #PR-2024-8812", excerpt: "Vehicle 1 failed to stop at red signal, striking Vehicle 2 in the intersection at approximately 35 mph." },
-  { page: "pg. 1", doc: "ER Records — Mercy General", excerpt: "Patient presents with acute cervical strain, right shoulder contusion, and complaints of radiating pain to right upper extremity." },
-  { page: "pg. 7", doc: "MRI Report — Regional Radiology", excerpt: "Impression: Central disc herniation at C5-C6 with moderate foraminal narrowing. Recommend neurosurgical consultation." },
-  { page: "pg. 2", doc: "PT Records — Advanced Rehab", excerpt: "Initial evaluation: cervical ROM significantly limited. Pain rated 7/10. Treatment plan: manual therapy, therapeutic exercise, modalities 3x/week." },
-];
-
+// ─── ReviewerIQ Preview (Coming Soon) ───────────────
 const MEDICAL_REVIEW_SECTIONS: AnalysisSection[] = [
   {
     title: "Treatment Reasonableness",
@@ -142,14 +116,10 @@ const CaseDetailPage = () => {
   const triggerProcessing = useTriggerProcessing();
   const [showUpload, setShowUpload] = useState(false);
   const [activeSection, setActiveSection] = useState<CaseSection>("overview");
-  const [expandedDoc, setExpandedDoc] = useState<string | null>(null);
+  const [showRightRail, setShowRightRail] = useState(true);
 
   if (caseLoading) {
-    return (
-      <div className="flex items-center justify-center h-full">
-        <p className="text-sm text-muted-foreground">Loading case…</p>
-      </div>
-    );
+    return <PageLoading message="Loading case…" />;
   }
 
   if (!caseData) {
@@ -158,7 +128,7 @@ const CaseDetailPage = () => {
         <Link to="/cases" className="text-sm text-primary hover:underline flex items-center gap-1 mb-4">
           <ArrowLeft className="h-4 w-4" /> Back to Cases
         </Link>
-        <p className="text-sm text-muted-foreground">Case not found.</p>
+        <EmptyState icon={Inbox} title="Case not found" description="This case may have been removed or you don't have access." />
       </div>
     );
   }
@@ -203,16 +173,9 @@ const CaseDetailPage = () => {
             {/* ── OVERVIEW ────────────────────────── */}
             {activeSection === "overview" && (
               <>
-                {/* Horizontal chronology bar */}
                 <HorizontalTimeline />
-
-                {/* DemandIQ Overview — Case Summary, Injuries, Flags */}
                 <OverviewCards caseData={caseData} documents={documents} />
-
-                {/* Body Map */}
                 <BodyMap />
-
-                {/* Chronology */}
                 <ChronologyPanel />
 
                 {/* Documents preview */}
@@ -242,10 +205,12 @@ const CaseDetailPage = () => {
                     </div>
                   }
                 >
-                  {documents.length === 0 ? (
-                    <div className="px-5 py-10 text-center">
-                      <p className="text-xs text-muted-foreground">No documents uploaded yet.</p>
+                  {docsLoading ? (
+                    <div className="p-5 space-y-2">
+                      {[1,2,3].map(i => <div key={i} className="animate-pulse h-10 bg-accent rounded-lg" />)}
                     </div>
+                  ) : documents.length === 0 ? (
+                    <EmptyState icon={FileText} title="No documents" description="Upload documents to begin analysis." />
                   ) : (
                     <div className="divide-y divide-border">
                       {documents.slice(0, 5).map((doc) => (
@@ -282,74 +247,32 @@ const CaseDetailPage = () => {
                   )}
                 </WorkspaceCard>
 
-                {/* Jobs */}
                 <JobsPanel jobs={jobs} loading={jobsLoading} />
               </>
             )}
 
             {/* ── TIMELINE ────────────────────────── */}
-            {activeSection === "timeline" && (
-              <WorkspaceCard
-                icon={Clock}
-                title="Case Chronology"
-                count={MOCK_TIMELINE.length}
-                tabs={[
-                  { key: "all", label: "All Events" },
-                  { key: "medical", label: "Medical" },
-                  { key: "legal", label: "Legal" },
-                ]}
-              >
-                {(tab: string) => {
-                  const events = tab === "all"
-                    ? MOCK_TIMELINE
-                    : MOCK_TIMELINE.filter((e) =>
-                        tab === "medical"
-                          ? ["Medical", "Diagnostic", "Treatment"].includes(e.type)
-                          : ["Legal", "Negotiation", "Incident"].includes(e.type)
-                      );
-                  return (
-                    <div className="px-5 py-4">
-                      <div className="relative">
-                        <div className="absolute left-[7px] top-3 bottom-3 w-px bg-border" />
-                        <div className="flex flex-col gap-0">
-                          {events.map((ev, idx) => (
-                            <div key={idx} className="flex gap-4 py-3 relative">
-                              <div className="relative z-10 mt-1">
-                                <div className="h-[15px] w-[15px] rounded-full border-2 border-primary bg-card" />
-                              </div>
-                              <div className="flex-1 min-w-0">
-                                <div className="flex items-baseline gap-2 mb-0.5">
-                                  <span className="text-xs font-semibold text-foreground">{ev.date}</span>
-                                  <span className="text-[10px] font-medium bg-accent text-muted-foreground px-2 py-0.5 rounded-full">
-                                    {ev.type}
-                                  </span>
-                                </div>
-                                <p className="text-sm text-foreground leading-relaxed">{ev.event}</p>
-                                <p className="text-[11px] text-muted-foreground mt-1 flex items-center gap-1">
-                                  <BookOpen className="h-3 w-3" /> {ev.source}
-                                </p>
-                              </div>
-                            </div>
-                          ))}
-                        </div>
-                      </div>
-                    </div>
-                  );
-                }}
-              </WorkspaceCard>
-            )}
+            {activeSection === "timeline" && <ChronologyPanel />}
 
             {/* ── NOTES (DemandIQ Workspace) ───── */}
             {activeSection === "notes" && (
               <>
                 <CaseNotesPanel />
 
-                <AnalysisCard
-                  icon={ClipboardCheck}
-                  title="Medical Review Snapshot"
-                  subtitle="ReviewerIQ Preview"
-                  sections={MEDICAL_REVIEW_SECTIONS}
-                />
+                {/* ReviewerIQ Preview — Coming Soon */}
+                <div className="relative">
+                  <div className="absolute top-3 right-3 z-10">
+                    <ComingSoonBadge label="ReviewerIQ" />
+                  </div>
+                  <div className="opacity-60 pointer-events-none">
+                    <AnalysisCard
+                      icon={ClipboardCheck}
+                      title="Medical Review Snapshot"
+                      subtitle="ReviewerIQ Preview"
+                      sections={MEDICAL_REVIEW_SECTIONS}
+                    />
+                  </div>
+                </div>
               </>
             )}
 
@@ -376,18 +299,20 @@ const CaseDetailPage = () => {
                   )}
                 </div>
                 <WorkspaceCard icon={FileText} title="All Documents" count={documents.length}>
-                  {documents.length === 0 ? (
-                    <div className="px-5 py-12 text-center">
-                      <p className="text-xs text-muted-foreground">No documents uploaded yet.</p>
+                  {docsLoading ? (
+                    <div className="p-5 space-y-2">
+                      {[1,2,3,4,5].map(i => <div key={i} className="animate-pulse h-10 bg-accent rounded-lg" />)}
                     </div>
+                  ) : documents.length === 0 ? (
+                    <EmptyState icon={FileText} title="No documents uploaded" description="Upload documents to begin case processing." />
                   ) : (
                     <table className="w-full text-sm">
                       <thead>
                         <tr className="border-b border-border text-left bg-muted/30">
                           <th className="px-5 py-2.5 text-xs font-medium text-muted-foreground uppercase tracking-wider">File</th>
                           <th className="px-5 py-2.5 text-xs font-medium text-muted-foreground uppercase tracking-wider">Type</th>
-                          <th className="px-5 py-2.5 text-xs font-medium text-muted-foreground uppercase tracking-wider">Size</th>
-                          <th className="px-5 py-2.5 text-xs font-medium text-muted-foreground uppercase tracking-wider">Pipeline</th>
+                          <th className="px-5 py-2.5 text-xs font-medium text-muted-foreground uppercase tracking-wider hidden sm:table-cell">Size</th>
+                          <th className="px-5 py-2.5 text-xs font-medium text-muted-foreground uppercase tracking-wider hidden md:table-cell">Pipeline</th>
                           <th className="px-5 py-2.5 text-xs font-medium text-muted-foreground uppercase tracking-wider">Status</th>
                         </tr>
                       </thead>
@@ -400,8 +325,8 @@ const CaseDetailPage = () => {
                               </Link>
                             </td>
                             <td className="px-5 py-3"><DocumentTypeTag type={doc.document_type} /></td>
-                            <td className="px-5 py-3 text-muted-foreground">{formatBytes(doc.file_size_bytes)}</td>
-                            <td className="px-5 py-3">
+                            <td className="px-5 py-3 text-muted-foreground hidden sm:table-cell">{formatBytes(doc.file_size_bytes)}</td>
+                            <td className="px-5 py-3 hidden md:table-cell">
                               <code className="text-[10px] bg-accent px-2 py-0.5 rounded-full text-muted-foreground font-medium">
                                 {doc.pipeline_stage.replace(/_/g, " ")}
                               </code>
@@ -422,9 +347,7 @@ const CaseDetailPage = () => {
             )}
 
             {/* ── SOURCES ────────────────────────── */}
-            {activeSection === "sources" && (
-              <SourcePagesPanel />
-            )}
+            {activeSection === "sources" && <SourcePagesPanel />}
 
             {/* ── WORKFLOWS ────────────────────────── */}
             {activeSection === "workflows" && (
@@ -449,12 +372,8 @@ const CaseDetailPage = () => {
                           </span>
                         </div>
                         <p className="text-xs text-muted-foreground mb-3">{wf.desc}</p>
-                        {/* Progress bar */}
                         <div className="h-1.5 w-full bg-accent rounded-full overflow-hidden">
-                          <div
-                            className="h-full bg-primary rounded-full transition-all"
-                            style={{ width: `${wf.progress}%` }}
-                          />
+                          <div className="h-full bg-primary rounded-full transition-all" style={{ width: `${wf.progress}%` }} />
                         </div>
                         <p className="text-[10px] text-muted-foreground mt-1">{wf.progress}% complete</p>
                       </div>
@@ -473,9 +392,21 @@ const CaseDetailPage = () => {
           </div>
         </div>
 
-        {/* Right rail — sticky on desktop, below content on mobile */}
-        <div className="hidden lg:flex lg:sticky lg:top-0 lg:h-full">
-          <CaseRightRail caseData={caseData} documents={documents} />
+        {/* Right rail — collapsible on desktop, hidden on mobile */}
+        <div className="hidden lg:flex lg:relative">
+          {/* Collapse toggle */}
+          <button
+            onClick={() => setShowRightRail(!showRightRail)}
+            className="absolute -left-3 top-4 z-20 h-6 w-6 rounded-full border border-border bg-card shadow-sm flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-accent transition-colors"
+            title={showRightRail ? "Collapse panel" : "Expand panel"}
+          >
+            {showRightRail ? <PanelRightClose className="h-3 w-3" /> : <PanelRightOpen className="h-3 w-3" />}
+          </button>
+          {showRightRail && (
+            <div className="lg:sticky lg:top-0 lg:h-full">
+              <CaseRightRail caseData={caseData} documents={documents} />
+            </div>
+          )}
         </div>
       </div>
 
@@ -486,27 +417,5 @@ const CaseDetailPage = () => {
     </CasePackageProvider>
   );
 };
-
-function StatCard({
-  icon: Icon,
-  label,
-  value,
-  color = "text-muted-foreground",
-}: {
-  icon: React.ElementType;
-  label: string;
-  value: number;
-  color?: string;
-}) {
-  return (
-    <div className="card-elevated px-4 py-3">
-      <div className="flex items-center gap-2 mb-1">
-        <Icon className={`h-3.5 w-3.5 ${color}`} />
-        <span className="text-[10px] font-medium text-muted-foreground uppercase tracking-wider">{label}</span>
-      </div>
-      <p className="text-xl font-semibold text-card-foreground">{value}</p>
-    </div>
-  );
-}
 
 export default CaseDetailPage;
