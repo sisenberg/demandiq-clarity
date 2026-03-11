@@ -212,74 +212,7 @@ const CaseDetailPage = () => {
             <div className="p-5 max-w-5xl flex flex-col gap-4">
               {/* ── OVERVIEW ────────────────────────── */}
               {activeSection === "overview" && (
-                <>
-                  <HorizontalTimeline />
-                  <OverviewCards caseData={caseData} documents={documents} />
-                  <BodyMap />
-                  <ChronologyPanel />
-
-                  {/* Documents preview */}
-                  <WorkspaceCard
-                    icon={FileText}
-                    title="Documents"
-                    count={documents.length}
-                    actions={
-                      <div className="flex gap-2">
-                        {hasPermission(role, "upload_document") && (
-                          <button onClick={() => setShowUpload(true)} className="btn-secondary text-[11px]">
-                            <Upload className="h-3 w-3" /> Upload
-                          </button>
-                        )}
-                        {hasPermission(role, "trigger_processing") && pendingDocs > 0 && (
-                          <button
-                            onClick={() => triggerProcessing.mutate({ caseId: caseData.id })}
-                            disabled={triggerProcessing.isPending}
-                            className="btn-primary text-[11px]"
-                          >
-                            <Play className="h-3 w-3" /> Process
-                          </button>
-                        )}
-                      </div>
-                    }
-                  >
-                    {docsLoading ? (
-                      <div className="p-5 space-y-2">
-                        {[1,2,3].map(i => <div key={i} className="animate-pulse h-10 bg-accent rounded-lg" />)}
-                      </div>
-                    ) : documents.length === 0 ? (
-                      <EmptyState icon={FileText} title="No documents" description="Upload documents to begin analysis." />
-                    ) : (
-                      <div className="divide-y divide-border">
-                        {documents.slice(0, 5).map((doc) => (
-                          <div key={doc.id} className="px-5 py-3 flex items-center gap-3 hover:bg-accent/30 transition-colors">
-                            <FileText className="h-4 w-4 text-muted-foreground shrink-0" />
-                            <div className="flex-1 min-w-0">
-                              <Link to={`/documents/${doc.id}`} className="text-sm font-medium text-foreground hover:text-primary transition-colors">
-                                {doc.file_name}
-                              </Link>
-                              <p className="text-[11px] text-muted-foreground mt-0.5">
-                                {formatBytes(doc.file_size_bytes)} · {doc.pipeline_stage.replace(/_/g, " ")}
-                              </p>
-                            </div>
-                            <DocumentTypeTag type={doc.document_type} />
-                            <span className={DOC_STATUS_BADGE[doc.document_status] ?? "status-badge-draft"}>
-                              {DOC_STATUS_LABEL[doc.document_status] ?? doc.document_status}
-                            </span>
-                          </div>
-                        ))}
-                        {documents.length > 5 && (
-                          <div className="px-5 py-2.5 text-center">
-                            <button onClick={() => setActiveSection("documents")} className="text-xs text-primary font-medium hover:underline">
-                              View all {documents.length} documents →
-                            </button>
-                          </div>
-                        )}
-                      </div>
-                    )}
-                  </WorkspaceCard>
-
-                  <JobsPanel jobs={jobs} loading={jobsLoading} />
-                </>
+                <CaseOverview caseData={caseData} documents={documents} />
               )}
 
               {/* ── CASE NOTES (DemandIQ Workspace) ──── */}
