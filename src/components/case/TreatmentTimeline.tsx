@@ -200,6 +200,13 @@ export default function TreatmentTimeline({ caseId }: TreatmentTimelineProps) {
 
   return (
     <div className="flex flex-col gap-4">
+      {/* ── Readiness Panel ────────────────────────── */}
+      <ReviewReadinessPanel
+        assessment={assessment}
+        onFilterByFlags={handleFilterByFlags}
+        onJumpToRecord={handleJumpToRecord}
+      />
+
       {/* ── Summary Metrics ──────────────────────────── */}
       <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-7 gap-2">
         <MetricCard icon={Users} label="Providers" value={metrics.totalProviders} />
