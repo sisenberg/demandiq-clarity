@@ -128,16 +128,22 @@ export function groupIntoEpisodes(
   return episodes;
 }
 
-function classifySpecialty(t: ReviewerTreatmentRecord): SpecialtyType {
-  // Check procedure codes first
-  const codes = t.procedures.map(p => p.code).filter(Boolean) as string[];
-  if (codes.some(c => CHIRO_CODES.has(c))) return "chiro";
-  if (codes.some(c => PT_EVAL_CODES.has(c) || PT_TIMED_CODES.has(c))) return "pt";
-  if (codes.some(c => IMAGING_CODES_ADVANCED.has(c))) return "radiology";
-  if (codes.some(c => INJECTION_CODES.has(c))) return "pain_management";
-  if (codes.some(c => SURGERY_CODES.has(c))) return "surgery";
-  // Fallback to visit type
-  return SPECIALTY_VISIT_MAP[t.visit_type] || "ortho";
+function classifySpecialtyGroup(recs: ReviewerTreatmentRecord[]): SpecialtyType {
+  // Check ALL records in the group — highest-acuity specialty wins
+  const allCodes = recs.flatMap(r => r.procedures.map(p => p.code).filter(Boolean) as string[]);
+  if (allCodes.some(c => SURGERY_CODES.has(c))) return "surgery";
+  if (allCodes.some(c => INJECTION_CODES.has(c))) return "pain_management";
+  if (allCodes.some(c => IMAGING_CODES_ADVANCED.has(c))) return "radiology";
+  if (allCodes.some(c => CHIRO_CODES.has(c))) return "chiro";
+  if (allCodes.some(c => PT_EVAL_CODES.has(c) || PT_TIMED_CODES.has(c))) return "pt";
+  // Fallback to visit types — highest acuity wins
+  const visitTypes = recs.map(r => r.visit_type);
+  if (visitTypes.includes("surgery")) return "surgery";
+  if (visitTypes.includes("pain_management")) return "pain_management";
+  if (visitTypes.includes("radiology")) return "radiology";
+  if (visitTypes.includes("chiropractic")) return "chiro";
+  if (visitTypes.includes("physical_therapy")) return "pt";
+  return SPECIALTY_VISIT_MAP[recs[0].visit_type] || "ortho";
 }
 
 function classifyPhase(spanDays: number, specialty: SpecialtyType, recs: ReviewerTreatmentRecord[]): EpisodePhase {
