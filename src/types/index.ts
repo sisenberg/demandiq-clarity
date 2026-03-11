@@ -625,10 +625,113 @@ export interface ClaimAssessmentBlock {
   evidence_refs: EvidenceReference[];
 }
 
+// ─── Module-Specific Output Contracts ───────────────
+// Each add-on module has a reserved typed section.
+// These are null/undefined when the tenant is not entitled or module hasn't run.
+
+/** ReviewerIQ output — medical review, billing analysis, provider highlights */
+export interface ReviewerIQOutput {
+  treatment_reasonableness: ReviewerItem[];
+  body_part_grouping: ReviewerItem[];
+  provider_highlights: ReviewerItem[];
+  billing_review: ReviewerItem[];
+  overall_assessment: string;
+  review_status: ReviewStatus;
+  reviewed_by: string | null;
+  reviewed_at: string | null;
+}
+
+export interface ReviewerItem {
+  label: string;
+  value?: string;
+  detail: string;
+  severity: "info" | "warning" | "alert";
+}
+
+/** EvaluateIQ output — case valuation and damage assessment */
+export interface EvaluateIQOutput {
+  valuation_range: { low: number; midpoint: number; high: number };
+  special_damages_breakdown: ValuationLineItem[];
+  general_damages_analysis: string;
+  comparable_cases: string[];
+  risk_factors: string[];
+  confidence_score: number | null;
+  review_status: ReviewStatus;
+}
+
+export interface ValuationLineItem {
+  category: string;
+  amount: number;
+  notes: string;
+}
+
+/** NegotiateIQ output — negotiation strategy and positioning */
+export interface NegotiateIQOutput {
+  recommended_range: { floor: number; target: number; ceiling: number };
+  strategy_summary: string;
+  leverage_points: string[];
+  concession_plan: NegotiationStep[];
+  counter_offer_analysis: string | null;
+  review_status: ReviewStatus;
+}
+
+export interface NegotiationStep {
+  round: number;
+  position: number;
+  rationale: string;
+}
+
+/** LitIQ output — litigation preparation and strategy */
+export interface LitIQOutput {
+  litigation_assessment: string;
+  key_issues: LitIssue[];
+  discovery_plan: string[];
+  deposition_targets: string[];
+  motion_recommendations: string[];
+  trial_value_range: { low: number; high: number } | null;
+  review_status: ReviewStatus;
+}
+
+export interface LitIssue {
+  issue: string;
+  analysis: string;
+  risk_level: "low" | "medium" | "high";
+}
+
+// ─── Module Sections Container ──────────────────────
+
+/**
+ * Module-namespaced output sections.
+ * Each key is only populated when that module has produced output for the case.
+ * Safe for tenants with zero, one, or all add-ons — absent keys are simply omitted.
+ */
+export interface ModuleSections {
+  demandiq?: DemandIQOutput;
+  revieweriq?: ReviewerIQOutput;
+  evaluateiq?: EvaluateIQOutput;
+  negotiateiq?: NegotiateIQOutput;
+  litiq?: LitIQOutput;
+}
+
 // ─── Case Package ───────────────────────────────────
 
-/** 19. CasePackage — the full assembled data for a case, consumed by all modules */
+/**
+ * 19. CasePackage — the full assembled data contract for a case.
+ *
+ * Structure:
+ *   - Shared platform data (parties, documents, timeline, injuries, etc.)
+ *   - DemandIQ canonical baseline (demand_summary at top level — the universal starting point)
+ *   - Module-namespaced sections (modules.*) for add-on module outputs
+ *   - Module execution metadata (module_runs, module_outputs)
+ *
+ * DemandIQ publishes the canonical completed baseline. All downstream modules
+ * consume from the completed snapshot, not live draft data.
+ */
 export interface CasePackage {
+  /** Contract version for forward compatibility */
+  contract_version: string;
+
+  // ── Shared platform data (module-agnostic) ──
   case_record: Case;
   parties: Party[];
   documents: Document[];
@@ -642,9 +745,38 @@ export interface CasePackage {
   insurance_policies: InsurancePolicy[];
   liability_facts: LiabilityFact[];
   issue_flags: IssueFlag[];
+
+  // ── DemandIQ canonical baseline ──
   demand_summary: DemandSummary;
+
+  // ── Module-namespaced output sections ──
+  modules: ModuleSections;
+
+  // ── Module execution metadata ──
   module_runs: ModuleRun[];
   module_outputs: ModuleOutput[];
+}
+
+/**
+ * 19b. CompletionSnapshot — the typed shape stored in module_completion_snapshots.snapshot_json.
+ * Contains the contract version, module ID, and relevant data at completion time.
+ */
+export interface CompletionSnapshotPayload {
+  contract_version: string;
+  module_id: string;
+  completed_at: string;
+  /** The shared platform data summary at time of completion */
+  case_summary: {
+    case_status: string;
+    document_count: number;
+    completed_documents: number;
+    injury_count: number;
+    provider_count: number;
+    total_billed: number;
+    total_paid: number;
+  };
+  /** The module-specific output frozen at completion time */
+  module_output: DemandIQOutput | ReviewerIQOutput | EvaluateIQOutput | NegotiateIQOutput | LitIQOutput;
 }
 
 // ─── Extraction ─────────────────────────────────────
