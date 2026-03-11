@@ -7,6 +7,7 @@ import type { CaseRow } from "@/hooks/useCases";
 import type { DocumentRow } from "@/hooks/useDocuments";
 import { isDocumentReady } from "@/lib/statuses";
 import type { EvidenceReference, TimelineEvent } from "@/types";
+import IntakeReadinessPanel from "./IntakeReadinessPanel";
 import {
   User,
   Car,
