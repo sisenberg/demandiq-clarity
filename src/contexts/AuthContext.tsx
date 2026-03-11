@@ -9,7 +9,8 @@ import {
 import type { User, Session } from "@supabase/supabase-js";
 import { supabase } from "@/lib/supabase";
 import type { AppRole } from "@/lib/permissions";
-import { ModuleId } from "@/types";
+import type { TenantModuleEntitlement } from "@/types";
+import { EntitlementStatus } from "@/types";
 
 interface Profile {
   display_name: string;
