@@ -9,6 +9,7 @@ import MainLayout from "@/components/layout/MainLayout";
 import SignIn from "@/pages/SignIn";
 import Dashboard from "@/pages/Dashboard";
 import CasesPage from "@/pages/CasesPage";
+import NewCasePage from "@/pages/NewCasePage";
 import CaseDetailPage from "@/pages/CaseDetailPage";
 import DocumentsPage from "@/pages/DocumentsPage";
 import DocumentDetailPage from "@/pages/DocumentDetailPage";
