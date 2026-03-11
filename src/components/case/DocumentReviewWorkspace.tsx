@@ -243,7 +243,7 @@ const DocumentReviewWorkspace = ({ documentId, caseId, onBack }: DocumentReviewW
         </div>
 
         {/* Right: Review panels */}
-        <div className="w-1/2 flex flex-col min-w-0">
+        <div className="w-full lg:w-1/2 flex flex-col min-w-0">
           {/* Tab bar */}
           <div className="pill-toggle-group mx-3 mt-2.5 mb-1">
             {([
