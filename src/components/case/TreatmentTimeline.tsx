@@ -106,7 +106,12 @@ export default function TreatmentTimeline({ caseId }: TreatmentTimelineProps) {
   const [expandedGroups, setExpandedGroups] = useState<Set<string>>(new Set(["__all__"]));
   const [expandedRecords, setExpandedRecords] = useState<Set<string>>(new Set());
   const [showFilters, setShowFilters] = useState(false);
+  const [flaggedOnly, setFlaggedOnly] = useState(false);
   const { openSource } = useSourceDrawer();
+
+  // Readiness assessment
+  const assessment = useMemo(() => assessReadiness(records), [records]);
+  const flaggedRecordIds = useMemo(() => getRecordIdsWithFlags(assessment.flags), [assessment.flags]);
 
   // Derive filter options
   const allProviders = useMemo(() => [...new Set(records.map((r) => r.provider_name_normalized || r.provider_name_raw))].sort(), [records]);
@@ -115,6 +120,7 @@ export default function TreatmentTimeline({ caseId }: TreatmentTimelineProps) {
   // Apply filters
   const filtered = useMemo(() => {
     return records.filter((r) => {
+      if (flaggedOnly && !flaggedRecordIds.has(r.id)) return false;
       if (filters.provider && (r.provider_name_normalized || r.provider_name_raw) !== filters.provider) return false;
       if (filters.bodyPart && !r.body_parts.includes(filters.bodyPart)) return false;
       if (filters.reviewState && r.review_state !== filters.reviewState) return false;
