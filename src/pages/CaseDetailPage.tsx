@@ -269,13 +269,17 @@ const CaseDetailPage = () => {
                     <ChronologySummaryTab />
                   )}
 
+                  {activeTab === "background" && (
+                    <ClaimantBackgroundTab />
+                  )}
+
                   {/* Placeholder tabs */}
-                  {(activeTab === "background" || activeTab === "providers") && (
-                    <WorkspaceCard icon={FileText} title={activeTab.charAt(0).toUpperCase() + activeTab.slice(1)}>
+                  {activeTab === "providers" && (
+                    <WorkspaceCard icon={FileText} title="Providers">
                       <div className="p-5">
                         <EmptyState
                           icon={FileText}
-                          title={`${activeTab.charAt(0).toUpperCase() + activeTab.slice(1)} workspace`}
+                          title="Providers workspace"
                           description="This section will be built in a future iteration."
                         />
                       </div>
