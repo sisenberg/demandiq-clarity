@@ -26,6 +26,7 @@ import AnalysisCard from "@/components/case/AnalysisCard";
 import type { AnalysisSection } from "@/components/case/AnalysisCard";
 import SourcePagesPanel from "@/components/case/SourcePagesPanel";
 import { SourceDrawerProvider, SourceDrawer } from "@/components/case/SourceDrawer";
+import CompleteDemandDialog from "@/components/case/CompleteDemandDialog";
 import EmptyState from "@/components/ui/EmptyState";
 import { PageLoading, WorkspaceSkeleton } from "@/components/ui/LoadingSkeleton";
 import ComingSoonBadge from "@/components/ui/ComingSoonBadge";
