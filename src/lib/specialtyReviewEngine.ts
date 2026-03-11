@@ -97,7 +97,7 @@ export function groupIntoEpisodes(
   for (const [key, recs] of groups) {
     const [provider, bodyRegion] = key.split("||");
     const sorted = [...recs].sort((a, b) => a.visit_date!.localeCompare(b.visit_date!));
-    const specialty = classifySpecialty(sorted[0]);
+    const specialty = classifySpecialtyGroup(sorted);
     const dateStart = sorted[0].visit_date!;
     const dateEnd = sorted[sorted.length - 1].visit_date!;
     const spanDays = differenceInDays(parseISO(dateEnd), parseISO(dateStart));
