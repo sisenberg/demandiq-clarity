@@ -1782,6 +1782,408 @@ export type Database = {
           },
         ]
       }
+      reviewer_bill_links: {
+        Row: {
+          ai_confidence: number | null
+          assessed_reasonable_amount: number | null
+          billed_amount: number
+          case_id: string
+          created_at: string
+          id: string
+          is_reviewed: boolean
+          linkage_status: Database["public"]["Enums"]["bill_linkage_status"]
+          reduction_reason: string
+          reviewed_at: string | null
+          reviewed_by: string | null
+          tenant_id: string
+          treatment_review_id: string | null
+          updated_at: string
+          upstream_bill_id: string
+          upstream_treatment_id: string | null
+        }
+        Insert: {
+          ai_confidence?: number | null
+          assessed_reasonable_amount?: number | null
+          billed_amount?: number
+          case_id: string
+          created_at?: string
+          id?: string
+          is_reviewed?: boolean
+          linkage_status?: Database["public"]["Enums"]["bill_linkage_status"]
+          reduction_reason?: string
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          tenant_id: string
+          treatment_review_id?: string | null
+          updated_at?: string
+          upstream_bill_id: string
+          upstream_treatment_id?: string | null
+        }
+        Update: {
+          ai_confidence?: number | null
+          assessed_reasonable_amount?: number | null
+          billed_amount?: number
+          case_id?: string
+          created_at?: string
+          id?: string
+          is_reviewed?: boolean
+          linkage_status?: Database["public"]["Enums"]["bill_linkage_status"]
+          reduction_reason?: string
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          tenant_id?: string
+          treatment_review_id?: string | null
+          updated_at?: string
+          upstream_bill_id?: string
+          upstream_treatment_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "reviewer_bill_links_case_id_fkey"
+            columns: ["case_id"]
+            isOneToOne: false
+            referencedRelation: "cases"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "reviewer_bill_links_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "reviewer_bill_links_treatment_review_id_fkey"
+            columns: ["treatment_review_id"]
+            isOneToOne: false
+            referencedRelation: "reviewer_treatment_reviews"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      reviewer_case_state: {
+        Row: {
+          bills_reviewed: number
+          case_id: string
+          completed_at: string | null
+          completed_by: string | null
+          created_at: string
+          id: string
+          open_flags: number
+          providers_confirmed: number
+          review_status: Database["public"]["Enums"]["reviewer_case_status"]
+          started_at: string | null
+          started_by: string | null
+          tenant_id: string
+          total_bills: number
+          total_providers: number
+          total_treatments: number
+          treatments_reviewed: number
+          updated_at: string
+          upstream_snapshot_id: string | null
+          upstream_snapshot_version: number | null
+        }
+        Insert: {
+          bills_reviewed?: number
+          case_id: string
+          completed_at?: string | null
+          completed_by?: string | null
+          created_at?: string
+          id?: string
+          open_flags?: number
+          providers_confirmed?: number
+          review_status?: Database["public"]["Enums"]["reviewer_case_status"]
+          started_at?: string | null
+          started_by?: string | null
+          tenant_id: string
+          total_bills?: number
+          total_providers?: number
+          total_treatments?: number
+          treatments_reviewed?: number
+          updated_at?: string
+          upstream_snapshot_id?: string | null
+          upstream_snapshot_version?: number | null
+        }
+        Update: {
+          bills_reviewed?: number
+          case_id?: string
+          completed_at?: string | null
+          completed_by?: string | null
+          created_at?: string
+          id?: string
+          open_flags?: number
+          providers_confirmed?: number
+          review_status?: Database["public"]["Enums"]["reviewer_case_status"]
+          started_at?: string | null
+          started_by?: string | null
+          tenant_id?: string
+          total_bills?: number
+          total_providers?: number
+          total_treatments?: number
+          treatments_reviewed?: number
+          updated_at?: string
+          upstream_snapshot_id?: string | null
+          upstream_snapshot_version?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "reviewer_case_state_case_id_fkey"
+            columns: ["case_id"]
+            isOneToOne: false
+            referencedRelation: "cases"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "reviewer_case_state_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "reviewer_case_state_upstream_snapshot_id_fkey"
+            columns: ["upstream_snapshot_id"]
+            isOneToOne: false
+            referencedRelation: "module_completion_snapshots"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      reviewer_medical_flags: {
+        Row: {
+          case_id: string
+          category: Database["public"]["Enums"]["medical_flag_category"]
+          created_at: string
+          description: string
+          flagged_by: string
+          id: string
+          related_entity_id: string | null
+          related_entity_type: string | null
+          resolution_notes: string
+          resolved_at: string | null
+          resolved_by: string | null
+          severity: Database["public"]["Enums"]["medical_flag_severity"]
+          source_document_id: string | null
+          source_page: number | null
+          source_snippet: string
+          status: Database["public"]["Enums"]["medical_flag_status"]
+          tenant_id: string
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          case_id: string
+          category?: Database["public"]["Enums"]["medical_flag_category"]
+          created_at?: string
+          description?: string
+          flagged_by?: string
+          id?: string
+          related_entity_id?: string | null
+          related_entity_type?: string | null
+          resolution_notes?: string
+          resolved_at?: string | null
+          resolved_by?: string | null
+          severity?: Database["public"]["Enums"]["medical_flag_severity"]
+          source_document_id?: string | null
+          source_page?: number | null
+          source_snippet?: string
+          status?: Database["public"]["Enums"]["medical_flag_status"]
+          tenant_id: string
+          title?: string
+          updated_at?: string
+        }
+        Update: {
+          case_id?: string
+          category?: Database["public"]["Enums"]["medical_flag_category"]
+          created_at?: string
+          description?: string
+          flagged_by?: string
+          id?: string
+          related_entity_id?: string | null
+          related_entity_type?: string | null
+          resolution_notes?: string
+          resolved_at?: string | null
+          resolved_by?: string | null
+          severity?: Database["public"]["Enums"]["medical_flag_severity"]
+          source_document_id?: string | null
+          source_page?: number | null
+          source_snippet?: string
+          status?: Database["public"]["Enums"]["medical_flag_status"]
+          tenant_id?: string
+          title?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "reviewer_medical_flags_case_id_fkey"
+            columns: ["case_id"]
+            isOneToOne: false
+            referencedRelation: "cases"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "reviewer_medical_flags_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      reviewer_provider_reviews: {
+        Row: {
+          canonical_name: string | null
+          canonical_npi: string | null
+          canonical_specialty: string | null
+          case_id: string
+          created_at: string
+          entity_cluster_id: string | null
+          id: string
+          is_reviewed: boolean
+          normalization_status: Database["public"]["Enums"]["provider_normalization_status"]
+          reviewed_at: string | null
+          reviewed_by: string | null
+          tenant_id: string
+          updated_at: string
+          upstream_provider_id: string
+        }
+        Insert: {
+          canonical_name?: string | null
+          canonical_npi?: string | null
+          canonical_specialty?: string | null
+          case_id: string
+          created_at?: string
+          entity_cluster_id?: string | null
+          id?: string
+          is_reviewed?: boolean
+          normalization_status?: Database["public"]["Enums"]["provider_normalization_status"]
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          tenant_id: string
+          updated_at?: string
+          upstream_provider_id: string
+        }
+        Update: {
+          canonical_name?: string | null
+          canonical_npi?: string | null
+          canonical_specialty?: string | null
+          case_id?: string
+          created_at?: string
+          entity_cluster_id?: string | null
+          id?: string
+          is_reviewed?: boolean
+          normalization_status?: Database["public"]["Enums"]["provider_normalization_status"]
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          tenant_id?: string
+          updated_at?: string
+          upstream_provider_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "reviewer_provider_reviews_case_id_fkey"
+            columns: ["case_id"]
+            isOneToOne: false
+            referencedRelation: "cases"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "reviewer_provider_reviews_entity_cluster_id_fkey"
+            columns: ["entity_cluster_id"]
+            isOneToOne: false
+            referencedRelation: "entity_clusters"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "reviewer_provider_reviews_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      reviewer_treatment_reviews: {
+        Row: {
+          accepted_decision: Database["public"]["Enums"]["treatment_review_decision"]
+          accepted_reasoning: string
+          ai_confidence: number | null
+          ai_decision: Database["public"]["Enums"]["treatment_review_decision"]
+          ai_reasoning: string
+          case_id: string
+          created_at: string
+          guideline_refs: string[]
+          id: string
+          is_reviewed: boolean
+          reviewed_at: string | null
+          reviewed_by: string | null
+          source_document_id: string | null
+          source_page: number | null
+          source_snippet: string
+          tenant_id: string
+          updated_at: string
+          upstream_snapshot: Json
+          upstream_treatment_id: string
+        }
+        Insert: {
+          accepted_decision?: Database["public"]["Enums"]["treatment_review_decision"]
+          accepted_reasoning?: string
+          ai_confidence?: number | null
+          ai_decision?: Database["public"]["Enums"]["treatment_review_decision"]
+          ai_reasoning?: string
+          case_id: string
+          created_at?: string
+          guideline_refs?: string[]
+          id?: string
+          is_reviewed?: boolean
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          source_document_id?: string | null
+          source_page?: number | null
+          source_snippet?: string
+          tenant_id: string
+          updated_at?: string
+          upstream_snapshot?: Json
+          upstream_treatment_id: string
+        }
+        Update: {
+          accepted_decision?: Database["public"]["Enums"]["treatment_review_decision"]
+          accepted_reasoning?: string
+          ai_confidence?: number | null
+          ai_decision?: Database["public"]["Enums"]["treatment_review_decision"]
+          ai_reasoning?: string
+          case_id?: string
+          created_at?: string
+          guideline_refs?: string[]
+          id?: string
+          is_reviewed?: boolean
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          source_document_id?: string | null
+          source_page?: number | null
+          source_snippet?: string
+          tenant_id?: string
+          updated_at?: string
+          upstream_snapshot?: Json
+          upstream_treatment_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "reviewer_treatment_reviews_case_id_fkey"
+            columns: ["case_id"]
+            isOneToOne: false
+            referencedRelation: "cases"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "reviewer_treatment_reviews_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       tenant_module_entitlements: {
         Row: {
           created_at: string
@@ -2000,6 +2402,12 @@ export type Database = {
         | "settlement_memo"
         | "negotiation_letter"
         | "litigation_brief"
+      bill_linkage_status:
+        | "pending"
+        | "linked"
+        | "unlinked"
+        | "disputed"
+        | "confirmed"
       bill_status:
         | "submitted"
         | "under_review"
@@ -2114,6 +2522,18 @@ export type Database = {
         | "package_export"
         | "ocr"
         | "classification"
+      medical_flag_category:
+        | "excessive_treatment"
+        | "insufficient_documentation"
+        | "coding_mismatch"
+        | "pre_existing_aggravation"
+        | "causation_gap"
+        | "guideline_deviation"
+        | "billing_anomaly"
+        | "provider_concern"
+        | "other"
+      medical_flag_severity: "info" | "warning" | "alert" | "critical"
+      medical_flag_status: "open" | "acknowledged" | "resolved" | "dismissed"
       module_completion_status:
         | "not_started"
         | "in_progress"
@@ -2142,6 +2562,26 @@ export type Database = {
         | "extraction_complete"
         | "evidence_links_created"
         | "review_items_generated"
+      provider_normalization_status:
+        | "pending"
+        | "matched"
+        | "new_entity"
+        | "needs_review"
+        | "confirmed"
+      reviewer_case_status:
+        | "not_started"
+        | "intake_review"
+        | "treatment_review"
+        | "billing_review"
+        | "provider_review"
+        | "flagging"
+        | "completed"
+      treatment_review_decision:
+        | "pending"
+        | "reasonable"
+        | "questionable"
+        | "unreasonable"
+        | "insufficient_info"
       treatment_type:
         | "emergency"
         | "inpatient"
@@ -2291,6 +2731,13 @@ export const Constants = {
         "negotiation_letter",
         "litigation_brief",
       ],
+      bill_linkage_status: [
+        "pending",
+        "linked",
+        "unlinked",
+        "disputed",
+        "confirmed",
+      ],
       bill_status: [
         "submitted",
         "under_review",
@@ -2412,6 +2859,19 @@ export const Constants = {
         "ocr",
         "classification",
       ],
+      medical_flag_category: [
+        "excessive_treatment",
+        "insufficient_documentation",
+        "coding_mismatch",
+        "pre_existing_aggravation",
+        "causation_gap",
+        "guideline_deviation",
+        "billing_anomaly",
+        "provider_concern",
+        "other",
+      ],
+      medical_flag_severity: ["info", "warning", "alert", "critical"],
+      medical_flag_status: ["open", "acknowledged", "resolved", "dismissed"],
       module_completion_status: [
         "not_started",
         "in_progress",
@@ -2443,6 +2903,29 @@ export const Constants = {
         "extraction_complete",
         "evidence_links_created",
         "review_items_generated",
+      ],
+      provider_normalization_status: [
+        "pending",
+        "matched",
+        "new_entity",
+        "needs_review",
+        "confirmed",
+      ],
+      reviewer_case_status: [
+        "not_started",
+        "intake_review",
+        "treatment_review",
+        "billing_review",
+        "provider_review",
+        "flagging",
+        "completed",
+      ],
+      treatment_review_decision: [
+        "pending",
+        "reasonable",
+        "questionable",
+        "unreasonable",
+        "insufficient_info",
       ],
       treatment_type: [
         "emergency",
