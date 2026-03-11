@@ -681,7 +681,7 @@ export function getDemandIQOutput(): DemandIQOutput {
     },
   ];
 
-  return {
+  const output: DemandIQOutput = {
     claim_assessment: claimAssessment,
     chronological_summary: timelineEvents.map((e) => `${e.event_date} — ${e.label}: ${e.description}`),
     medical_codes: [
