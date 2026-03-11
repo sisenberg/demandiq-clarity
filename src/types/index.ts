@@ -220,6 +220,42 @@ export enum ReviewStatus {
   Published = "published",
 }
 
+export enum ModuleCompletionStatus {
+  NotStarted = "not_started",
+  InProgress = "in_progress",
+  Completed = "completed",
+  Reopened = "reopened",
+}
+
+/** Module completion record — tracks lifecycle per module per case */
+export interface ModuleCompletion {
+  id: string;
+  tenant_id: string;
+  case_id: string;
+  module_id: string;
+  status: ModuleCompletionStatus;
+  version: number;
+  completed_by: string | null;
+  completed_at: string | null;
+  reopened_by: string | null;
+  reopened_at: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+/** Versioned snapshot created at module completion */
+export interface ModuleCompletionSnapshot {
+  id: string;
+  tenant_id: string;
+  case_id: string;
+  module_id: string;
+  completion_id: string;
+  version: number;
+  snapshot_json: Record<string, unknown>;
+  created_by: string | null;
+  created_at: string;
+}
+
 /** Tenant module entitlement record */
 export interface TenantModuleEntitlement {
   id: string;
