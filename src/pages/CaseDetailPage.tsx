@@ -292,34 +292,18 @@ const CaseDetailPage = () => {
               </WorkspaceCard>
             )}
 
-            {/* ── NOTES ────────────────────────── */}
+            {/* ── NOTES (DemandIQ Workspace) ───── */}
             {activeSection === "notes" && (
-              <WorkspaceCard icon={StickyNote} title="Case Notes" count={MOCK_NOTES.length}>
-                <div className="divide-y divide-border">
-                  {MOCK_NOTES.map((note, idx) => (
-                    <div key={idx} className="px-5 py-4">
-                      <div className="flex items-center gap-2 mb-2">
-                        <div className="h-6 w-6 rounded-full bg-accent flex items-center justify-center">
-                          <span className="text-[9px] font-semibold text-foreground">
-                            {note.author.split(" ").map((n) => n[0]).join("")}
-                          </span>
-                        </div>
-                        <span className="text-xs font-medium text-foreground">{note.author}</span>
-                        <span className="text-[10px] text-muted-foreground">· {note.time}</span>
-                      </div>
-                      <p className="text-sm text-foreground leading-relaxed pl-8">{note.text}</p>
-                    </div>
-                  ))}
-                </div>
-                {/* Add note */}
-                <div className="px-5 py-3 border-t border-border bg-muted/20">
-                  <input
-                    type="text"
-                    placeholder="Add a note…"
-                    className="w-full px-3.5 py-2.5 text-sm border border-input rounded-lg bg-card text-foreground placeholder:text-muted-foreground outline-none focus:ring-2 focus:ring-ring/40 focus:border-primary transition-colors"
-                  />
-                </div>
-              </WorkspaceCard>
+              <>
+                <CaseNotesPanel />
+
+                <AnalysisCard
+                  icon={ClipboardCheck}
+                  title="Medical Review Snapshot"
+                  subtitle="ReviewerIQ Preview"
+                  sections={MEDICAL_REVIEW_SECTIONS}
+                />
+              </>
             )}
 
             {/* ── DOCUMENTS (dedicated) ────────── */}
