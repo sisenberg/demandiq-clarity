@@ -7,6 +7,7 @@ import { MODULES } from "@/lib/modules";
 import { EntitlementStatus } from "@/types";
 import type { TenantModuleEntitlement } from "@/types";
 import { useModuleEntitlements, useUpsertEntitlement } from "@/hooks/useModuleEntitlements";
+import PhiReadinessPanel from "@/components/admin/PhiReadinessPanel";
 import {
   type AppRole,
   ALL_ROLES,
