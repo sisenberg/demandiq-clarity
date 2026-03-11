@@ -71,6 +71,11 @@ export default {
           "attention-bg": "hsl(var(--status-attention-bg))",
           "attention-foreground": "hsl(var(--status-attention-foreground))",
         },
+        confidence: {
+          high: "hsl(var(--confidence-high))",
+          medium: "hsl(var(--confidence-medium))",
+          low: "hsl(var(--confidence-low))",
+        },
         sidebar: {
           DEFAULT: "hsl(var(--sidebar-background))",
           foreground: "hsl(var(--sidebar-foreground))",

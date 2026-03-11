@@ -52,35 +52,32 @@ const CasesPage = () => {
   const [showCreate, setShowCreate] = useState(false);
 
   return (
-    <div className="p-6 lg:p-8 max-w-7xl">
-      <div className="flex items-center justify-between mb-6">
+    <div className="p-6 max-w-6xl">
+      <div className="flex items-center justify-between mb-5">
         <div>
-          <h1 className="text-xl font-semibold text-foreground tracking-tight">Cases</h1>
-          <p className="text-sm text-muted-foreground mt-0.5">
+          <h1 className="text-lg font-semibold text-foreground tracking-tight">Cases</h1>
+          <p className="text-[12px] text-muted-foreground mt-0.5">
             {isLoading ? "Loading…" : `${cases.length} cases`}
           </p>
         </div>
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-2">
           {hasPermission(role, "create_case") && (
-            <button
-              onClick={() => setShowCreate(true)}
-              className="flex items-center gap-2 text-xs font-medium px-4 py-2 rounded-lg bg-primary text-primary-foreground hover:bg-primary/90 transition-colors shadow-sm"
-            >
+            <button onClick={() => setShowCreate(true)} className="btn-primary">
               <Plus className="h-3.5 w-3.5" /> New Case
             </button>
           )}
-          <div className="flex gap-0.5 border border-border rounded-lg overflow-hidden p-0.5 bg-muted">
+          <div className="flex gap-px border border-border rounded-lg overflow-hidden p-0.5 bg-accent">
             <button
               onClick={() => setView("queue")}
-              className={`px-3 py-1.5 text-xs font-medium rounded-md transition-all ${
+              className={`px-2.5 py-1.5 text-[11px] font-medium rounded-md transition-all ${
                 view === "queue" ? "bg-card text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"
               }`}
             >
-              Work Queue
+              Queue
             </button>
             <button
               onClick={() => setView("table")}
-              className={`px-3 py-1.5 text-xs font-medium rounded-md transition-all ${
+              className={`px-2.5 py-1.5 text-[11px] font-medium rounded-md transition-all ${
                 view === "table" ? "bg-card text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"
               }`}
             >
@@ -93,42 +90,42 @@ const CasesPage = () => {
       {isLoading ? (
         <PageLoading message="Loading cases…" />
       ) : view === "queue" ? (
-        <div className="flex flex-col gap-6">
+        <div className="flex flex-col gap-5">
           {STATUS_GROUPS.map((group) => {
             const groupCases = cases.filter((c) => group.statuses.includes(c.case_status));
             if (groupCases.length === 0) return null;
             return (
               <div key={group.label}>
-                <h2 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-3 flex items-center gap-2">
+                <h2 className="section-label mb-2 flex items-center gap-2">
                   {group.label}
-                  <span className="text-[10px] font-medium bg-accent text-muted-foreground px-2 py-0.5 rounded-full">{groupCases.length}</span>
+                  <span className="text-[10px] font-semibold bg-accent text-muted-foreground px-1.5 py-0.5 rounded-md">{groupCases.length}</span>
                 </h2>
-                <div className="flex flex-col gap-2">
+                <div className="flex flex-col gap-1.5">
                   {groupCases.map((c) => (
                     <Link
                       key={c.id}
                       to={`/cases/${c.id}`}
-                      className="card-elevated-hover px-5 py-4 flex items-center justify-between group"
+                      className="card-elevated-hover px-4 py-3 flex items-center justify-between group"
                     >
-                      <div className="flex items-center gap-3.5 min-w-0">
-                        <div className="h-9 w-9 rounded-lg bg-accent flex items-center justify-center shrink-0">
-                          <Briefcase className="h-4 w-4 text-muted-foreground" />
+                      <div className="flex items-center gap-3 min-w-0">
+                        <div className="h-8 w-8 rounded-lg bg-accent flex items-center justify-center shrink-0">
+                          <Briefcase className="h-3.5 w-3.5 text-muted-foreground" />
                         </div>
                         <div className="min-w-0">
-                          <p className="text-sm font-medium text-foreground truncate group-hover:text-primary transition-colors">{c.title || `${c.claimant} v. ${c.insured}`}</p>
-                          <p className="text-xs text-muted-foreground mt-0.5">
-                            {c.case_number} · {c.claimant} · DOL: {c.date_of_loss ?? "—"}
+                          <p className="text-[13px] font-medium text-foreground truncate group-hover:text-primary transition-colors">{c.title || `${c.claimant} v. ${c.insured}`}</p>
+                          <p className="text-[11px] text-muted-foreground mt-0.5">
+                            {c.case_number} · {c.claimant} · DOI: {c.date_of_loss ?? "—"}
                           </p>
                         </div>
                       </div>
-                      <div className="flex items-center gap-2.5 shrink-0">
+                      <div className="flex items-center gap-2 shrink-0">
                         {c.priority !== "normal" && (
                           <span className={PRIORITY_BADGE[c.priority]}>{c.priority}</span>
                         )}
                         <span className={CASE_STATUS_BADGE[c.case_status] ?? "status-badge-draft"}>
                           {CASE_STATUS_LABEL[c.case_status] ?? c.case_status}
                         </span>
-                        <ChevronRight className="h-4 w-4 text-muted-foreground/40 group-hover:text-muted-foreground transition-colors" />
+                        <ChevronRight className="h-3.5 w-3.5 text-muted-foreground/30 group-hover:text-muted-foreground transition-colors" />
                       </div>
                     </Link>
                   ))}
@@ -144,33 +141,33 @@ const CasesPage = () => {
         </div>
       ) : (
         <div className="card-elevated overflow-hidden overflow-x-auto">
-          <table className="w-full text-sm">
+          <table className="data-table">
             <thead>
-              <tr className="border-b border-border text-left bg-muted/30">
-                <th className="px-5 py-3 text-xs font-medium text-muted-foreground uppercase tracking-wider">Case</th>
-                <th className="px-5 py-3 text-xs font-medium text-muted-foreground uppercase tracking-wider hidden sm:table-cell">Case #</th>
-                <th className="px-5 py-3 text-xs font-medium text-muted-foreground uppercase tracking-wider hidden md:table-cell">Claimant</th>
-                <th className="px-5 py-3 text-xs font-medium text-muted-foreground uppercase tracking-wider hidden lg:table-cell">DOL</th>
-                <th className="px-5 py-3 text-xs font-medium text-muted-foreground uppercase tracking-wider">Priority</th>
-                <th className="px-5 py-3 text-xs font-medium text-muted-foreground uppercase tracking-wider">Status</th>
+              <tr>
+                <th>Case</th>
+                <th className="hidden sm:table-cell">Case #</th>
+                <th className="hidden md:table-cell">Claimant</th>
+                <th className="hidden lg:table-cell">DOI</th>
+                <th>Priority</th>
+                <th>Status</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-border">
+            <tbody>
               {cases.map((c) => (
-                <tr key={c.id} className="hover:bg-accent/30 transition-colors">
-                  <td className="px-5 py-3.5">
-                    <Link to={`/cases/${c.id}`} className="flex items-center gap-2.5 hover:text-primary transition-colors">
-                      <Briefcase className="h-4 w-4 text-muted-foreground shrink-0" />
-                      <span className="font-medium text-foreground">{c.title || `${c.claimant} v. ${c.insured}`}</span>
+                <tr key={c.id}>
+                  <td>
+                    <Link to={`/cases/${c.id}`} className="flex items-center gap-2 hover:text-primary transition-colors">
+                      <Briefcase className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
+                      <span className="font-medium text-foreground text-[13px]">{c.title || `${c.claimant} v. ${c.insured}`}</span>
                     </Link>
                   </td>
-                  <td className="px-5 py-3.5 text-muted-foreground hidden sm:table-cell">{c.case_number}</td>
-                  <td className="px-5 py-3.5 text-foreground hidden md:table-cell">{c.claimant}</td>
-                  <td className="px-5 py-3.5 text-muted-foreground hidden lg:table-cell">{c.date_of_loss ?? "—"}</td>
-                  <td className="px-5 py-3.5">
+                  <td className="text-muted-foreground hidden sm:table-cell text-[12px]">{c.case_number}</td>
+                  <td className="text-foreground hidden md:table-cell text-[13px]">{c.claimant}</td>
+                  <td className="text-muted-foreground hidden lg:table-cell text-[12px]">{c.date_of_loss ?? "—"}</td>
+                  <td>
                     <span className={PRIORITY_BADGE[c.priority] ?? "status-badge-draft"}>{c.priority}</span>
                   </td>
-                  <td className="px-5 py-3.5">
+                  <td>
                     <span className={CASE_STATUS_BADGE[c.case_status] ?? "status-badge-draft"}>
                       {CASE_STATUS_LABEL[c.case_status] ?? c.case_status}
                     </span>
