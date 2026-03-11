@@ -40,7 +40,7 @@ const PRIORITY_BADGE: Record<string, string> = {
 const STATUS_GROUPS = [
   { label: "Intake", statuses: ["draft", "intake_in_progress", "intake_complete"] },
   { label: "Processing", statuses: ["processing_in_progress"] },
-  { label: "Ready to Export", statuses: ["complete"] },
+  { label: "Ready to Complete", statuses: ["complete"] },
   { label: "Completed", statuses: ["exported", "closed"] },
   { label: "Failed", statuses: ["failed"] },
 ];
