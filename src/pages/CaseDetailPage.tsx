@@ -17,6 +17,9 @@ import WorkspaceCard from "@/components/case/WorkspaceCard";
 import OverviewCards from "@/components/case/OverviewCards";
 import BodyMap from "@/components/case/BodyMap";
 import ChronologyPanel from "@/components/case/ChronologyPanel";
+import CaseNotesPanel from "@/components/case/CaseNotesPanel";
+import AnalysisCard from "@/components/case/AnalysisCard";
+import type { AnalysisSection } from "@/components/case/AnalysisCard";
 import {
   ArrowLeft,
   FileText,
@@ -32,6 +35,7 @@ import {
   TrendingUp,
   CheckCircle,
   ExternalLink,
+  ClipboardCheck,
 } from "lucide-react";
 
 const DOC_STATUS_BADGE: Record<string, string> = {
