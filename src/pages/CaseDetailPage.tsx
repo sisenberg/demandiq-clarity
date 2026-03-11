@@ -264,8 +264,12 @@ const CaseDetailPage = () => {
                     </>
                   )}
 
+                  {activeTab === "chronology" && (
+                    <ChronologySummaryTab />
+                  )}
+
                   {/* Placeholder tabs */}
-                  {(activeTab === "chronology" || activeTab === "background" || activeTab === "providers") && (
+                  {(activeTab === "background" || activeTab === "providers") && (
                     <WorkspaceCard icon={FileText} title={activeTab.charAt(0).toUpperCase() + activeTab.slice(1)}>
                       <div className="p-5">
                         <EmptyState
