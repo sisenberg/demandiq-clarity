@@ -149,7 +149,24 @@ const CaseDetailPage = () => {
     <SourceDrawerProvider>
     <div className="flex flex-col h-full">
       {/* Top case header */}
-      <CaseHeader caseData={caseData} />
+      <CaseHeader caseData={caseData}>
+        {/* Completion action in header */}
+        {hasPermission(role, "complete_module") && (caseData.case_status === "complete" || caseData.case_status === "exported") && (
+          <button
+            onClick={() => setShowCompletionDialog(true)}
+            className={`flex items-center gap-1.5 text-xs font-medium px-3.5 py-2 rounded-lg transition-colors shadow-sm ${
+              demandCompletion?.status === ModuleCompletionStatus.Completed
+                ? "border border-[hsl(var(--status-approved))]/30 bg-[hsl(var(--status-approved))]/10 text-foreground hover:bg-[hsl(var(--status-approved))]/20"
+                : "bg-primary text-primary-foreground hover:bg-primary/90"
+            }`}
+          >
+            <CheckCircle2 className="h-3.5 w-3.5" />
+            {demandCompletion?.status === ModuleCompletionStatus.Completed
+              ? `Demand Completed · v${demandCompletion.version}`
+              : "Complete Demand"}
+          </button>
+        )}
+      </CaseHeader>
 
       {/* Workspace body */}
       <div className="flex flex-1 overflow-hidden">
