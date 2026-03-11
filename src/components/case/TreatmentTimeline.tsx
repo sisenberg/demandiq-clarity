@@ -357,6 +357,7 @@ export default function TreatmentTimeline({ caseId }: TreatmentTimelineProps) {
                     <TreatmentRecordRow
                       key={record.id}
                       record={record}
+                      flags={getFlagsForRecord(assessment.flags, record.id)}
                       expanded={expandedRecords.has(record.id)}
                       onToggle={() => toggleRecord(record.id)}
                       onViewSource={() => handleViewSource(record)}
