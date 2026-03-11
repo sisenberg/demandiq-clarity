@@ -138,6 +138,9 @@ export const ISSUE_TYPE_LABEL: Record<ReviewIssueType, string> = {
   missing_documentation: "Missing Documentation",
   duplicate_bill_line: "Duplicate Bill Line",
   provider_concern: "Provider Concern",
+  near_identical_notes: "Near-Identical Notes",
+  gap_then_intensive_care: "Gap Then Intensive Care",
+  provider_utilization_pattern: "Provider Utilization Pattern",
 };
 
 export const ISSUE_SEVERITY_LABEL: Record<ReviewIssueSeverity, string> = {
