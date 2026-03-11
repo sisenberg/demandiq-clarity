@@ -21,7 +21,8 @@ export type CaseSection =
   | "billing"
   | "chat"
   | "documents"
-  | "sources";
+  | "sources"
+  | "entities";
 
 const NAV_ITEMS: { key: CaseSection; label: string; icon: React.ElementType }[] = [
   { key: "overview", label: "Overview", icon: LayoutDashboard },
