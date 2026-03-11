@@ -2,6 +2,7 @@ import { useState, useMemo } from "react";
 import { Link } from "react-router-dom";
 import { type DocumentRow, useDeleteDocument } from "@/hooks/useDocuments";
 import { useRetryIntakeJob, useCaseIntakeJobs } from "@/hooks/useIntakeJobs";
+import { useInvokeExtraction, useTriggerCaseExtraction } from "@/hooks/useExtraction";
 import { useCaseDuplicateFlags } from "@/hooks/useDuplicateFlags";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
@@ -26,6 +27,7 @@ import {
   Copy,
   Inbox,
   Upload,
+  Zap,
 } from "lucide-react";
 
 // ─── Status styles ───────────────────────────────────
@@ -81,7 +83,18 @@ const IntakeDocumentsWorkstation = ({ documents, loading, caseId }: IntakeDocume
   const [confirmDelete, setConfirmDelete] = useState<string | null>(null);
 
   const deleteDoc = useDeleteDocument();
+  const triggerExtraction = useTriggerCaseExtraction();
+  const invokeExtraction = useInvokeExtraction();
+  const retryIntakeJob = useRetryIntakeJob();
+  const { data: intakeJobs = [] } = useCaseIntakeJobs(caseId);
   const { data: duplicateFlags = [] } = useCaseDuplicateFlags(caseId);
+
+  const queuedExtractionCount = intakeJobs.filter(
+    (j) => j.job_type === "text_extraction" && j.status === "queued"
+  ).length;
+  const runningJobCount = intakeJobs.filter(
+    (j) => j.status === "running"
+  ).length;
 
   // Build a set of doc IDs that have duplicate flags
   const duplicateDocIds = useMemo(() => {
@@ -129,18 +142,35 @@ const IntakeDocumentsWorkstation = ({ documents, loading, caseId }: IntakeDocume
       {/* Intake Summary */}
       <IntakeSummaryPanel documents={documents} loading={loading} />
 
-      {/* Upload toggle */}
+      {/* Actions bar */}
       <div className="flex items-center justify-between">
-        <h3 className="text-xs font-semibold text-foreground uppercase tracking-wider">
+        <h3 className="text-xs font-semibold text-foreground uppercase tracking-wider flex items-center gap-2">
           Document Intake
+          {runningJobCount > 0 && (
+            <span className="flex items-center gap-1 text-[10px] font-medium text-primary normal-case tracking-normal">
+              <Loader2 className="h-3 w-3 animate-spin" /> {runningJobCount} processing
+            </span>
+          )}
         </h3>
-        <button
-          onClick={() => setShowUploadZone(!showUploadZone)}
-          className="flex items-center gap-1.5 text-xs font-medium px-3.5 py-2 rounded-lg bg-primary text-primary-foreground hover:bg-primary/90 transition-colors shadow-sm"
-        >
-          <Upload className="h-3.5 w-3.5" />
-          {showUploadZone ? "Hide Upload" : "Upload Documents"}
-        </button>
+        <div className="flex items-center gap-2">
+          {queuedExtractionCount > 0 && (
+            <button
+              onClick={() => triggerExtraction.mutate(caseId)}
+              disabled={triggerExtraction.isPending}
+              className="flex items-center gap-1.5 text-xs font-medium px-3.5 py-2 rounded-lg border border-primary/20 bg-primary/5 text-primary hover:bg-primary/10 transition-colors disabled:opacity-50"
+            >
+              <Zap className="h-3.5 w-3.5" />
+              {triggerExtraction.isPending ? "Starting…" : `Extract ${queuedExtractionCount} Doc${queuedExtractionCount !== 1 ? "s" : ""}`}
+            </button>
+          )}
+          <button
+            onClick={() => setShowUploadZone(!showUploadZone)}
+            className="flex items-center gap-1.5 text-xs font-medium px-3.5 py-2 rounded-lg bg-primary text-primary-foreground hover:bg-primary/90 transition-colors shadow-sm"
+          >
+            <Upload className="h-3.5 w-3.5" />
+            {showUploadZone ? "Hide Upload" : "Upload Documents"}
+          </button>
+        </div>
       </div>
 
       {/* Upload zone */}
@@ -350,18 +380,46 @@ const IntakeDocumentsWorkstation = ({ documents, loading, caseId }: IntakeDocume
                   </div>
                 )}
 
-                {/* Failed error state */}
-                {selectedDoc.intake_status === "failed" && (
-                  <div className="rounded-lg border border-destructive/30 bg-[hsl(var(--status-failed-bg))] px-4 py-3 flex items-start gap-2.5">
-                    <AlertTriangle className="h-4 w-4 text-destructive shrink-0 mt-0.5" />
-                    <div>
-                      <p className="text-xs font-medium text-foreground">Processing Failed</p>
-                      <p className="text-[10px] text-muted-foreground mt-0.5">
-                        Text extraction or parsing failed for this document. You can retry the process or upload a new version.
-                      </p>
+                {/* Failed error state with retry */}
+                {selectedDoc.intake_status === "failed" && (() => {
+                  const failedJob = intakeJobs.find(
+                    (j) => j.document_id === selectedDoc.id && j.status === "failed"
+                  );
+                  return (
+                    <div className="rounded-lg border border-destructive/30 bg-[hsl(var(--status-failed-bg))] px-4 py-3">
+                      <div className="flex items-start gap-2.5">
+                        <AlertTriangle className="h-4 w-4 text-destructive shrink-0 mt-0.5" />
+                        <div className="flex-1">
+                          <p className="text-xs font-medium text-foreground">Processing Failed</p>
+                          <p className="text-[10px] text-muted-foreground mt-0.5">
+                            {failedJob?.error_message || "Text extraction failed. You can retry or upload a new version."}
+                          </p>
+                        </div>
+                      </div>
+                      {failedJob && (
+                        <div className="mt-3 flex items-center gap-2">
+                          <button
+                            onClick={() => {
+                              retryIntakeJob.mutate(failedJob.id, {
+                                onSuccess: () => {
+                                  // Re-invoke extraction after retry
+                                  setTimeout(() => invokeExtraction.mutate(failedJob.id), 500);
+                                },
+                              });
+                            }}
+                            disabled={retryIntakeJob.isPending}
+                            className="flex items-center gap-1 text-[10px] font-medium px-3 py-1.5 rounded-lg bg-primary text-primary-foreground hover:bg-primary/90 transition-colors disabled:opacity-50"
+                          >
+                            <RotateCcw className="h-3 w-3" /> Retry Extraction
+                          </button>
+                          <span className="text-[9px] text-muted-foreground">
+                            {failedJob.retry_count}/{failedJob.max_retries} retries used
+                          </span>
+                        </div>
+                      )}
                     </div>
-                  </div>
-                )}
+                  );
+                })()}
 
                 {/* Hash */}
                 {selectedDoc.file_hash && (

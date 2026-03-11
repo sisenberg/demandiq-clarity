@@ -28,6 +28,15 @@ export function useCaseDocuments(caseId: string | undefined) {
   return useQuery({
     queryKey: ["case-documents", caseId],
     enabled: !!caseId,
+    refetchInterval: (query) => {
+      // Poll every 4s if any documents are in a processing intake state
+      const docs = query.state.data as DocumentRow[] | undefined;
+      const processingStatuses = ["queued_for_text_extraction", "extracting_text", "queued_for_parsing", "parsing"];
+      if (docs?.some((d) => processingStatuses.includes(d.intake_status))) {
+        return 4000;
+      }
+      return false;
+    },
     queryFn: async () => {
       const { data, error } = await (supabase
         .from("case_documents") as any)
@@ -146,10 +155,20 @@ export function useUploadDocuments() {
           results.push(data as DocumentRow);
 
           // Auto-enqueue intake jobs for this document
-          await (supabase.from("intake_jobs") as any).insert([
+          const { data: createdJobs } = await (supabase.from("intake_jobs") as any).insert([
             { tenant_id: tenantId, case_id: caseId, document_id: data.id, job_type: "text_extraction", status: "queued" },
             { tenant_id: tenantId, case_id: caseId, document_id: data.id, job_type: "duplicate_detection", status: "queued" },
-          ]);
+          ]).select();
+
+          // Fire-and-forget: invoke extraction for the text_extraction job
+          if (createdJobs) {
+            const textJob = createdJobs.find((j: any) => j.job_type === "text_extraction");
+            if (textJob) {
+              supabase.functions.invoke("process-document", {
+                body: { job_id: textJob.id },
+              }).catch((err) => console.warn("Auto-extraction invocation failed:", err));
+            }
+          }
         } catch (err: any) {
           onFileProgress?.(i, { status: "error", error: err.message, progress: 0 });
         }
