@@ -18,7 +18,7 @@ export const MODULES: ModuleDefinition[] = [
     id: "demandiq",
     label: "DemandIQ",
     shortLabel: "Demand",
-    description: "Document intake, chronology, issue flagging & demand package generation",
+    description: "Document intake, chronology, issue flagging & demand completion",
     isBase: true,
     icon: "FileText",
     accentHsl: "var(--primary)",
