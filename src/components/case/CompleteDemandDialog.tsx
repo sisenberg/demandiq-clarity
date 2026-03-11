@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { CheckCircle2, AlertTriangle, RotateCcw, Package, X } from "lucide-react";
+import { isDocumentReady } from "@/lib/statuses";
 import {
   useModuleCompletion,
   useCompleteModule,
