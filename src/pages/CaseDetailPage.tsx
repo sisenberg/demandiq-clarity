@@ -26,6 +26,7 @@ import AnalysisCard from "@/components/case/AnalysisCard";
 import type { AnalysisSection } from "@/components/case/AnalysisCard";
 import SourcePagesPanel from "@/components/case/SourcePagesPanel";
 import { SourceDrawerProvider, SourceDrawer } from "@/components/case/SourceDrawer";
+import ModuleCompletionStatusPanel from "@/components/case/ModuleCompletionStatusPanel";
 import CompleteDemandDialog from "@/components/case/CompleteDemandDialog";
 import EmptyState from "@/components/ui/EmptyState";
 import { PageLoading, WorkspaceSkeleton } from "@/components/ui/LoadingSkeleton";
@@ -282,6 +283,11 @@ const CaseDetailPage = () => {
             {/* ── NOTES (DemandIQ Workspace) ───── */}
             {activeSection === "notes" && (
               <>
+                <ModuleCompletionStatusPanel
+                  caseId={caseData.id}
+                  moduleId="demandiq"
+                  onCompleteClick={hasPermission(role, "complete_module") ? () => setShowCompletionDialog(true) : undefined}
+                />
                 <CaseNotesPanel />
 
                 {/* ReviewerIQ — show full card if entitled, teaser if not */}
