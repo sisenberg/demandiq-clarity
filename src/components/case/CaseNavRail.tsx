@@ -13,6 +13,7 @@ import {
   Hash,
   FileStack,
   Users,
+  Stethoscope,
 } from "lucide-react";
 
 export type CaseSection =
@@ -23,7 +24,8 @@ export type CaseSection =
   | "documents"
   | "sources"
   | "entities"
-  | "chronology";
+  | "chronology"
+  | "medical-review";
 
 const NAV_ITEMS: { key: CaseSection; label: string; icon: React.ElementType }[] = [
   { key: "overview", label: "Overview", icon: LayoutDashboard },
