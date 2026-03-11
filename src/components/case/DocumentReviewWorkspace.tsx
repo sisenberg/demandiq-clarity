@@ -70,6 +70,7 @@ const DocumentReviewWorkspace = ({ documentId, caseId, onBack }: DocumentReviewW
   const [rightTab, setRightTab] = useState<"text" | "metadata" | "facts" | "chronology">("text");
   const [pdfUrl, setPdfUrl] = useState<string | null>(null);
   const textPanelRef = useRef<HTMLDivElement>(null);
+  const pdfRefreshTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   // Filter chronology to this document's events
   const docChronoCandidates = useMemo(
@@ -77,12 +78,32 @@ const DocumentReviewWorkspace = ({ documentId, caseId, onBack }: DocumentReviewW
     [chronoCandidates, documentId]
   );
 
-  // Load PDF URL
+  // Sign PDF URL with auto-refresh before expiration (sign for 600s, refresh at 480s)
+  const signPdfUrl = useCallback(async (storagePath: string) => {
+    const { data } = await supabase.storage.from("case-documents").createSignedUrl(storagePath, 600);
+    if (data?.signedUrl) setPdfUrl(data.signedUrl);
+    // Schedule refresh 2 minutes before expiry
+    if (pdfRefreshTimer.current) clearTimeout(pdfRefreshTimer.current);
+    pdfRefreshTimer.current = setTimeout(() => signPdfUrl(storagePath), 480_000);
+  }, []);
+
   useEffect(() => {
     if (!doc?.storage_path) return;
-    supabase.storage.from("case-documents").createSignedUrl(doc.storage_path, 600)
-      .then(({ data }) => { if (data?.signedUrl) setPdfUrl(data.signedUrl); });
-  }, [doc?.storage_path]);
+    signPdfUrl(doc.storage_path);
+    return () => { if (pdfRefreshTimer.current) clearTimeout(pdfRefreshTimer.current); };
+  }, [doc?.storage_path, signPdfUrl]);
+
+  // Escape key to close workspace (only when not editing)
+  useEffect(() => {
+    const handler = (e: KeyboardEvent) => {
+      if (e.key !== "Escape") return;
+      const tag = (e.target as HTMLElement)?.tagName;
+      if (tag === "INPUT" || tag === "TEXTAREA" || (e.target as HTMLElement)?.isContentEditable) return;
+      onBack?.();
+    };
+    document.addEventListener("keydown", handler);
+    return () => document.removeEventListener("keydown", handler);
+  }, [onBack]);
 
   const currentPage = pages.find((p) => p.page_number === activePage);
   const totalPages = pages.length || doc?.page_count || 0;
