@@ -262,20 +262,29 @@ const CaseDetailPage = () => {
               <>
                 <CaseNotesPanel />
 
-                {/* ReviewerIQ Preview — Coming Soon */}
-                <div className="relative">
-                  <div className="absolute top-3 right-3 z-10">
-                    <ComingSoonBadge label="ReviewerIQ" />
+                {/* ReviewerIQ — show full card if entitled, teaser if not */}
+                {hasReviewerIQ ? (
+                  <AnalysisCard
+                    icon={ClipboardCheck}
+                    title="Medical Review Snapshot"
+                    subtitle="ReviewerIQ"
+                    sections={MEDICAL_REVIEW_SECTIONS}
+                  />
+                ) : (
+                  <div className="relative">
+                    <div className="absolute top-3 right-3 z-10">
+                      <ComingSoonBadge label="ReviewerIQ · Add-on" />
+                    </div>
+                    <div className="opacity-50 pointer-events-none">
+                      <AnalysisCard
+                        icon={ClipboardCheck}
+                        title="Medical Review Snapshot"
+                        subtitle="ReviewerIQ Preview"
+                        sections={MEDICAL_REVIEW_SECTIONS.slice(0, 1)}
+                      />
+                    </div>
                   </div>
-                  <div className="opacity-60 pointer-events-none">
-                    <AnalysisCard
-                      icon={ClipboardCheck}
-                      title="Medical Review Snapshot"
-                      subtitle="ReviewerIQ Preview"
-                      sections={MEDICAL_REVIEW_SECTIONS}
-                    />
-                  </div>
-                </div>
+                )}
               </>
             )}
 
