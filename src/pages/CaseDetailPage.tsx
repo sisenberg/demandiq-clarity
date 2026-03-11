@@ -17,6 +17,9 @@ import WorkspaceCard from "@/components/case/WorkspaceCard";
 import OverviewCards from "@/components/case/OverviewCards";
 import BodyMap from "@/components/case/BodyMap";
 import ChronologyPanel from "@/components/case/ChronologyPanel";
+import CaseNotesPanel from "@/components/case/CaseNotesPanel";
+import AnalysisCard from "@/components/case/AnalysisCard";
+import type { AnalysisSection } from "@/components/case/AnalysisCard";
 import {
   ArrowLeft,
   FileText,
@@ -32,6 +35,7 @@ import {
   TrendingUp,
   CheckCircle,
   ExternalLink,
+  ClipboardCheck,
 } from "lucide-react";
 
 const DOC_STATUS_BADGE: Record<string, string> = {
@@ -85,6 +89,44 @@ const MOCK_SOURCES = [
   { page: "pg. 1", doc: "ER Records — Mercy General", excerpt: "Patient presents with acute cervical strain, right shoulder contusion, and complaints of radiating pain to right upper extremity." },
   { page: "pg. 7", doc: "MRI Report — Regional Radiology", excerpt: "Impression: Central disc herniation at C5-C6 with moderate foraminal narrowing. Recommend neurosurgical consultation." },
   { page: "pg. 2", doc: "PT Records — Advanced Rehab", excerpt: "Initial evaluation: cervical ROM significantly limited. Pain rated 7/10. Treatment plan: manual therapy, therapeutic exercise, modalities 3x/week." },
+];
+
+const MEDICAL_REVIEW_SECTIONS: AnalysisSection[] = [
+  {
+    title: "Treatment Reasonableness",
+    items: [
+      { label: "ER Visit — Mercy General", value: "Reasonable", detail: "Appropriate given mechanism; cervical strain, shoulder contusion, radiating pain warranted imaging.", severity: "info" },
+      { label: "PT Frequency (3x/week)", value: "Reasonable", detail: "Consistent with cervical disc herniation treatment guidelines. Duration appropriate.", severity: "info" },
+      { label: "ESI #2 at 8 weeks post-#1", value: "Flagged", detail: "Second injection at 8-week interval is within guidelines but may be questioned given only partial relief from first.", severity: "warning" },
+      { label: "PT Non-Completion (24/36)", value: "Issue", detail: "Only 67% of prescribed sessions completed. Defense will argue non-compliance weakens damages.", severity: "alert" },
+    ],
+  },
+  {
+    title: "Body-Part Grouping",
+    items: [
+      { label: "Cervical Spine (C5-C6)", value: "Primary", detail: "Herniation confirmed by MRI. Driving majority of treatment and damages.", severity: "alert" },
+      { label: "Right Shoulder", value: "Resolved", detail: "Contusion and strain resolved after 6 weeks PT. No ongoing treatment.", severity: "info" },
+      { label: "Lumbar Spine (L4-L5)", value: "Disputed", detail: "Pre-existing degenerative changes noted. Causation may be challenged.", severity: "warning" },
+      { label: "Right Knee", value: "Secondary", detail: "Meniscus tear confirmed. Conservative treatment ongoing.", severity: "warning" },
+    ],
+  },
+  {
+    title: "Provider Highlights",
+    items: [
+      { label: "Dr. Sarah Chen — Orthopedics", detail: "Primary treating physician. 6 visits. Consistent documentation, causation opinions well-supported.", severity: "info" },
+      { label: "Dr. Raj Patel — Pain Management", detail: "ESI provider. 3 visits. Procedure notes adequate. Follow-up documentation could be stronger.", severity: "info" },
+      { label: "Dr. William Roberts — IME", detail: "Defense examiner. Concurs on herniation causation but disputes surgical necessity. Key rebuttal target.", severity: "alert" },
+    ],
+  },
+  {
+    title: "Billing Review Items",
+    items: [
+      { label: "MRI Cervical (72141)", value: "$3,200", detail: "Billed at $3,200 vs. Medicare rate ~$380. Expect significant reduction in adjusted value.", severity: "warning" },
+      { label: "ESI (64483) x2", value: "$12,400", detail: "Two injections at $6,200 each. Within range but on high end for market.", severity: "warning" },
+      { label: "PT Sessions (97110)", value: "$9,600", detail: "24 sessions at $400/session. Reasonable per-session rate.", severity: "info" },
+      { label: "Total Reduction Risk", value: "~29%", detail: "Expected reduction from billed ($87,450) to adjusted value (~$62,200) based on usual and customary analysis.", severity: "alert" },
+    ],
+  },
 ];
 
 const CaseDetailPage = () => {
@@ -288,34 +330,18 @@ const CaseDetailPage = () => {
               </WorkspaceCard>
             )}
 
-            {/* ── NOTES ────────────────────────── */}
+            {/* ── NOTES (DemandIQ Workspace) ───── */}
             {activeSection === "notes" && (
-              <WorkspaceCard icon={StickyNote} title="Case Notes" count={MOCK_NOTES.length}>
-                <div className="divide-y divide-border">
-                  {MOCK_NOTES.map((note, idx) => (
-                    <div key={idx} className="px-5 py-4">
-                      <div className="flex items-center gap-2 mb-2">
-                        <div className="h-6 w-6 rounded-full bg-accent flex items-center justify-center">
-                          <span className="text-[9px] font-semibold text-foreground">
-                            {note.author.split(" ").map((n) => n[0]).join("")}
-                          </span>
-                        </div>
-                        <span className="text-xs font-medium text-foreground">{note.author}</span>
-                        <span className="text-[10px] text-muted-foreground">· {note.time}</span>
-                      </div>
-                      <p className="text-sm text-foreground leading-relaxed pl-8">{note.text}</p>
-                    </div>
-                  ))}
-                </div>
-                {/* Add note */}
-                <div className="px-5 py-3 border-t border-border bg-muted/20">
-                  <input
-                    type="text"
-                    placeholder="Add a note…"
-                    className="w-full px-3.5 py-2.5 text-sm border border-input rounded-lg bg-card text-foreground placeholder:text-muted-foreground outline-none focus:ring-2 focus:ring-ring/40 focus:border-primary transition-colors"
-                  />
-                </div>
-              </WorkspaceCard>
+              <>
+                <CaseNotesPanel />
+
+                <AnalysisCard
+                  icon={ClipboardCheck}
+                  title="Medical Review Snapshot"
+                  subtitle="ReviewerIQ Preview"
+                  sections={MEDICAL_REVIEW_SECTIONS}
+                />
+              </>
             )}
 
             {/* ── DOCUMENTS (dedicated) ────────── */}
