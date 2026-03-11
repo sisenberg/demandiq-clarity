@@ -1,4 +1,5 @@
 import { useCasePackage } from "@/hooks/useCasePackage";
+import { isDocumentReady } from "@/lib/statuses";
 import { EvidenceStatement, type CitationSource } from "./EvidenceCitation";
 import WorkspaceCard from "./WorkspaceCard";
 import {
