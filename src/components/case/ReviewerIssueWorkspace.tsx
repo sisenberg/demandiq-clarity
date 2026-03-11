@@ -132,6 +132,22 @@ export default function ReviewerIssueWorkspace({ issues, onDisposition }: Review
           {search && <button onClick={() => setSearch("")} className="absolute right-2 top-1/2 -translate-y-1/2"><X className="h-3 w-3 text-muted-foreground" /></button>}
         </div>
 
+        {/* Group mode toggle */}
+        <div className="flex items-center rounded-lg border border-border overflow-hidden">
+          <button
+            onClick={() => setGroupMode("provider")}
+            className={`text-[10px] font-medium px-2.5 py-1.5 transition-colors ${groupMode === "provider" ? "bg-primary/10 text-primary" : "bg-card text-muted-foreground"}`}
+          >
+            By Provider
+          </button>
+          <button
+            onClick={() => setGroupMode("category")}
+            className={`text-[10px] font-medium px-2.5 py-1.5 transition-colors ${groupMode === "category" ? "bg-primary/10 text-primary" : "bg-card text-muted-foreground"}`}
+          >
+            By Category
+          </button>
+        </div>
+
         <button
           onClick={() => setShowPendingOnly(!showPendingOnly)}
           className={`text-[10px] font-medium px-2.5 py-1.5 rounded-lg border transition-colors ${
@@ -160,6 +176,25 @@ export default function ReviewerIssueWorkspace({ issues, onDisposition }: Review
         })}
 
         <div className="ml-auto text-[10px] text-muted-foreground">{filtered.length} issues</div>
+      </div>
+
+      {/* Clinical category chips */}
+      <div className="flex items-center gap-1.5 flex-wrap">
+        <span className="text-[9px] text-muted-foreground font-medium mr-1">Categories:</span>
+        {(Object.entries(categoryCounts) as [ClinicalIssueCategory, number][]).map(([cat, count]) => {
+          const isActive = categoryFilter === cat;
+          return (
+            <button
+              key={cat}
+              onClick={() => setCategoryFilter(isActive ? null : cat)}
+              className={`text-[9px] font-medium px-2 py-1 rounded-md border transition-colors ${
+                isActive ? "border-primary/30 bg-primary/5 text-primary" : "border-border bg-card text-muted-foreground hover:text-foreground"
+              }`}
+            >
+              {CLINICAL_CATEGORY_LABEL[cat]} ({count})
+            </button>
+          );
+        })}
       </div>
 
       {/* Grouped issue list */}
