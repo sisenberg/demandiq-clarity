@@ -7,6 +7,7 @@ import type { CaseRow } from "@/hooks/useCases";
 import type { DocumentRow } from "@/hooks/useDocuments";
 import { isDocumentReady } from "@/lib/statuses";
 import type { EvidenceReference, TimelineEvent } from "@/types";
+import IntakeReadinessPanel from "./IntakeReadinessPanel";
 import {
   User,
   Car,
@@ -77,9 +78,10 @@ const FLAG_ICON_MAP: Record<string, string> = {
 interface CaseOverviewProps {
   caseData: CaseRow;
   documents: DocumentRow[];
+  onNavigate?: (section: string) => void;
 }
 
-const CaseOverview = ({ caseData, documents }: CaseOverviewProps) => {
+const CaseOverview = ({ caseData, documents, onNavigate }: CaseOverviewProps) => {
   const { pkg } = useCasePackage();
   const billing = getBillingSummary(pkg);
   const stats = getTreatmentStats(pkg);
@@ -95,6 +97,9 @@ const CaseOverview = ({ caseData, documents }: CaseOverviewProps) => {
     <div className="flex gap-5">
       {/* ═══ LEFT COLUMN — Main content ═══ */}
       <div className="flex-1 min-w-0 flex flex-col gap-4">
+        {/* ── Row 0: Intake Readiness ── */}
+        <IntakeReadinessPanel documents={documents} caseId={caseData.id} onNavigate={onNavigate} />
+
         {/* ── Row 1: Case Snapshot + Key Metrics ── */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
           {/* Case / Claimant Summary */}
