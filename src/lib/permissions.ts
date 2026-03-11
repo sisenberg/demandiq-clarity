@@ -67,7 +67,8 @@ export const MATRIX_PERMISSIONS: Permission[] = [
   "upload_document",
   "trigger_processing",
   "edit_extraction",
-  "export_package",
+  "complete_module",
+  "download_artifacts",
   "manage_users",
   "view_audit_log",
 ];
