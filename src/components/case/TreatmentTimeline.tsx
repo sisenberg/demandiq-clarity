@@ -173,11 +173,8 @@ export default function TreatmentTimeline({ caseId }: TreatmentTimelineProps) {
   const handleViewSource = (r: ReviewerTreatmentRecord) => {
     if (!r.source_document_id) return;
     openSource({
-      documentId: r.source_document_id,
-      documentName: r.facility_name || "Source Document",
-      pageNumber: r.source_page_start ?? 1,
-      quotedText: r.source_snippet,
-      relevanceType: "direct",
+      docName: r.facility_name || "Source Document",
+      page: `pg. ${r.source_page_start ?? 1}`,
     });
   };
 
