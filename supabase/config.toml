@@ -1,1 +1,4 @@
 project_id = "hzcrkipdqaqklrnikcrm"
+
+[functions.extract-treatments]
+verify_jwt = false
