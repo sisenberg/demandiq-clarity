@@ -8,12 +8,16 @@ import { useState, useMemo } from "react";
 import {
   AlertTriangle, CheckCircle2, XCircle, HelpCircle, ArrowUpRight,
   ChevronDown, ChevronRight, Filter, Search, X, FileText,
-  DollarSign, Stethoscope, Shield,
+  DollarSign, Stethoscope, Shield, Clock, Zap, Activity, BookOpen,
 } from "lucide-react";
 import type {
   ReviewIssue, ReviewIssueType, ReviewIssueSeverity, ReviewIssueDisposition,
+  ClinicalIssueCategory,
 } from "@/types/reviewer-issues";
-import { ISSUE_TYPE_LABEL, ISSUE_SEVERITY_LABEL, DISPOSITION_LABEL } from "@/types/reviewer-issues";
+import {
+  ISSUE_TYPE_LABEL, ISSUE_SEVERITY_LABEL, DISPOSITION_LABEL,
+  ISSUE_CATEGORY_MAP, CLINICAL_CATEGORY_LABEL,
+} from "@/types/reviewer-issues";
 
 // ─── Severity styling ───────────────────────────────────
 
