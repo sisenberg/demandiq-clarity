@@ -27,6 +27,20 @@ export interface MedicalReviewConfig {
   duplicate_tolerance_days: number;
   /** High-variance threshold % for pricing flags */
   high_variance_threshold_pct: number;
+  /** Min objective findings length to be considered adequate */
+  min_objective_findings_length: number;
+  /** Jaccard similarity threshold for near-identical notes (0-1) */
+  near_identical_note_threshold: number;
+  /** Gap in days that triggers gap-then-intensive-care rule */
+  treatment_gap_days: number;
+  /** Visits per week after gap to be considered "intensive" */
+  post_gap_intensive_visits_per_week: number;
+  /** Provider utilization: min visits to trigger pattern analysis */
+  provider_pattern_min_visits: number;
+  /** Provider utilization: % of case total billed to flag */
+  provider_concentration_pct: number;
+  /** Rule engine version for audit metadata */
+  rule_engine_version: string;
 }
 
 export const DEFAULT_MEDICAL_REVIEW_CONFIG: MedicalReviewConfig = {
@@ -36,6 +50,13 @@ export const DEFAULT_MEDICAL_REVIEW_CONFIG: MedicalReviewConfig = {
   max_passive_only_weeks: 4,
   duplicate_tolerance_days: 1,
   high_variance_threshold_pct: 200,
+  min_objective_findings_length: 30,
+  near_identical_note_threshold: 0.7,
+  treatment_gap_days: 30,
+  post_gap_intensive_visits_per_week: 3,
+  provider_pattern_min_visits: 8,
+  provider_concentration_pct: 60,
+  rule_engine_version: "1.1.0",
 };
 
 // ─── Rule Engine ────────────────────────────────────────
