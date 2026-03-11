@@ -93,7 +93,26 @@ const DocumentReviewWorkspace = ({ documentId, caseId, onBack }: DocumentReviewW
     setRightTab("text");
   };
 
-  if (!doc) return null;
+  if (docLoading) {
+    return (
+      <div className="flex items-center justify-center h-full gap-2 text-muted-foreground">
+        <Loader2 className="h-4 w-4 animate-spin" />
+        <span className="text-xs">Loading document…</span>
+      </div>
+    );
+  }
+
+  if (!doc) {
+    return (
+      <div className="flex flex-col items-center justify-center h-full text-muted-foreground gap-2">
+        <AlertTriangle className="h-6 w-6 opacity-40" />
+        <p className="text-xs">Document not found</p>
+        {onBack && (
+          <button onClick={onBack} className="text-xs text-primary hover:underline mt-1">← Back to list</button>
+        )}
+      </div>
+    );
+  }
 
   const intakeStatus = (doc as any).intake_status || "uploaded";
 

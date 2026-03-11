@@ -74,6 +74,7 @@ export function useDocumentMetadataExtractions(documentId: string | undefined) {
   return useQuery({
     queryKey: ["metadata-extractions", documentId],
     enabled: !!documentId,
+    staleTime: 30_000,
     queryFn: async () => {
       const { data, error } = await (supabase.from("document_metadata_extractions") as any)
         .select("*")

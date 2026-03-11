@@ -69,6 +69,7 @@ export function useIntakeReadiness(
   const { data: dbCounts, isLoading: countsLoading } = useQuery({
     queryKey: ["intake-readiness", caseId],
     enabled: !!caseId,
+    staleTime: 15_000,
     refetchInterval: 10000,
     queryFn: async () => {
       const [dupRes, entityRes, chronoRes, metaRes] = await Promise.all([
