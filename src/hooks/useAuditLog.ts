@@ -27,6 +27,8 @@ export type AuditActionType =
   // Admin / config
   | "role_changed"
   | "entitlement_changed"
+  // Compliance / readiness
+  | "readiness_config_changed"
   // Processing
   | "processing_triggered"
   // Export
