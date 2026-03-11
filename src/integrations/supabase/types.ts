@@ -660,6 +660,53 @@ export type Database = {
           },
         ]
       }
+      tenant_module_entitlements: {
+        Row: {
+          created_at: string
+          enabled_at: string | null
+          enabled_by: string | null
+          id: string
+          module_id: string
+          notes: string
+          status: Database["public"]["Enums"]["module_entitlement_status"]
+          tenant_id: string
+          trial_ends_at: string | null
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          enabled_at?: string | null
+          enabled_by?: string | null
+          id?: string
+          module_id: string
+          notes?: string
+          status?: Database["public"]["Enums"]["module_entitlement_status"]
+          tenant_id: string
+          trial_ends_at?: string | null
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          enabled_at?: string | null
+          enabled_by?: string | null
+          id?: string
+          module_id?: string
+          notes?: string
+          status?: Database["public"]["Enums"]["module_entitlement_status"]
+          tenant_id?: string
+          trial_ends_at?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "tenant_module_entitlements_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       tenants: {
         Row: {
           created_at: string
@@ -884,6 +931,7 @@ export type Database = {
         | "package_export"
         | "ocr"
         | "classification"
+      module_entitlement_status: "enabled" | "disabled" | "trial" | "suspended"
       party_role:
         | "claimant"
         | "insured"
@@ -1104,6 +1152,7 @@ export const Constants = {
         "ocr",
         "classification",
       ],
+      module_entitlement_status: ["enabled", "disabled", "trial", "suspended"],
       party_role: [
         "claimant",
         "insured",
