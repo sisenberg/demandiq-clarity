@@ -18,12 +18,14 @@ import ClaimantBackgroundTab from "@/components/case/ClaimantBackgroundTab";
 import ClaimAssessmentTab from "@/components/case/ClaimAssessmentTab";
 import ProvidersTab from "@/components/case/ProvidersTab";
 import BillingView from "@/components/case/BillingView";
+import CaseChatView from "@/components/case/CaseChatView";
+import DocumentsWorkstation from "@/components/case/DocumentsWorkstation";
+import SourcePagesWorkstation from "@/components/case/SourcePagesWorkstation";
 import DocumentUpload from "@/components/case/DocumentUpload";
 import JobsPanel from "@/components/case/JobsPanel";
 import DocumentTypeTag from "@/components/case/DocumentTypeTag";
 import CaseNavRail, { type CaseSection } from "@/components/case/CaseNavRail";
 import CaseHeader from "@/components/case/CaseHeader";
-import CaseRightRail from "@/components/case/CaseRightRail";
 import CaseRightUtilityRail from "@/components/case/CaseRightUtilityRail";
 import CaseWorkspaceTabs, { type WorkspaceTab } from "@/components/case/CaseWorkspaceTabs";
 import CaseWorkspaceToolbar from "@/components/case/CaseWorkspaceToolbar";
@@ -35,7 +37,6 @@ import HorizontalTimeline from "@/components/case/HorizontalTimeline";
 import CaseNotesPanel from "@/components/case/CaseNotesPanel";
 import AnalysisCard from "@/components/case/AnalysisCard";
 import type { AnalysisSection } from "@/components/case/AnalysisCard";
-import SourcePagesPanel from "@/components/case/SourcePagesPanel";
 import { SourceDrawerProvider, SourceDrawer } from "@/components/case/SourceDrawer";
 import ModuleCompletionStatusPanel from "@/components/case/ModuleCompletionStatusPanel";
 import CompleteDemandDialog from "@/components/case/CompleteDemandDialog";
@@ -45,41 +46,12 @@ import ComingSoonBadge from "@/components/ui/ComingSoonBadge";
 import {
   ArrowLeft,
   FileText,
-  Play,
   Upload,
   ClipboardCheck,
   CheckCircle2,
   Inbox,
 } from "lucide-react";
 
-// ─── Status lookups ─────────────────────────────────
-const DOC_STATUS_BADGE: Record<string, string> = {
-  uploaded: "status-badge-draft",
-  queued: "status-badge-draft",
-  ocr_in_progress: "status-badge-processing",
-  classified: "status-badge-processing",
-  extracted: "status-badge-approved",
-  needs_attention: "status-badge-attention",
-  complete: "status-badge-approved",
-  failed: "status-badge-failed",
-};
-
-const DOC_STATUS_LABEL: Record<string, string> = {
-  uploaded: "Uploaded",
-  queued: "Queued",
-  ocr_in_progress: "OCR In Progress",
-  classified: "Classified",
-  extracted: "Extracted",
-  needs_attention: "Needs Attention",
-  complete: "Complete",
-  failed: "Failed",
-};
-
-function formatBytes(bytes: number): string {
-  if (bytes < 1024) return `${bytes} B`;
-  if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(0)} KB`;
-  return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
-}
 
 // ─── ReviewerIQ Preview ─────────────────────────────
 const MEDICAL_REVIEW_SECTIONS: AnalysisSection[] = [
@@ -259,79 +231,15 @@ const CaseDetailPage = () => {
 
               {/* ── DOCUMENTS ─────────────────────── */}
               {activeSection === "documents" && (
-                <>
-                  <div className="flex flex-wrap gap-2">
-                    {hasPermission(role, "upload_document") && (
-                      <button onClick={() => setShowUpload(true)} className="btn-secondary">
-                        <Upload className="h-3.5 w-3.5" /> Upload Documents
-                      </button>
-                    )}
-                    {hasPermission(role, "trigger_processing") && pendingDocs > 0 && (
-                      <button
-                        onClick={() => triggerProcessing.mutate({ caseId: caseData.id })}
-                        disabled={triggerProcessing.isPending}
-                        className="btn-primary"
-                      >
-                        <Play className="h-3.5 w-3.5" /> Trigger Processing
-                      </button>
-                    )}
-                  </div>
-                  <WorkspaceCard icon={FileText} title="All Documents" count={documents.length}>
-                    {docsLoading ? (
-                      <div className="p-5 space-y-2">
-                        {[1,2,3,4,5].map(i => <div key={i} className="animate-pulse h-10 bg-accent rounded-lg" />)}
-                      </div>
-                    ) : documents.length === 0 ? (
-                      <EmptyState icon={FileText} title="No documents uploaded" description="Upload documents to begin case processing." />
-                    ) : (
-                      <table className="data-table">
-                        <thead>
-                          <tr>
-                            <th>File</th>
-                            <th>Type</th>
-                            <th className="hidden sm:table-cell">Size</th>
-                            <th className="hidden md:table-cell">Pipeline</th>
-                            <th>Status</th>
-                          </tr>
-                        </thead>
-                        <tbody>
-                          {documents.map((doc) => (
-                            <tr key={doc.id}>
-                              <td>
-                                <Link to={`/documents/${doc.id}`} className="font-medium text-foreground hover:text-primary transition-colors">
-                                  {doc.file_name}
-                                </Link>
-                              </td>
-                              <td><DocumentTypeTag type={doc.document_type} /></td>
-                              <td className="text-muted-foreground hidden sm:table-cell">{formatBytes(doc.file_size_bytes)}</td>
-                              <td className="hidden md:table-cell">
-                                <code className="text-[10px] bg-accent px-2 py-0.5 rounded-full text-muted-foreground font-medium">
-                                  {doc.pipeline_stage.replace(/_/g, " ")}
-                                </code>
-                              </td>
-                              <td>
-                                <span className={DOC_STATUS_BADGE[doc.document_status] ?? "status-badge-draft"}>
-                                  {DOC_STATUS_LABEL[doc.document_status] ?? doc.document_status}
-                                </span>
-                              </td>
-                            </tr>
-                          ))}
-                        </tbody>
-                      </table>
-                    )}
-                  </WorkspaceCard>
-                  <JobsPanel jobs={jobs} loading={jobsLoading} />
-                </>
+                <DocumentsWorkstation documents={documents} loading={docsLoading} caseId={caseData.id} />
               )}
 
               {/* ── SOURCE PAGES ──────────────────── */}
-              {activeSection === "sources" && <SourcePagesPanel />}
+              {activeSection === "sources" && <SourcePagesWorkstation />}
 
-              {/* ── CHAT (mobile fallback) ────────── */}
+              {/* ── CHAT ──────────────────────────── */}
               {activeSection === "chat" && (
-                <div className="lg:hidden">
-                  <CaseRightRail caseData={caseData} documents={documents} />
-                </div>
+                <CaseChatView />
               )}
             </div>
           </div>
