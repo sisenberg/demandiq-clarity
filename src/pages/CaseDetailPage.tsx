@@ -166,6 +166,7 @@ const CaseDetailPage = () => {
   const completeDocs = documents.filter((d) => d.document_status === "complete" || d.document_status === "extracted").length;
 
   return (
+    <SourceDrawerProvider>
     <div className="flex flex-col h-full">
       {/* Top case header */}
       <CaseHeader caseData={caseData} />
