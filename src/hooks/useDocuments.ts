@@ -28,6 +28,15 @@ export function useCaseDocuments(caseId: string | undefined) {
   return useQuery({
     queryKey: ["case-documents", caseId],
     enabled: !!caseId,
+    refetchInterval: (query) => {
+      // Poll every 4s if any documents are in a processing intake state
+      const docs = query.state.data as DocumentRow[] | undefined;
+      const processingStatuses = ["queued_for_text_extraction", "extracting_text", "queued_for_parsing", "parsing"];
+      if (docs?.some((d) => processingStatuses.includes(d.intake_status))) {
+        return 4000;
+      }
+      return false;
+    },
     queryFn: async () => {
       const { data, error } = await (supabase
         .from("case_documents") as any)
