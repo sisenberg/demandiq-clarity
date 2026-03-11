@@ -109,7 +109,7 @@ const MEDICAL_REVIEW_SECTIONS: AnalysisSection[] = [
 
 const CaseDetailPage = () => {
   const { caseId } = useParams<{ caseId: string }>();
-  const { role } = useAuth();
+  const { role, entitlements } = useAuth();
   const { data: caseData, isLoading: caseLoading } = useCase(caseId);
   const { data: documents = [], isLoading: docsLoading } = useCaseDocuments(caseId);
   const { data: jobs = [], isLoading: jobsLoading } = useCaseJobs(caseId);
@@ -117,6 +117,7 @@ const CaseDetailPage = () => {
   const [showUpload, setShowUpload] = useState(false);
   const [activeSection, setActiveSection] = useState<CaseSection>("overview");
   const [showRightRail, setShowRightRail] = useState(true);
+  const hasReviewerIQ = isEntitlementActive(entitlements, ModuleId.ReviewerIQ);
 
   if (caseLoading) {
     return <PageLoading message="Loading case…" />;
