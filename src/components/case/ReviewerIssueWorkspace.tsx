@@ -50,8 +50,10 @@ export default function ReviewerIssueWorkspace({ issues, onDisposition }: Review
   const [search, setSearch] = useState("");
   const [severityFilter, setSeverityFilter] = useState<ReviewIssueSeverity | null>(null);
   const [typeFilter, setTypeFilter] = useState<ReviewIssueType | null>(null);
+  const [categoryFilter, setCategoryFilter] = useState<ClinicalIssueCategory | null>(null);
   const [expandedIssues, setExpandedIssues] = useState<Set<string>>(new Set());
   const [showPendingOnly, setShowPendingOnly] = useState(false);
+  const [groupMode, setGroupMode] = useState<"provider" | "category">("provider");
 
   const filtered = useMemo(() => {
     return issues.filter(i => {
