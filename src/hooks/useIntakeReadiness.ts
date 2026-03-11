@@ -119,7 +119,6 @@ export function useIntakeReadiness(
       && d.file_type === "application/pdf"
       && !!d.storage_path // only flag real uploads, not seed placeholders
     );
-    );
 
     const stats: IntakeReadinessStats = {
       totalDocuments: total,
