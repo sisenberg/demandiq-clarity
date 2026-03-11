@@ -70,6 +70,16 @@ export const AI_BOUNDARY_CONFIG: Record<string, AIBoundaryEntry> = {
     notes:
       "Large PHI-containing text blocks required for accurate timeline extraction. Hardest path to minimize.",
   },
+  "extract-treatments": {
+    functionName: "extract-treatments",
+    approved: true,
+    dataLevel: "L4",
+    requiresBAA: true,
+    dataSent: "Up to 60000 chars of extracted document text, document metadata, file name",
+    minimumNecessary: false,
+    notes:
+      "Sends page-level OCR text for SOAP/treatment record extraction. Contains embedded PII/PHI. BAA mandatory before production use.",
+  },
 } as const;
 
 /**
