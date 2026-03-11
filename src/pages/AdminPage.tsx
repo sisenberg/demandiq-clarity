@@ -40,7 +40,7 @@ const ENTITLEMENT_BADGE: Record<EntitlementStatus, string> = {
 
 const AdminPage = () => {
   const { role, tenantId } = useAuth();
-  const [tab, setTab] = useState<"users" | "permissions" | "modules" | "settings">("users");
+  const [tab, setTab] = useState<"users" | "permissions" | "modules" | "compliance" | "settings">("users");
   const [users, setUsers] = useState<TenantUser[]>([]);
   const [loadingUsers, setLoadingUsers] = useState(true);
   const [tenant, setTenant] = useState<{ name: string; slug: string } | null>(null);
