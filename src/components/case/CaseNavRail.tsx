@@ -12,6 +12,7 @@ import {
   Calendar,
   Hash,
   FileStack,
+  Users,
 } from "lucide-react";
 
 export type CaseSection =
