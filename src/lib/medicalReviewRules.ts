@@ -80,11 +80,15 @@ export function runMedicalReviewRules(
   issues.push(...checkBeyondRecoveryWindow(treatments, config, T, C));
   issues.push(...checkRepeatedPassiveModalities(treatments, config, T, C));
   issues.push(...checkDuplicateServices(treatments, config, T, C));
-  issues.push(...checkEscalationWithoutFindings(treatments, T, C));
+  issues.push(...checkEscalationWithoutFindings(treatments, config, T, C));
   issues.push(...checkBillNoTreatment(billLines, treatments, T, C));
   issues.push(...checkTreatmentNoBill(treatments, billLines, T, C));
   issues.push(...checkHighVariancePricing(billLines, config, T, C));
   issues.push(...checkCodeNoteMismatch(treatments, T, C));
+  issues.push(...checkProlongedCareWeakFindings(treatments, config, T, C));
+  issues.push(...checkNearIdenticalNotes(treatments, config, T, C));
+  issues.push(...checkGapThenIntensiveCare(treatments, config, T, C));
+  issues.push(...checkProviderUtilizationPattern(treatments, config, T, C));
 
   return issues;
 }
