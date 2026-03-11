@@ -13,6 +13,7 @@ import { ModuleId, ModuleCompletionStatus } from "@/types";
 import CaseOverview from "@/components/case/CaseOverview";
 import CoverPageTab from "@/components/case/CoverPageTab";
 import ChecklistTab from "@/components/case/ChecklistTab";
+import ChronologySummaryTab from "@/components/case/ChronologySummaryTab";
 import DocumentUpload from "@/components/case/DocumentUpload";
 import JobsPanel from "@/components/case/JobsPanel";
 import DocumentTypeTag from "@/components/case/DocumentTypeTag";
