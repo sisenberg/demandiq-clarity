@@ -163,6 +163,7 @@ export type Database = {
           file_size_bytes: number
           file_type: string
           id: string
+          intake_status: Database["public"]["Enums"]["intake_status"]
           page_count: number | null
           pipeline_stage: Database["public"]["Enums"]["pipeline_stage"]
           storage_path: string | null
@@ -181,6 +182,7 @@ export type Database = {
           file_size_bytes?: number
           file_type?: string
           id?: string
+          intake_status?: Database["public"]["Enums"]["intake_status"]
           page_count?: number | null
           pipeline_stage?: Database["public"]["Enums"]["pipeline_stage"]
           storage_path?: string | null
@@ -199,6 +201,7 @@ export type Database = {
           file_size_bytes?: number
           file_type?: string
           id?: string
+          intake_status?: Database["public"]["Enums"]["intake_status"]
           page_count?: number | null
           pipeline_stage?: Database["public"]["Enums"]["pipeline_stage"]
           storage_path?: string | null
@@ -344,6 +347,288 @@ export type Database = {
         Relationships: [
           {
             foreignKeyName: "cases_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      document_pages: {
+        Row: {
+          case_id: string
+          confidence_score: number | null
+          created_at: string
+          document_id: string
+          extracted_text: string | null
+          height_px: number | null
+          id: string
+          image_storage_path: string | null
+          page_number: number
+          tenant_id: string
+          width_px: number | null
+        }
+        Insert: {
+          case_id: string
+          confidence_score?: number | null
+          created_at?: string
+          document_id: string
+          extracted_text?: string | null
+          height_px?: number | null
+          id?: string
+          image_storage_path?: string | null
+          page_number: number
+          tenant_id: string
+          width_px?: number | null
+        }
+        Update: {
+          case_id?: string
+          confidence_score?: number | null
+          created_at?: string
+          document_id?: string
+          extracted_text?: string | null
+          height_px?: number | null
+          id?: string
+          image_storage_path?: string | null
+          page_number?: number
+          tenant_id?: string
+          width_px?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "document_pages_case_id_fkey"
+            columns: ["case_id"]
+            isOneToOne: false
+            referencedRelation: "cases"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "document_pages_document_id_fkey"
+            columns: ["document_id"]
+            isOneToOne: false
+            referencedRelation: "case_documents"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "document_pages_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      duplicate_document_flags: {
+        Row: {
+          case_id: string
+          created_at: string
+          document_id: string
+          duplicate_of_document_id: string
+          flag_status: Database["public"]["Enums"]["duplicate_flag_status"]
+          flagged_at: string
+          id: string
+          resolved_at: string | null
+          resolved_by: string | null
+          similarity_score: number
+          tenant_id: string
+        }
+        Insert: {
+          case_id: string
+          created_at?: string
+          document_id: string
+          duplicate_of_document_id: string
+          flag_status?: Database["public"]["Enums"]["duplicate_flag_status"]
+          flagged_at?: string
+          id?: string
+          resolved_at?: string | null
+          resolved_by?: string | null
+          similarity_score?: number
+          tenant_id: string
+        }
+        Update: {
+          case_id?: string
+          created_at?: string
+          document_id?: string
+          duplicate_of_document_id?: string
+          flag_status?: Database["public"]["Enums"]["duplicate_flag_status"]
+          flagged_at?: string
+          id?: string
+          resolved_at?: string | null
+          resolved_by?: string | null
+          similarity_score?: number
+          tenant_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "duplicate_document_flags_case_id_fkey"
+            columns: ["case_id"]
+            isOneToOne: false
+            referencedRelation: "cases"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "duplicate_document_flags_document_id_fkey"
+            columns: ["document_id"]
+            isOneToOne: false
+            referencedRelation: "case_documents"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "duplicate_document_flags_duplicate_of_document_id_fkey"
+            columns: ["duplicate_of_document_id"]
+            isOneToOne: false
+            referencedRelation: "case_documents"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "duplicate_document_flags_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      extracted_facts: {
+        Row: {
+          case_id: string
+          confidence_score: number | null
+          created_at: string
+          document_id: string
+          fact_text: string
+          fact_type: Database["public"]["Enums"]["fact_type"]
+          id: string
+          needs_review: boolean
+          page_id: string | null
+          page_number: number | null
+          reviewed_at: string | null
+          reviewed_by: string | null
+          source_anchor: string | null
+          source_snippet: string
+          structured_data: Json
+          tenant_id: string
+          updated_at: string
+        }
+        Insert: {
+          case_id: string
+          confidence_score?: number | null
+          created_at?: string
+          document_id: string
+          fact_text?: string
+          fact_type?: Database["public"]["Enums"]["fact_type"]
+          id?: string
+          needs_review?: boolean
+          page_id?: string | null
+          page_number?: number | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          source_anchor?: string | null
+          source_snippet?: string
+          structured_data?: Json
+          tenant_id: string
+          updated_at?: string
+        }
+        Update: {
+          case_id?: string
+          confidence_score?: number | null
+          created_at?: string
+          document_id?: string
+          fact_text?: string
+          fact_type?: Database["public"]["Enums"]["fact_type"]
+          id?: string
+          needs_review?: boolean
+          page_id?: string | null
+          page_number?: number | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          source_anchor?: string | null
+          source_snippet?: string
+          structured_data?: Json
+          tenant_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "extracted_facts_case_id_fkey"
+            columns: ["case_id"]
+            isOneToOne: false
+            referencedRelation: "cases"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "extracted_facts_document_id_fkey"
+            columns: ["document_id"]
+            isOneToOne: false
+            referencedRelation: "case_documents"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "extracted_facts_page_id_fkey"
+            columns: ["page_id"]
+            isOneToOne: false
+            referencedRelation: "document_pages"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "extracted_facts_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      fact_evidence_links: {
+        Row: {
+          case_id: string
+          created_at: string
+          fact_id: string
+          id: string
+          linked_entity_id: string
+          linked_entity_type: string
+          notes: string
+          relevance_type: string
+          tenant_id: string
+        }
+        Insert: {
+          case_id: string
+          created_at?: string
+          fact_id: string
+          id?: string
+          linked_entity_id: string
+          linked_entity_type: string
+          notes?: string
+          relevance_type?: string
+          tenant_id: string
+        }
+        Update: {
+          case_id?: string
+          created_at?: string
+          fact_id?: string
+          id?: string
+          linked_entity_id?: string
+          linked_entity_type?: string
+          notes?: string
+          relevance_type?: string
+          tenant_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "fact_evidence_links_case_id_fkey"
+            columns: ["case_id"]
+            isOneToOne: false
+            referencedRelation: "cases"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "fact_evidence_links_fact_id_fkey"
+            columns: ["fact_id"]
+            isOneToOne: false
+            referencedRelation: "extracted_facts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "fact_evidence_links_tenant_id_fkey"
             columns: ["tenant_id"]
             isOneToOne: false
             referencedRelation: "tenants"
@@ -537,6 +822,79 @@ export type Database = {
           },
           {
             foreignKeyName: "insurance_policies_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      intake_jobs: {
+        Row: {
+          case_id: string
+          completed_at: string | null
+          created_at: string
+          document_id: string | null
+          error_message: string | null
+          id: string
+          job_type: Database["public"]["Enums"]["intake_job_type"]
+          max_retries: number
+          metadata: Json
+          retry_count: number
+          started_at: string | null
+          status: Database["public"]["Enums"]["intake_job_status"]
+          tenant_id: string
+          updated_at: string
+        }
+        Insert: {
+          case_id: string
+          completed_at?: string | null
+          created_at?: string
+          document_id?: string | null
+          error_message?: string | null
+          id?: string
+          job_type: Database["public"]["Enums"]["intake_job_type"]
+          max_retries?: number
+          metadata?: Json
+          retry_count?: number
+          started_at?: string | null
+          status?: Database["public"]["Enums"]["intake_job_status"]
+          tenant_id: string
+          updated_at?: string
+        }
+        Update: {
+          case_id?: string
+          completed_at?: string | null
+          created_at?: string
+          document_id?: string | null
+          error_message?: string | null
+          id?: string
+          job_type?: Database["public"]["Enums"]["intake_job_type"]
+          max_retries?: number
+          metadata?: Json
+          retry_count?: number
+          started_at?: string | null
+          status?: Database["public"]["Enums"]["intake_job_status"]
+          tenant_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "intake_jobs_case_id_fkey"
+            columns: ["case_id"]
+            isOneToOne: false
+            referencedRelation: "cases"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "intake_jobs_document_id_fkey"
+            columns: ["document_id"]
+            isOneToOne: false
+            referencedRelation: "case_documents"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "intake_jobs_tenant_id_fkey"
             columns: ["tenant_id"]
             isOneToOne: false
             referencedRelation: "tenants"
@@ -1174,12 +1532,47 @@ export type Database = {
         | "expert_report"
         | "photograph"
         | "other"
+      duplicate_flag_status: "flagged" | "dismissed" | "confirmed"
+      fact_type:
+        | "medical_diagnosis"
+        | "treatment"
+        | "medication"
+        | "date_of_event"
+        | "injury_description"
+        | "provider_info"
+        | "billing_amount"
+        | "liability_statement"
+        | "witness_statement"
+        | "policy_detail"
+        | "employment_info"
+        | "other"
       injury_severity:
         | "minor"
         | "moderate"
         | "severe"
         | "catastrophic"
         | "fatal"
+      intake_job_status:
+        | "queued"
+        | "running"
+        | "completed"
+        | "failed"
+        | "cancelled"
+      intake_job_type:
+        | "text_extraction"
+        | "document_parsing"
+        | "fact_extraction"
+        | "duplicate_detection"
+      intake_status:
+        | "uploaded"
+        | "queued_for_text_extraction"
+        | "extracting_text"
+        | "text_extracted"
+        | "queued_for_parsing"
+        | "parsing"
+        | "parsed"
+        | "needs_review"
+        | "failed"
       job_status: "queued" | "running" | "completed" | "failed"
       job_type:
         | "document_extraction"
@@ -1409,7 +1802,46 @@ export const Constants = {
         "photograph",
         "other",
       ],
+      duplicate_flag_status: ["flagged", "dismissed", "confirmed"],
+      fact_type: [
+        "medical_diagnosis",
+        "treatment",
+        "medication",
+        "date_of_event",
+        "injury_description",
+        "provider_info",
+        "billing_amount",
+        "liability_statement",
+        "witness_statement",
+        "policy_detail",
+        "employment_info",
+        "other",
+      ],
       injury_severity: ["minor", "moderate", "severe", "catastrophic", "fatal"],
+      intake_job_status: [
+        "queued",
+        "running",
+        "completed",
+        "failed",
+        "cancelled",
+      ],
+      intake_job_type: [
+        "text_extraction",
+        "document_parsing",
+        "fact_extraction",
+        "duplicate_detection",
+      ],
+      intake_status: [
+        "uploaded",
+        "queued_for_text_extraction",
+        "extracting_text",
+        "text_extracted",
+        "queued_for_parsing",
+        "parsing",
+        "parsed",
+        "needs_review",
+        "failed",
+      ],
       job_status: ["queued", "running", "completed", "failed"],
       job_type: [
         "document_extraction",

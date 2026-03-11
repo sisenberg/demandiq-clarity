@@ -15,6 +15,7 @@ export interface DocumentRow {
   document_status: string;
   document_type: string;
   pipeline_stage: string;
+  intake_status: string;
   extracted_text: string | null;
   uploaded_by: string;
   extracted_at: string | null;
