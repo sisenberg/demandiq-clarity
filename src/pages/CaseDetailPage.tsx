@@ -10,6 +10,8 @@ import { CasePackageProvider, useCasePackage } from "@/hooks/useCasePackage";
 import { isEntitlementActive } from "@/hooks/useModuleEntitlements";
 import { ModuleId } from "@/types";
 import DocumentUpload from "@/components/case/DocumentUpload";
+import JobsPanel from "@/components/case/JobsPanel";
+import DocumentTypeTag from "@/components/case/DocumentTypeTag";
 import CaseNavRail, { type CaseSection } from "@/components/case/CaseNavRail";
 import CaseHeader from "@/components/case/CaseHeader";
 import CaseRightRail from "@/components/case/CaseRightRail";
