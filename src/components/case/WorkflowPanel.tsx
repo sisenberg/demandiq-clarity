@@ -41,7 +41,7 @@ const stateLabel: Record<PhaseState, string> = {
 
 const WorkflowPanel = ({ caseStatus }: { caseStatus: CaseStatus }) => {
   const phases = getPhaseStates(caseStatus);
-  const phaseOrder: WorkflowPhase[] = ["intake", "processing", "export"];
+  const phaseOrder: WorkflowPhase[] = ["intake", "processing", "completion"];
 
   return (
     <div className="border border-border rounded-lg bg-card overflow-hidden">

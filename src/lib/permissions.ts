@@ -108,7 +108,7 @@ export function canAccessRoute(role: AppRole | null, route: string): boolean {
     case "/audit":
       return hasPermission(role, "view_audit_log");
     case "/exports":
-      return hasPermission(role, "export_package");
+      return hasPermission(role, "download_artifacts");
     default:
       return true;
   }
