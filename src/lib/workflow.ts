@@ -113,8 +113,8 @@ const STATUS_TO_PHASE: Record<CaseStatus, { phase: WorkflowPhase; state: PhaseSt
   [CaseStatus.IntakeComplete]: { phase: "intake", state: "complete" },
   [CaseStatus.ProcessingInProgress]: { phase: "processing", state: "active" },
   [CaseStatus.Complete]: { phase: "processing", state: "complete" },
-  [CaseStatus.Exported]: { phase: "export", state: "complete" },
-  [CaseStatus.Closed]: { phase: "export", state: "complete" },
+  [CaseStatus.Exported]: { phase: "completion", state: "complete" },
+  [CaseStatus.Closed]: { phase: "completion", state: "complete" },
   [CaseStatus.Failed]: { phase: "intake", state: "failed" },
 };
 
