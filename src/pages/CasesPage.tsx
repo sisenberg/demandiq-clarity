@@ -3,6 +3,7 @@ import { Link, useNavigate } from "react-router-dom";
 import { useCases, type CaseRow } from "@/hooks/useCases";
 import { useAuth } from "@/contexts/AuthContext";
 import { hasPermission } from "@/lib/permissions";
+import { maskName, maskClaimNumber } from "@/lib/phi-utils";
 import CreateCaseDialog from "@/components/case/CreateCaseDialog";
 import { PageLoading } from "@/components/ui/LoadingSkeleton";
 import EmptyState from "@/components/ui/EmptyState";
