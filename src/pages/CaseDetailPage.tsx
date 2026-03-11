@@ -195,7 +195,7 @@ const CaseDetailPage = () => {
 
         {/* Center workspace */}
         <div className="flex-1 overflow-y-auto">
-          <div className="p-6 max-w-5xl flex flex-col gap-5">
+          <div className="p-5 max-w-5xl flex flex-col gap-4">
             {/* ── OVERVIEW ────────────────────────── */}
             {activeSection === "overview" && (
               <>
