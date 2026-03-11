@@ -27,6 +27,7 @@ import {
   Copy,
   Inbox,
   Upload,
+  Zap,
 } from "lucide-react";
 
 // ─── Status styles ───────────────────────────────────
