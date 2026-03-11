@@ -351,6 +351,13 @@ const IntakeDocumentsWorkstation = ({ documents, loading, caseId }: IntakeDocume
                   <MetaItem label="Pages" value={selectedDoc.page_count?.toString() ?? "—"} />
                 </div>
 
+                {/* AI Classification & Metadata Panel */}
+                <DocumentMetadataPanel
+                  documentId={selectedDoc.id}
+                  currentDocumentType={selectedDoc.document_type}
+                  intakeStatus={selectedDoc.intake_status}
+                />
+
                 {/* Duplicate warning */}
                 {duplicateDocIds.has(selectedDoc.id) && (
                   <div className="rounded-lg border border-[hsl(var(--status-attention))]/30 bg-[hsl(var(--status-attention-bg))] px-4 py-3 flex items-start gap-2.5">
