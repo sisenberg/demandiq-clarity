@@ -10,38 +10,26 @@ import DocumentUpload from "@/components/case/DocumentUpload";
 import JobsPanel from "@/components/case/JobsPanel";
 import ProcessingPipeline from "@/components/case/ProcessingPipeline";
 import DocumentTypeTag from "@/components/case/DocumentTypeTag";
+import CaseNavRail, { type CaseSection } from "@/components/case/CaseNavRail";
+import CaseHeader from "@/components/case/CaseHeader";
+import CaseRightRail from "@/components/case/CaseRightRail";
+import WorkspaceCard from "@/components/case/WorkspaceCard";
 import {
   ArrowLeft,
   FileText,
   Cog,
   Play,
   Upload,
-  Calendar,
-  MapPin,
-  Hash,
+  Clock,
+  StickyNote,
+  BookOpen,
+  GitBranch,
+  AlertTriangle,
+  Briefcase,
+  TrendingUp,
+  CheckCircle,
+  ExternalLink,
 } from "lucide-react";
-
-const CASE_STATUS_LABEL: Record<string, string> = {
-  draft: "Draft",
-  intake_in_progress: "Intake In Progress",
-  intake_complete: "Intake Complete",
-  processing_in_progress: "Processing",
-  complete: "Complete",
-  exported: "Exported",
-  closed: "Closed",
-  failed: "Failed",
-};
-
-const CASE_STATUS_BADGE: Record<string, string> = {
-  draft: "status-badge-draft",
-  intake_in_progress: "status-badge-processing",
-  intake_complete: "status-badge-approved",
-  processing_in_progress: "status-badge-processing",
-  complete: "status-badge-approved",
-  exported: "status-badge-draft",
-  closed: "status-badge-draft",
-  failed: "status-badge-failed",
-};
 
 const DOC_STATUS_BADGE: Record<string, string> = {
   uploaded: "status-badge-draft",
@@ -71,6 +59,31 @@ function formatBytes(bytes: number): string {
   return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
 }
 
+// ─── Mock data for timeline / notes ──────────────────
+const MOCK_TIMELINE = [
+  { date: "2024-11-15", event: "Motor vehicle accident on I-95 northbound", type: "Incident", source: "Police Report #PR-2024-8812" },
+  { date: "2024-11-15", event: "Emergency room visit at Mercy General Hospital", type: "Medical", source: "ER Records — Mercy General" },
+  { date: "2024-11-18", event: "Follow-up visit with Dr. Sarah Chen, orthopedic evaluation", type: "Medical", source: "Medical Record — Dr. Chen" },
+  { date: "2024-12-02", event: "MRI of cervical spine completed — disc herniation C5-C6", type: "Diagnostic", source: "Imaging Report — Regional Radiology" },
+  { date: "2024-12-10", event: "Physical therapy initiated — 3x/week for 8 weeks", type: "Treatment", source: "PT Records — Advanced Rehab" },
+  { date: "2025-01-05", event: "Insurance demand letter sent to carrier", type: "Legal", source: "Correspondence — Demand Letter v1" },
+  { date: "2025-02-15", event: "Independent medical examination by Dr. Roberts", type: "Medical", source: "IME Report — Dr. Roberts" },
+  { date: "2025-03-01", event: "Settlement negotiation round 1 — $45,000 offered", type: "Negotiation", source: "Carrier Correspondence" },
+];
+
+const MOCK_NOTES = [
+  { author: "Sarah Mitchell", time: "2 hours ago", text: "Reviewed the MRI report — C5-C6 herniation is well-documented. Need to cross-reference with PT progress notes for causation argument." },
+  { author: "David Park", time: "Yesterday", text: "Police report confirms defendant ran red light. Liability should be straightforward. Requesting dash cam footage." },
+  { author: "Sarah Mitchell", time: "3 days ago", text: "Initial document review complete. 12 medical records, 2 billing statements, 1 police report uploaded. Flagged potential pre-existing condition in lumbar region." },
+];
+
+const MOCK_SOURCES = [
+  { page: "pg. 3", doc: "Police Report #PR-2024-8812", excerpt: "Vehicle 1 failed to stop at red signal, striking Vehicle 2 in the intersection at approximately 35 mph." },
+  { page: "pg. 1", doc: "ER Records — Mercy General", excerpt: "Patient presents with acute cervical strain, right shoulder contusion, and complaints of radiating pain to right upper extremity." },
+  { page: "pg. 7", doc: "MRI Report — Regional Radiology", excerpt: "Impression: Central disc herniation at C5-C6 with moderate foraminal narrowing. Recommend neurosurgical consultation." },
+  { page: "pg. 2", doc: "PT Records — Advanced Rehab", excerpt: "Initial evaluation: cervical ROM significantly limited. Pain rated 7/10. Treatment plan: manual therapy, therapeutic exercise, modalities 3x/week." },
+];
+
 const CaseDetailPage = () => {
   const { caseId } = useParams<{ caseId: string }>();
   const { role } = useAuth();
@@ -79,10 +92,15 @@ const CaseDetailPage = () => {
   const { data: jobs = [], isLoading: jobsLoading } = useCaseJobs(caseId);
   const triggerProcessing = useTriggerProcessing();
   const [showUpload, setShowUpload] = useState(false);
+  const [activeSection, setActiveSection] = useState<CaseSection>("overview");
   const [expandedDoc, setExpandedDoc] = useState<string | null>(null);
 
   if (caseLoading) {
-    return <div className="p-8"><p className="text-sm text-muted-foreground">Loading…</p></div>;
+    return (
+      <div className="flex items-center justify-center h-full">
+        <p className="text-sm text-muted-foreground">Loading case…</p>
+      </div>
+    );
   }
 
   if (!caseData) {
@@ -96,152 +114,376 @@ const CaseDetailPage = () => {
     );
   }
 
+  const pendingDocs = documents.filter((d) => d.document_status === "uploaded").length;
+  const completeDocs = documents.filter((d) => d.document_status === "complete" || d.document_status === "extracted").length;
+
   return (
-    <div className="p-8 max-w-7xl">
-      {/* Back */}
-      <Link to="/cases" className="text-xs text-primary hover:text-primary/80 flex items-center gap-1 mb-5 font-medium transition-colors">
-        <ArrowLeft className="h-3.5 w-3.5" /> Back to Cases
-      </Link>
+    <div className="flex flex-col h-full">
+      {/* Top case header */}
+      <CaseHeader caseData={caseData} />
 
-      {/* Case Header Card */}
-      <div className="card-elevated px-6 py-5 mb-6">
-        <div className="flex items-start justify-between">
-          <div>
-            <h1 className="text-lg font-semibold text-foreground tracking-tight">
-              {caseData.title || `${caseData.claimant} v. ${caseData.insured}`}
-            </h1>
-            <div className="flex items-center gap-4 mt-2 flex-wrap">
-              <span className="flex items-center gap-1.5 text-xs text-muted-foreground">
-                <Hash className="h-3 w-3" /> {caseData.case_number}
-              </span>
-              {caseData.claim_number && (
-                <span className="text-xs text-muted-foreground">Claim: {caseData.claim_number}</span>
-              )}
-              {caseData.date_of_loss && (
-                <span className="flex items-center gap-1.5 text-xs text-muted-foreground">
-                  <Calendar className="h-3 w-3" /> DOL: {caseData.date_of_loss}
-                </span>
-              )}
-              {caseData.jurisdiction_state && (
-                <span className="flex items-center gap-1.5 text-xs text-muted-foreground">
-                  <MapPin className="h-3 w-3" /> {caseData.jurisdiction_state}
-                </span>
-              )}
-            </div>
-          </div>
-          <span className={CASE_STATUS_BADGE[caseData.case_status] ?? "status-badge-draft"}>
-            {CASE_STATUS_LABEL[caseData.case_status] ?? caseData.case_status}
-          </span>
+      {/* Workspace body */}
+      <div className="flex flex-1 overflow-hidden">
+        {/* Left nav rail */}
+        <div className="hidden md:flex">
+          <CaseNavRail active={activeSection} onChange={setActiveSection} />
         </div>
 
-        {/* Actions */}
-        <div className="flex flex-wrap gap-2 mt-4 pt-4 border-t border-border">
-          {hasPermission(role, "upload_document") && (
+        {/* Mobile section tabs */}
+        <div className="md:hidden flex overflow-x-auto border-b border-border bg-card px-2 gap-1 shrink-0">
+          {(["overview", "documents", "timeline", "notes", "chat"] as CaseSection[]).map((s) => (
             <button
-              onClick={() => setShowUpload(true)}
-              className="flex items-center gap-1.5 text-xs font-medium px-3.5 py-2 rounded-lg border border-border bg-card text-foreground hover:bg-accent transition-colors"
+              key={s}
+              onClick={() => setActiveSection(s)}
+              className={`px-3 py-2.5 text-xs font-medium whitespace-nowrap transition-colors ${
+                activeSection === s
+                  ? "text-primary border-b-2 border-primary"
+                  : "text-muted-foreground"
+              }`}
             >
-              <Upload className="h-3.5 w-3.5" /> Upload Documents
+              {s.charAt(0).toUpperCase() + s.slice(1)}
             </button>
-          )}
-          {hasPermission(role, "trigger_processing") && documents.some((d) => d.document_status === "uploaded") && (
-            <button
-              onClick={() => triggerProcessing.mutate({ caseId: caseData.id })}
-              disabled={triggerProcessing.isPending}
-              className="flex items-center gap-1.5 text-xs font-medium px-3.5 py-2 rounded-lg bg-primary text-primary-foreground hover:bg-primary/90 transition-colors disabled:opacity-50 shadow-sm"
-            >
-              <Play className="h-3.5 w-3.5" /> Trigger Processing
-            </button>
-          )}
+          ))}
         </div>
-      </div>
 
-      {/* Stats Row */}
-      <div className="grid grid-cols-3 gap-4 mb-6">
-        <StatCard icon={FileText} label="Documents" value={documents.length} />
-        <StatCard icon={Cog} label="Jobs" value={jobs.length} />
-        <StatCard
-          icon={FileText}
-          label="Pending Processing"
-          value={documents.filter((d) => d.document_status === "uploaded").length}
-        />
-      </div>
+        {/* Center workspace */}
+        <div className="flex-1 overflow-y-auto">
+          <div className="p-6 max-w-5xl flex flex-col gap-5">
+            {/* ── OVERVIEW ────────────────────────── */}
+            {activeSection === "overview" && (
+              <>
+                {/* Stats Row */}
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                  <StatCard icon={FileText} label="Documents" value={documents.length} />
+                  <StatCard icon={CheckCircle} label="Processed" value={completeDocs} color="text-[hsl(var(--status-approved))]" />
+                  <StatCard icon={AlertTriangle} label="Pending" value={pendingDocs} color="text-[hsl(var(--status-review))]" />
+                  <StatCard icon={Cog} label="Jobs" value={jobs.length} />
+                </div>
 
-      {/* Documents Card */}
-      <div className="card-elevated overflow-hidden mb-6">
-        <div className="px-5 py-4 border-b border-border flex items-center gap-2">
-          <FileText className="h-4 w-4 text-primary" />
-          <h2 className="text-sm font-semibold text-foreground">Documents</h2>
-          <span className="text-xs text-muted-foreground">({docsLoading ? "…" : documents.length})</span>
-        </div>
-        {documents.length === 0 ? (
-          <div className="px-5 py-12 text-center">
-            <div className="h-10 w-10 rounded-xl bg-accent mx-auto flex items-center justify-center mb-3">
-              <FileText className="h-5 w-5 text-muted-foreground" />
-            </div>
-            <p className="text-xs text-muted-foreground">No documents uploaded yet.</p>
-          </div>
-        ) : (
-          <table className="w-full text-sm">
-            <thead>
-              <tr className="border-b border-border text-left bg-muted/30">
-                <th className="px-5 py-2.5 text-xs font-medium text-muted-foreground uppercase tracking-wider">File</th>
-                <th className="px-5 py-2.5 text-xs font-medium text-muted-foreground uppercase tracking-wider">Type</th>
-                <th className="px-5 py-2.5 text-xs font-medium text-muted-foreground uppercase tracking-wider">Size</th>
-                <th className="px-5 py-2.5 text-xs font-medium text-muted-foreground uppercase tracking-wider">Pipeline</th>
-                <th className="px-5 py-2.5 text-xs font-medium text-muted-foreground uppercase tracking-wider">Status</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-border">
-              {documents.map((doc) => (
-                <>
-                  <tr
-                    key={doc.id}
-                    className="hover:bg-accent/30 transition-colors cursor-pointer"
-                    onClick={() => setExpandedDoc(expandedDoc === doc.id ? null : doc.id)}
-                  >
-                    <td className="px-5 py-3">
-                      <Link
-                        to={`/documents/${doc.id}`}
-                        onClick={(e) => e.stopPropagation()}
-                        className="font-medium text-foreground hover:text-primary transition-colors"
-                      >
-                        {doc.file_name}
-                      </Link>
-                    </td>
-                    <td className="px-5 py-3"><DocumentTypeTag type={doc.document_type} /></td>
-                    <td className="px-5 py-3 text-muted-foreground">{formatBytes(doc.file_size_bytes)}</td>
-                    <td className="px-5 py-3">
-                      <code className="text-[10px] bg-accent px-2 py-0.5 rounded-full text-muted-foreground font-medium">
-                        {doc.pipeline_stage.replace(/_/g, " ")}
-                      </code>
-                    </td>
-                    <td className="px-5 py-3">
-                      <span className={DOC_STATUS_BADGE[doc.document_status] ?? "status-badge-draft"}>
-                        {DOC_STATUS_LABEL[doc.document_status] ?? doc.document_status}
-                      </span>
-                    </td>
-                  </tr>
-                  {expandedDoc === doc.id && (
-                    <tr key={`${doc.id}-pipeline`}>
-                      <td colSpan={5} className="px-5 py-4 bg-muted/20">
-                        <div className="max-w-xs">
-                          <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider mb-2">Processing Pipeline</p>
-                          <ProcessingPipeline currentStage={doc.pipeline_stage} documentStatus={doc.document_status} />
-                        </div>
-                      </td>
-                    </tr>
+                {/* Actions */}
+                <div className="flex flex-wrap gap-2">
+                  {hasPermission(role, "upload_document") && (
+                    <button
+                      onClick={() => setShowUpload(true)}
+                      className="flex items-center gap-1.5 text-xs font-medium px-3.5 py-2 rounded-lg border border-border bg-card text-foreground hover:bg-accent transition-colors"
+                    >
+                      <Upload className="h-3.5 w-3.5" /> Upload Documents
+                    </button>
                   )}
-                </>
-              ))}
-            </tbody>
-          </table>
-        )}
-      </div>
+                  {hasPermission(role, "trigger_processing") && pendingDocs > 0 && (
+                    <button
+                      onClick={() => triggerProcessing.mutate({ caseId: caseData.id })}
+                      disabled={triggerProcessing.isPending}
+                      className="flex items-center gap-1.5 text-xs font-medium px-3.5 py-2 rounded-lg bg-primary text-primary-foreground hover:bg-primary/90 transition-colors disabled:opacity-50 shadow-sm"
+                    >
+                      <Play className="h-3.5 w-3.5" /> Trigger Processing
+                    </button>
+                  )}
+                </div>
 
-      {/* Jobs */}
-      <div className="mb-8">
-        <JobsPanel jobs={jobs} loading={jobsLoading} />
+                {/* Documents card */}
+                <WorkspaceCard
+                  icon={FileText}
+                  title="Documents"
+                  count={documents.length}
+                  tabs={[
+                    { key: "all", label: "All" },
+                    { key: "medical", label: "Medical" },
+                    { key: "legal", label: "Legal" },
+                  ]}
+                >
+                  {(tab: string) => {
+                    const filtered = tab === "all"
+                      ? documents
+                      : documents.filter((d) =>
+                          tab === "medical"
+                            ? d.document_type.includes("medical") || d.document_type.includes("imaging")
+                            : d.document_type.includes("legal") || d.document_type.includes("police")
+                        );
+                    if (filtered.length === 0) {
+                      return (
+                        <div className="px-5 py-10 text-center">
+                          <p className="text-xs text-muted-foreground">
+                            {documents.length === 0 ? "No documents uploaded yet." : "No matching documents."}
+                          </p>
+                        </div>
+                      );
+                    }
+                    return (
+                      <div className="divide-y divide-border">
+                        {filtered.map((doc) => (
+                          <div key={doc.id}>
+                            <div
+                              className="px-5 py-3 flex items-center gap-3 hover:bg-accent/30 transition-colors cursor-pointer"
+                              onClick={() => setExpandedDoc(expandedDoc === doc.id ? null : doc.id)}
+                            >
+                              <FileText className="h-4 w-4 text-muted-foreground shrink-0" />
+                              <div className="flex-1 min-w-0">
+                                <Link
+                                  to={`/documents/${doc.id}`}
+                                  onClick={(e) => e.stopPropagation()}
+                                  className="text-sm font-medium text-foreground hover:text-primary transition-colors"
+                                >
+                                  {doc.file_name}
+                                </Link>
+                                <p className="text-[11px] text-muted-foreground mt-0.5">
+                                  {formatBytes(doc.file_size_bytes)} · {doc.pipeline_stage.replace(/_/g, " ")}
+                                </p>
+                              </div>
+                              <DocumentTypeTag type={doc.document_type} />
+                              <span className={DOC_STATUS_BADGE[doc.document_status] ?? "status-badge-draft"}>
+                                {DOC_STATUS_LABEL[doc.document_status] ?? doc.document_status}
+                              </span>
+                            </div>
+                            {expandedDoc === doc.id && (
+                              <div className="px-5 py-4 bg-muted/20 border-t border-border">
+                                <div className="max-w-xs">
+                                  <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider mb-2">
+                                    Processing Pipeline
+                                  </p>
+                                  <ProcessingPipeline currentStage={doc.pipeline_stage} documentStatus={doc.document_status} />
+                                </div>
+                              </div>
+                            )}
+                          </div>
+                        ))}
+                      </div>
+                    );
+                  }}
+                </WorkspaceCard>
+
+                {/* Jobs */}
+                <JobsPanel jobs={jobs} loading={jobsLoading} />
+              </>
+            )}
+
+            {/* ── TIMELINE ────────────────────────── */}
+            {activeSection === "timeline" && (
+              <WorkspaceCard
+                icon={Clock}
+                title="Case Chronology"
+                count={MOCK_TIMELINE.length}
+                tabs={[
+                  { key: "all", label: "All Events" },
+                  { key: "medical", label: "Medical" },
+                  { key: "legal", label: "Legal" },
+                ]}
+              >
+                {(tab: string) => {
+                  const events = tab === "all"
+                    ? MOCK_TIMELINE
+                    : MOCK_TIMELINE.filter((e) =>
+                        tab === "medical"
+                          ? ["Medical", "Diagnostic", "Treatment"].includes(e.type)
+                          : ["Legal", "Negotiation", "Incident"].includes(e.type)
+                      );
+                  return (
+                    <div className="px-5 py-4">
+                      <div className="relative">
+                        <div className="absolute left-[7px] top-3 bottom-3 w-px bg-border" />
+                        <div className="flex flex-col gap-0">
+                          {events.map((ev, idx) => (
+                            <div key={idx} className="flex gap-4 py-3 relative">
+                              <div className="relative z-10 mt-1">
+                                <div className="h-[15px] w-[15px] rounded-full border-2 border-primary bg-card" />
+                              </div>
+                              <div className="flex-1 min-w-0">
+                                <div className="flex items-baseline gap-2 mb-0.5">
+                                  <span className="text-xs font-semibold text-foreground">{ev.date}</span>
+                                  <span className="text-[10px] font-medium bg-accent text-muted-foreground px-2 py-0.5 rounded-full">
+                                    {ev.type}
+                                  </span>
+                                </div>
+                                <p className="text-sm text-foreground leading-relaxed">{ev.event}</p>
+                                <p className="text-[11px] text-muted-foreground mt-1 flex items-center gap-1">
+                                  <BookOpen className="h-3 w-3" /> {ev.source}
+                                </p>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    </div>
+                  );
+                }}
+              </WorkspaceCard>
+            )}
+
+            {/* ── NOTES ────────────────────────── */}
+            {activeSection === "notes" && (
+              <WorkspaceCard icon={StickyNote} title="Case Notes" count={MOCK_NOTES.length}>
+                <div className="divide-y divide-border">
+                  {MOCK_NOTES.map((note, idx) => (
+                    <div key={idx} className="px-5 py-4">
+                      <div className="flex items-center gap-2 mb-2">
+                        <div className="h-6 w-6 rounded-full bg-accent flex items-center justify-center">
+                          <span className="text-[9px] font-semibold text-foreground">
+                            {note.author.split(" ").map((n) => n[0]).join("")}
+                          </span>
+                        </div>
+                        <span className="text-xs font-medium text-foreground">{note.author}</span>
+                        <span className="text-[10px] text-muted-foreground">· {note.time}</span>
+                      </div>
+                      <p className="text-sm text-foreground leading-relaxed pl-8">{note.text}</p>
+                    </div>
+                  ))}
+                </div>
+                {/* Add note */}
+                <div className="px-5 py-3 border-t border-border bg-muted/20">
+                  <input
+                    type="text"
+                    placeholder="Add a note…"
+                    className="w-full px-3.5 py-2.5 text-sm border border-input rounded-lg bg-card text-foreground placeholder:text-muted-foreground outline-none focus:ring-2 focus:ring-ring/40 focus:border-primary transition-colors"
+                  />
+                </div>
+              </WorkspaceCard>
+            )}
+
+            {/* ── DOCUMENTS (dedicated) ────────── */}
+            {activeSection === "documents" && (
+              <>
+                <div className="flex flex-wrap gap-2">
+                  {hasPermission(role, "upload_document") && (
+                    <button
+                      onClick={() => setShowUpload(true)}
+                      className="flex items-center gap-1.5 text-xs font-medium px-3.5 py-2 rounded-lg border border-border bg-card text-foreground hover:bg-accent transition-colors"
+                    >
+                      <Upload className="h-3.5 w-3.5" /> Upload Documents
+                    </button>
+                  )}
+                  {hasPermission(role, "trigger_processing") && pendingDocs > 0 && (
+                    <button
+                      onClick={() => triggerProcessing.mutate({ caseId: caseData.id })}
+                      disabled={triggerProcessing.isPending}
+                      className="flex items-center gap-1.5 text-xs font-medium px-3.5 py-2 rounded-lg bg-primary text-primary-foreground hover:bg-primary/90 transition-colors disabled:opacity-50 shadow-sm"
+                    >
+                      <Play className="h-3.5 w-3.5" /> Trigger Processing
+                    </button>
+                  )}
+                </div>
+                <WorkspaceCard icon={FileText} title="All Documents" count={documents.length}>
+                  {documents.length === 0 ? (
+                    <div className="px-5 py-12 text-center">
+                      <p className="text-xs text-muted-foreground">No documents uploaded yet.</p>
+                    </div>
+                  ) : (
+                    <table className="w-full text-sm">
+                      <thead>
+                        <tr className="border-b border-border text-left bg-muted/30">
+                          <th className="px-5 py-2.5 text-xs font-medium text-muted-foreground uppercase tracking-wider">File</th>
+                          <th className="px-5 py-2.5 text-xs font-medium text-muted-foreground uppercase tracking-wider">Type</th>
+                          <th className="px-5 py-2.5 text-xs font-medium text-muted-foreground uppercase tracking-wider">Size</th>
+                          <th className="px-5 py-2.5 text-xs font-medium text-muted-foreground uppercase tracking-wider">Pipeline</th>
+                          <th className="px-5 py-2.5 text-xs font-medium text-muted-foreground uppercase tracking-wider">Status</th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-border">
+                        {documents.map((doc) => (
+                          <tr key={doc.id} className="hover:bg-accent/30 transition-colors">
+                            <td className="px-5 py-3">
+                              <Link to={`/documents/${doc.id}`} className="font-medium text-foreground hover:text-primary transition-colors">
+                                {doc.file_name}
+                              </Link>
+                            </td>
+                            <td className="px-5 py-3"><DocumentTypeTag type={doc.document_type} /></td>
+                            <td className="px-5 py-3 text-muted-foreground">{formatBytes(doc.file_size_bytes)}</td>
+                            <td className="px-5 py-3">
+                              <code className="text-[10px] bg-accent px-2 py-0.5 rounded-full text-muted-foreground font-medium">
+                                {doc.pipeline_stage.replace(/_/g, " ")}
+                              </code>
+                            </td>
+                            <td className="px-5 py-3">
+                              <span className={DOC_STATUS_BADGE[doc.document_status] ?? "status-badge-draft"}>
+                                {DOC_STATUS_LABEL[doc.document_status] ?? doc.document_status}
+                              </span>
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  )}
+                </WorkspaceCard>
+                <JobsPanel jobs={jobs} loading={jobsLoading} />
+              </>
+            )}
+
+            {/* ── SOURCES ────────────────────────── */}
+            {activeSection === "sources" && (
+              <WorkspaceCard
+                icon={BookOpen}
+                title="Source Citations"
+                count={MOCK_SOURCES.length}
+              >
+                <div className="divide-y divide-border">
+                  {MOCK_SOURCES.map((src, idx) => (
+                    <div key={idx} className="px-5 py-4">
+                      <div className="flex items-center gap-2 mb-2">
+                        <span className="text-[10px] font-semibold bg-primary/10 text-primary px-2 py-0.5 rounded-full">
+                          {src.page}
+                        </span>
+                        <span className="text-xs font-medium text-foreground">{src.doc}</span>
+                        <ExternalLink className="h-3 w-3 text-muted-foreground ml-auto cursor-pointer hover:text-primary transition-colors" />
+                      </div>
+                      <blockquote className="text-sm text-foreground leading-relaxed pl-3 border-l-2 border-primary/30 evidence-text">
+                        "{src.excerpt}"
+                      </blockquote>
+                    </div>
+                  ))}
+                </div>
+              </WorkspaceCard>
+            )}
+
+            {/* ── WORKFLOWS ────────────────────────── */}
+            {activeSection === "workflows" && (
+              <WorkspaceCard icon={GitBranch} title="Workflows">
+                <div className="px-5 py-4">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    {[
+                      { title: "Document Intake", desc: "Upload, OCR, classify and extract", status: "active", progress: documents.length > 0 ? Math.round((completeDocs / Math.max(documents.length, 1)) * 100) : 0 },
+                      { title: "Chronology Build", desc: "Generate timeline from medical records", status: documents.length > 0 ? "ready" : "pending", progress: 0 },
+                      { title: "Issue Flagging", desc: "Identify gaps, pre-existing conditions", status: "pending", progress: 0 },
+                      { title: "Demand Package", desc: "Generate demand letter and exhibits", status: "pending", progress: 0 },
+                    ].map((wf) => (
+                      <div key={wf.title} className="rounded-xl border border-border p-4 bg-background">
+                        <div className="flex items-center justify-between mb-2">
+                          <h4 className="text-sm font-medium text-foreground">{wf.title}</h4>
+                          <span className={`text-[10px] font-medium px-2 py-0.5 rounded-full ${
+                            wf.status === "active" ? "status-badge-processing" :
+                            wf.status === "ready" ? "status-badge-approved" :
+                            "status-badge-draft"
+                          }`}>
+                            {wf.status}
+                          </span>
+                        </div>
+                        <p className="text-xs text-muted-foreground mb-3">{wf.desc}</p>
+                        {/* Progress bar */}
+                        <div className="h-1.5 w-full bg-accent rounded-full overflow-hidden">
+                          <div
+                            className="h-full bg-primary rounded-full transition-all"
+                            style={{ width: `${wf.progress}%` }}
+                          />
+                        </div>
+                        <p className="text-[10px] text-muted-foreground mt-1">{wf.progress}% complete</p>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </WorkspaceCard>
+            )}
+
+            {/* ── CHAT (mobile fallback) ────────── */}
+            {activeSection === "chat" && (
+              <div className="lg:hidden">
+                <CaseRightRail caseData={caseData} documents={documents} />
+              </div>
+            )}
+          </div>
+        </div>
+
+        {/* Right rail — hidden on mobile, visible on lg+ */}
+        <div className="hidden lg:flex">
+          <CaseRightRail caseData={caseData} documents={documents} />
+        </div>
       </div>
 
       <DocumentUpload caseId={caseData.id} open={showUpload} onClose={() => setShowUpload(false)} />
@@ -249,11 +491,21 @@ const CaseDetailPage = () => {
   );
 };
 
-function StatCard({ icon: Icon, label, value }: { icon: React.ElementType; label: string; value: number }) {
+function StatCard({
+  icon: Icon,
+  label,
+  value,
+  color = "text-muted-foreground",
+}: {
+  icon: React.ElementType;
+  label: string;
+  value: number;
+  color?: string;
+}) {
   return (
-    <div className="card-elevated px-4 py-3.5">
-      <div className="flex items-center gap-2 mb-1.5">
-        <Icon className="h-3.5 w-3.5 text-muted-foreground" />
+    <div className="card-elevated px-4 py-3">
+      <div className="flex items-center gap-2 mb-1">
+        <Icon className={`h-3.5 w-3.5 ${color}`} />
         <span className="text-[10px] font-medium text-muted-foreground uppercase tracking-wider">{label}</span>
       </div>
       <p className="text-xl font-semibold text-card-foreground">{value}</p>
