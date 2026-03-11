@@ -266,12 +266,25 @@ export default function TreatmentTimeline({ caseId }: TreatmentTimelineProps) {
 
         {activeFilterCount > 0 && (
           <button
-            onClick={() => setFilters(EMPTY_FILTERS)}
+            onClick={() => { setFilters(EMPTY_FILTERS); setFlaggedOnly(false); }}
             className="text-[10px] text-muted-foreground hover:text-foreground underline"
           >
             Clear all
           </button>
         )}
+
+        {/* Needs Review queue toggle */}
+        <button
+          onClick={() => setFlaggedOnly(!flaggedOnly)}
+          className={`flex items-center gap-1.5 px-3 py-1.5 text-[11px] font-medium rounded-lg border transition-colors ${
+            flaggedOnly
+              ? "border-[hsl(var(--status-review))]/30 bg-[hsl(var(--status-review-bg))] text-[hsl(var(--status-review-foreground))]"
+              : "border-border bg-card text-muted-foreground hover:text-foreground"
+          }`}
+        >
+          <ShieldAlert className="h-3 w-3" />
+          Needs Review{flaggedRecordIds.size > 0 && ` (${flaggedRecordIds.size})`}
+        </button>
 
         <div className="ml-auto text-[10px] text-muted-foreground">
           {filtered.length} of {records.length} records
