@@ -430,8 +430,8 @@ const CasesPage = () => {
                       </div>
                     </div>
 
-                    {/* Claimant */}
-                    <span className="text-[12px] text-foreground truncate">{c.claimant}</span>
+                    {/* Claimant — masked in list view */}
+                    <span className="text-[12px] text-foreground truncate" title="View case for full name">{maskName(c.claimant)}</span>
 
                     {/* DOI */}
                     <span className="text-[11px] text-muted-foreground">{formatDate(c.date_of_loss)}</span>
