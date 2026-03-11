@@ -484,11 +484,23 @@ function TreatmentRecordRow({
         </span>
 
         {/* Duplicate flag */}
-      {r.is_duplicate_suspect && (
-        <span title="Possible duplicate">
-          <Copy className="h-3 w-3 text-[hsl(var(--status-review))] shrink-0" />
-        </span>
-      )}
+        {r.is_duplicate_suspect && (
+          <span title="Possible duplicate">
+            <Copy className="h-3 w-3 text-[hsl(var(--status-review))] shrink-0" />
+          </span>
+        )}
+
+        {/* Flag count indicator */}
+        {hasFlags && (
+          <span
+            className={`text-[8px] font-bold px-1 py-0.5 rounded-md shrink-0 ${
+              hasErrors ? "bg-[hsl(var(--status-failed-bg))] text-[hsl(var(--status-failed))]" : "bg-[hsl(var(--status-review-bg))] text-[hsl(var(--status-review))]"
+            }`}
+            title={`${flags.length} issue(s)`}
+          >
+            {flags.length} {flags.length === 1 ? "issue" : "issues"}
+          </span>
+        )}
 
         {/* Source link */}
         <button
