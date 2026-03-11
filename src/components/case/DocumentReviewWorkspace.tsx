@@ -78,13 +78,19 @@ const DocumentReviewWorkspace = ({ documentId, caseId, onBack }: DocumentReviewW
     [chronoCandidates, documentId]
   );
 
-  // Sign PDF URL with auto-refresh before expiration (sign for 600s, refresh at 480s)
+  // COMPLIANCE: Signed URL for document viewer.
+  // - TTL 300s (5 min) — shortest practical for viewer refresh cycles.
+  // - Auto-refresh at 240s (1 min before expiry) to prevent broken viewers.
+  // - Storage RLS ensures only tenant-scoped paths are accessible.
+  // - This path accesses PRIMARY EVIDENCE ZONE data (L4 restricted_phi).
+  const SIGNED_URL_TTL = 300;
+  const SIGNED_URL_REFRESH = 240_000; // ms — refresh 1 min before expiry
+
   const signPdfUrl = useCallback(async (storagePath: string) => {
-    const { data } = await supabase.storage.from("case-documents").createSignedUrl(storagePath, 600);
+    const { data } = await supabase.storage.from("case-documents").createSignedUrl(storagePath, SIGNED_URL_TTL);
     if (data?.signedUrl) setPdfUrl(data.signedUrl);
-    // Schedule refresh 2 minutes before expiry
     if (pdfRefreshTimer.current) clearTimeout(pdfRefreshTimer.current);
-    pdfRefreshTimer.current = setTimeout(() => signPdfUrl(storagePath), 480_000);
+    pdfRefreshTimer.current = setTimeout(() => signPdfUrl(storagePath), SIGNED_URL_REFRESH);
   }, []);
 
   useEffect(() => {
