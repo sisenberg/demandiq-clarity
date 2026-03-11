@@ -158,7 +158,19 @@ export default function TreatmentTimeline({ caseId }: TreatmentTimelineProps) {
   }, [filtered]);
 
   const metrics = useMemo(() => computeMetrics(records), [records]);
-  const activeFilterCount = Object.entries(filters).filter(([k, v]) => k !== "search" && v !== "" && v !== false).length;
+  const activeFilterCount = Object.entries(filters).filter(([k, v]) => k !== "search" && v !== "" && v !== false).length + (flaggedOnly ? 1 : 0);
+
+  const handleFilterByFlags = useCallback(() => {
+    setFlaggedOnly(true);
+  }, []);
+
+  const handleJumpToRecord = useCallback((recordId: string) => {
+    setExpandedRecords((prev) => new Set(prev).add(recordId));
+    // Scroll into view after a tick
+    setTimeout(() => {
+      document.getElementById(`tr-${recordId}`)?.scrollIntoView({ behavior: "smooth", block: "center" });
+    }, 100);
+  }, []);
 
   const toggleGroup = (key: string) => {
     setExpandedGroups((prev) => {
