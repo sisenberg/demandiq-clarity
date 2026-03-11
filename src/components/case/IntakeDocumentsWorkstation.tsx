@@ -6,6 +6,7 @@ import { useInvokeExtraction, useTriggerCaseExtraction } from "@/hooks/useExtrac
 import { useCaseDuplicateFlags } from "@/hooks/useDuplicateFlags";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
+import DocumentReviewWorkspace from "./DocumentReviewWorkspace";
 import {
   getIntakeBadge,
   INTAKE_STATUS_LABEL,
