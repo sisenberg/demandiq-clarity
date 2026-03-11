@@ -307,7 +307,7 @@ const IntakeDocumentsWorkstation = ({ documents, loading, caseId }: IntakeDocume
                           {doc.page_count && <span className="text-[10px] text-muted-foreground">{doc.page_count} pg</span>}
                         </div>
                         <div className="flex items-center gap-2 mt-1">
-                          <span className={`text-[8px] font-semibold uppercase tracking-wider px-1.5 py-0.5 rounded ${intakeBadge.class}`}>
+                          <span className={`text-[8px] font-semibold uppercase tracking-wider px-1.5 py-0.5 rounded ${intakeBadge.className}`}>
                             {intakeBadge.label}
                           </span>
                           <span className="text-[9px] text-muted-foreground">{formatDate(doc.created_at)}</span>
