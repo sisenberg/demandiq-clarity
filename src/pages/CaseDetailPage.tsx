@@ -245,17 +245,8 @@ const CaseDetailPage = () => {
                     <ClaimantBackgroundTab />
                   )}
 
-                  {/* Placeholder tabs */}
                   {activeTab === "providers" && (
-                    <WorkspaceCard icon={FileText} title="Providers">
-                      <div className="p-5">
-                        <EmptyState
-                          icon={FileText}
-                          title="Providers workspace"
-                          description="This section will be built in a future iteration."
-                        />
-                      </div>
-                    </WorkspaceCard>
+                    <ProvidersTab />
                   )}
                 </>
               )}
