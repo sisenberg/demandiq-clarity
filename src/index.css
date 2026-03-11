@@ -246,10 +246,10 @@
     @apply transition-colors duration-75;
   }
   .data-table tbody tr:hover {
-    @apply bg-accent/25;
+    background-color: hsl(var(--accent) / 0.25);
   }
   .data-table tbody tr.row-selected {
-    @apply bg-primary/3;
+    background-color: hsl(var(--primary) / 0.03);
   }
   .data-table tfoot td {
     @apply px-4 py-2.5 text-[10px] font-semibold text-muted-foreground bg-accent/20 border-t border-border;
