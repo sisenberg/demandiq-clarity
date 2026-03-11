@@ -416,12 +416,17 @@ function FilterSelect({
 }
 
 function TreatmentRecordRow({
-  record: r, expanded, onToggle, onViewSource,
+  record: r, flags, expanded, onToggle, onViewSource,
 }: {
-  record: ReviewerTreatmentRecord; expanded: boolean; onToggle: () => void; onViewSource: () => void;
+  record: ReviewerTreatmentRecord; flags: ReviewFlag[]; expanded: boolean; onToggle: () => void; onViewSource: () => void;
 }) {
+  const hasFlags = flags.length > 0;
+  const hasErrors = flags.some((f) => f.severity === "error");
   return (
-    <div className={`border-b last:border-b-0 border-border/50 ${r.is_duplicate_suspect ? "bg-[hsl(var(--status-review-bg))]/40" : ""}`}>
+    <div
+      id={`tr-${r.id}`}
+      className={`border-b last:border-b-0 border-border/50 ${r.is_duplicate_suspect ? "bg-[hsl(var(--status-review-bg))]/40" : ""} ${hasErrors ? "border-l-2 border-l-[hsl(var(--status-failed))]/40" : hasFlags ? "border-l-2 border-l-[hsl(var(--status-review))]/40" : ""}`}
+    >
       {/* Compact row */}
       <div className="flex items-center gap-2 px-3 py-2 hover:bg-accent/30 transition-colors cursor-pointer" onClick={onToggle}>
         {/* Date */}
