@@ -344,8 +344,8 @@ const IntakeDocumentsWorkstation = ({ documents, loading, caseId }: IntakeDocume
               <div className="flex-1 overflow-y-auto p-4 space-y-4">
                 {/* Metadata */}
                 <div className="grid grid-cols-2 gap-3">
-                  <MetaItem label="Intake Status" value={INTAKE_STATUS_LABEL[selectedDoc.intake_status as keyof typeof INTAKE_STATUS_LABEL] ?? selectedDoc.intake_status} />
-                  <MetaItem label="Pipeline" value={selectedDoc.pipeline_stage.replace(/_/g, " ")} />
+                  <MetaItem label="Intake Status" value={getIntakeBadge(selectedDoc.intake_status).label} />
+                  <MetaItem label="Pipeline" value={getPipelineStageLabel(selectedDoc.pipeline_stage)} />
                   <MetaItem label="Uploaded" value={formatDate(selectedDoc.created_at)} />
                   <MetaItem label="Pages" value={selectedDoc.page_count?.toString() ?? "—"} />
                 </div>
