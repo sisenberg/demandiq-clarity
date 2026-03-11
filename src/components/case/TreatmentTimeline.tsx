@@ -118,7 +118,7 @@ export default function TreatmentTimeline({ caseId }: TreatmentTimelineProps) {
       if (filters.reviewState && r.review_state !== filters.reviewState) return false;
       if (filters.visitType && r.visit_type !== filters.visitType) return false;
       if (filters.duplicatesOnly && !r.is_duplicate_suspect) return false;
-      if (filters.missingBills && (r.total_billed != null && r.total_billed > 0)) return false;
+      if (filters.missingBills && r.total_billed != null && r.total_billed > 0) return false;
       if (filters.search) {
         const q = filters.search.toLowerCase();
         const haystack = [
