@@ -14,6 +14,96 @@ export type Database = {
   }
   public: {
     Tables: {
+      bills: {
+        Row: {
+          adjusted_amount: number | null
+          bill_date: string | null
+          bill_status: Database["public"]["Enums"]["bill_status"]
+          billed_amount: number
+          case_id: string
+          cpt_codes: string[]
+          created_at: string
+          description: string
+          document_id: string | null
+          id: string
+          paid_amount: number | null
+          provider_party_id: string | null
+          tenant_id: string
+          treatment_id: string | null
+          updated_at: string
+        }
+        Insert: {
+          adjusted_amount?: number | null
+          bill_date?: string | null
+          bill_status?: Database["public"]["Enums"]["bill_status"]
+          billed_amount?: number
+          case_id: string
+          cpt_codes?: string[]
+          created_at?: string
+          description?: string
+          document_id?: string | null
+          id?: string
+          paid_amount?: number | null
+          provider_party_id?: string | null
+          tenant_id: string
+          treatment_id?: string | null
+          updated_at?: string
+        }
+        Update: {
+          adjusted_amount?: number | null
+          bill_date?: string | null
+          bill_status?: Database["public"]["Enums"]["bill_status"]
+          billed_amount?: number
+          case_id?: string
+          cpt_codes?: string[]
+          created_at?: string
+          description?: string
+          document_id?: string | null
+          id?: string
+          paid_amount?: number | null
+          provider_party_id?: string | null
+          tenant_id?: string
+          treatment_id?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "bills_case_id_fkey"
+            columns: ["case_id"]
+            isOneToOne: false
+            referencedRelation: "cases"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "bills_document_id_fkey"
+            columns: ["document_id"]
+            isOneToOne: false
+            referencedRelation: "case_documents"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "bills_provider_party_id_fkey"
+            columns: ["provider_party_id"]
+            isOneToOne: false
+            referencedRelation: "case_parties"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "bills_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "bills_treatment_id_fkey"
+            columns: ["treatment_id"]
+            isOneToOne: false
+            referencedRelation: "treatment_records"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       case_documents: {
         Row: {
           case_id: string
@@ -79,6 +169,66 @@ export type Database = {
           },
           {
             foreignKeyName: "case_documents_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      case_parties: {
+        Row: {
+          address: string
+          case_id: string
+          contact_email: string
+          contact_phone: string
+          created_at: string
+          full_name: string
+          id: string
+          notes: string
+          organization: string
+          party_role: Database["public"]["Enums"]["party_role"]
+          tenant_id: string
+          updated_at: string
+        }
+        Insert: {
+          address?: string
+          case_id: string
+          contact_email?: string
+          contact_phone?: string
+          created_at?: string
+          full_name?: string
+          id?: string
+          notes?: string
+          organization?: string
+          party_role: Database["public"]["Enums"]["party_role"]
+          tenant_id: string
+          updated_at?: string
+        }
+        Update: {
+          address?: string
+          case_id?: string
+          contact_email?: string
+          contact_phone?: string
+          created_at?: string
+          full_name?: string
+          id?: string
+          notes?: string
+          organization?: string
+          party_role?: Database["public"]["Enums"]["party_role"]
+          tenant_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "case_parties_case_id_fkey"
+            columns: ["case_id"]
+            isOneToOne: false
+            referencedRelation: "cases"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "case_parties_tenant_id_fkey"
             columns: ["tenant_id"]
             isOneToOne: false
             referencedRelation: "tenants"
@@ -154,6 +304,199 @@ export type Database = {
           },
         ]
       }
+      generated_artifacts: {
+        Row: {
+          artifact_type: Database["public"]["Enums"]["artifact_type"]
+          case_id: string
+          content_json: Json
+          created_at: string
+          created_by: string | null
+          id: string
+          module_id: string
+          storage_path: string | null
+          tenant_id: string
+          title: string
+          updated_at: string
+          version: number
+        }
+        Insert: {
+          artifact_type: Database["public"]["Enums"]["artifact_type"]
+          case_id: string
+          content_json?: Json
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          module_id?: string
+          storage_path?: string | null
+          tenant_id: string
+          title?: string
+          updated_at?: string
+          version?: number
+        }
+        Update: {
+          artifact_type?: Database["public"]["Enums"]["artifact_type"]
+          case_id?: string
+          content_json?: Json
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          module_id?: string
+          storage_path?: string | null
+          tenant_id?: string
+          title?: string
+          updated_at?: string
+          version?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "generated_artifacts_case_id_fkey"
+            columns: ["case_id"]
+            isOneToOne: false
+            referencedRelation: "cases"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "generated_artifacts_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      injuries: {
+        Row: {
+          body_part: string
+          case_id: string
+          created_at: string
+          date_of_onset: string | null
+          diagnosis_code: string
+          diagnosis_description: string
+          id: string
+          is_pre_existing: boolean
+          notes: string
+          party_id: string | null
+          severity: Database["public"]["Enums"]["injury_severity"]
+          tenant_id: string
+          updated_at: string
+        }
+        Insert: {
+          body_part?: string
+          case_id: string
+          created_at?: string
+          date_of_onset?: string | null
+          diagnosis_code?: string
+          diagnosis_description?: string
+          id?: string
+          is_pre_existing?: boolean
+          notes?: string
+          party_id?: string | null
+          severity?: Database["public"]["Enums"]["injury_severity"]
+          tenant_id: string
+          updated_at?: string
+        }
+        Update: {
+          body_part?: string
+          case_id?: string
+          created_at?: string
+          date_of_onset?: string | null
+          diagnosis_code?: string
+          diagnosis_description?: string
+          id?: string
+          is_pre_existing?: boolean
+          notes?: string
+          party_id?: string | null
+          severity?: Database["public"]["Enums"]["injury_severity"]
+          tenant_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "injuries_case_id_fkey"
+            columns: ["case_id"]
+            isOneToOne: false
+            referencedRelation: "cases"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "injuries_party_id_fkey"
+            columns: ["party_id"]
+            isOneToOne: false
+            referencedRelation: "case_parties"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "injuries_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      insurance_policies: {
+        Row: {
+          carrier_name: string
+          case_id: string
+          coverage_limit: number | null
+          created_at: string
+          deductible: number | null
+          effective_date: string | null
+          expiration_date: string | null
+          id: string
+          notes: string
+          policy_number: string
+          policy_type: string
+          tenant_id: string
+          updated_at: string
+        }
+        Insert: {
+          carrier_name?: string
+          case_id: string
+          coverage_limit?: number | null
+          created_at?: string
+          deductible?: number | null
+          effective_date?: string | null
+          expiration_date?: string | null
+          id?: string
+          notes?: string
+          policy_number?: string
+          policy_type?: string
+          tenant_id: string
+          updated_at?: string
+        }
+        Update: {
+          carrier_name?: string
+          case_id?: string
+          coverage_limit?: number | null
+          created_at?: string
+          deductible?: number | null
+          effective_date?: string | null
+          expiration_date?: string | null
+          id?: string
+          notes?: string
+          policy_number?: string
+          policy_type?: string
+          tenant_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "insurance_policies_case_id_fkey"
+            columns: ["case_id"]
+            isOneToOne: false
+            referencedRelation: "cases"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "insurance_policies_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       jobs: {
         Row: {
           case_id: string
@@ -221,6 +564,70 @@ export type Database = {
           },
         ]
       }
+      liability_facts: {
+        Row: {
+          case_id: string
+          confidence_score: number | null
+          created_at: string
+          fact_text: string
+          id: string
+          notes: string
+          source_document_id: string | null
+          source_page: number | null
+          supports_liability: boolean
+          tenant_id: string
+          updated_at: string
+        }
+        Insert: {
+          case_id: string
+          confidence_score?: number | null
+          created_at?: string
+          fact_text?: string
+          id?: string
+          notes?: string
+          source_document_id?: string | null
+          source_page?: number | null
+          supports_liability?: boolean
+          tenant_id: string
+          updated_at?: string
+        }
+        Update: {
+          case_id?: string
+          confidence_score?: number | null
+          created_at?: string
+          fact_text?: string
+          id?: string
+          notes?: string
+          source_document_id?: string | null
+          source_page?: number | null
+          supports_liability?: boolean
+          tenant_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "liability_facts_case_id_fkey"
+            columns: ["case_id"]
+            isOneToOne: false
+            referencedRelation: "cases"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "liability_facts_source_document_id_fkey"
+            columns: ["source_document_id"]
+            isOneToOne: false
+            referencedRelation: "case_documents"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "liability_facts_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       profiles: {
         Row: {
           created_at: string
@@ -274,6 +681,99 @@ export type Database = {
         }
         Relationships: []
       }
+      treatment_records: {
+        Row: {
+          case_id: string
+          created_at: string
+          description: string
+          document_id: string | null
+          facility_name: string
+          id: string
+          injury_id: string | null
+          procedure_codes: string[]
+          provider_name: string
+          provider_party_id: string | null
+          source_page: number | null
+          tenant_id: string
+          treatment_date: string | null
+          treatment_end_date: string | null
+          treatment_type: Database["public"]["Enums"]["treatment_type"]
+          updated_at: string
+        }
+        Insert: {
+          case_id: string
+          created_at?: string
+          description?: string
+          document_id?: string | null
+          facility_name?: string
+          id?: string
+          injury_id?: string | null
+          procedure_codes?: string[]
+          provider_name?: string
+          provider_party_id?: string | null
+          source_page?: number | null
+          tenant_id: string
+          treatment_date?: string | null
+          treatment_end_date?: string | null
+          treatment_type?: Database["public"]["Enums"]["treatment_type"]
+          updated_at?: string
+        }
+        Update: {
+          case_id?: string
+          created_at?: string
+          description?: string
+          document_id?: string | null
+          facility_name?: string
+          id?: string
+          injury_id?: string | null
+          procedure_codes?: string[]
+          provider_name?: string
+          provider_party_id?: string | null
+          source_page?: number | null
+          tenant_id?: string
+          treatment_date?: string | null
+          treatment_end_date?: string | null
+          treatment_type?: Database["public"]["Enums"]["treatment_type"]
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "treatment_records_case_id_fkey"
+            columns: ["case_id"]
+            isOneToOne: false
+            referencedRelation: "cases"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "treatment_records_document_id_fkey"
+            columns: ["document_id"]
+            isOneToOne: false
+            referencedRelation: "case_documents"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "treatment_records_injury_id_fkey"
+            columns: ["injury_id"]
+            isOneToOne: false
+            referencedRelation: "injuries"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "treatment_records_provider_party_id_fkey"
+            columns: ["provider_party_id"]
+            isOneToOne: false
+            referencedRelation: "case_parties"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "treatment_records_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       user_roles: {
         Row: {
           id: string
@@ -323,6 +823,22 @@ export type Database = {
     }
     Enums: {
       app_role: "admin" | "manager" | "reviewer" | "adjuster" | "readonly"
+      artifact_type:
+        | "demand_package"
+        | "chronology_report"
+        | "medical_summary"
+        | "valuation_report"
+        | "settlement_memo"
+        | "negotiation_letter"
+        | "litigation_brief"
+      bill_status:
+        | "submitted"
+        | "under_review"
+        | "approved"
+        | "reduced"
+        | "denied"
+        | "paid"
+        | "appealed"
       case_priority: "low" | "normal" | "high" | "urgent"
       case_status:
         | "draft"
@@ -354,6 +870,12 @@ export type Database = {
         | "expert_report"
         | "photograph"
         | "other"
+      injury_severity:
+        | "minor"
+        | "moderate"
+        | "severe"
+        | "catastrophic"
+        | "fatal"
       job_status: "queued" | "running" | "completed" | "failed"
       job_type:
         | "document_extraction"
@@ -362,6 +884,16 @@ export type Database = {
         | "package_export"
         | "ocr"
         | "classification"
+      party_role:
+        | "claimant"
+        | "insured"
+        | "defendant"
+        | "witness"
+        | "employer"
+        | "provider"
+        | "expert"
+        | "attorney"
+        | "adjuster"
       pipeline_stage:
         | "upload_received"
         | "ocr_queued"
@@ -370,6 +902,18 @@ export type Database = {
         | "extraction_complete"
         | "evidence_links_created"
         | "review_items_generated"
+      treatment_type:
+        | "emergency"
+        | "inpatient"
+        | "outpatient"
+        | "surgery"
+        | "physical_therapy"
+        | "chiropractic"
+        | "diagnostic_imaging"
+        | "prescription"
+        | "dme"
+        | "mental_health"
+        | "other"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -498,6 +1042,24 @@ export const Constants = {
   public: {
     Enums: {
       app_role: ["admin", "manager", "reviewer", "adjuster", "readonly"],
+      artifact_type: [
+        "demand_package",
+        "chronology_report",
+        "medical_summary",
+        "valuation_report",
+        "settlement_memo",
+        "negotiation_letter",
+        "litigation_brief",
+      ],
+      bill_status: [
+        "submitted",
+        "under_review",
+        "approved",
+        "reduced",
+        "denied",
+        "paid",
+        "appealed",
+      ],
       case_priority: ["low", "normal", "high", "urgent"],
       case_status: [
         "draft",
@@ -532,6 +1094,7 @@ export const Constants = {
         "photograph",
         "other",
       ],
+      injury_severity: ["minor", "moderate", "severe", "catastrophic", "fatal"],
       job_status: ["queued", "running", "completed", "failed"],
       job_type: [
         "document_extraction",
@@ -541,6 +1104,17 @@ export const Constants = {
         "ocr",
         "classification",
       ],
+      party_role: [
+        "claimant",
+        "insured",
+        "defendant",
+        "witness",
+        "employer",
+        "provider",
+        "expert",
+        "attorney",
+        "adjuster",
+      ],
       pipeline_stage: [
         "upload_received",
         "ocr_queued",
@@ -549,6 +1123,19 @@ export const Constants = {
         "extraction_complete",
         "evidence_links_created",
         "review_items_generated",
+      ],
+      treatment_type: [
+        "emergency",
+        "inpatient",
+        "outpatient",
+        "surgery",
+        "physical_therapy",
+        "chiropractic",
+        "diagnostic_imaging",
+        "prescription",
+        "dme",
+        "mental_health",
+        "other",
       ],
     },
   },
