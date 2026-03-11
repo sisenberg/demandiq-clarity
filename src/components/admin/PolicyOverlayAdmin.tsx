@@ -312,6 +312,20 @@ function CalibrationTab({ run, onRun }: { run: CalibrationRun | null; onRun: () 
 // ─── QA Dashboard ──────────────────────────────────────
 
 function QADashboard({ run }: { run: CalibrationRun | null }) {
+  const specialtyBreakdown = useMemo(() => {
+    if (!run) return new Map();
+    const map = new Map<string, { total: number; matches: number; fp: number; fn: number }>();
+    for (const r of run.results) {
+      if (!map.has(r.specialty)) map.set(r.specialty, { total: 0, matches: 0, fp: 0, fn: 0 });
+      const entry = map.get(r.specialty)!;
+      entry.total++;
+      if (r.result_type === "match") entry.matches++;
+      if (r.result_type === "false_positive") entry.fp++;
+      if (r.result_type === "false_negative") entry.fn++;
+    }
+    return map;
+  }, [run]);
+
   if (!run) {
     return (
       <div className="text-center py-12 text-muted-foreground text-[11px]">
