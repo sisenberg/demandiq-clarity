@@ -181,6 +181,10 @@ interface CandidateRowProps {
   onStartMerge: () => void;
   onCancelMerge: () => void;
   onMergeInto: () => void;
+  updateStatus: ReturnType<typeof useUpdateCandidateStatus>;
+  editCandidate: ReturnType<typeof useEditCandidate>;
+  mergeCandidates: ReturnType<typeof useMergeCandidates>;
+  auditLog: ReturnType<typeof useAuditLog>;
 }
 
 function CandidateRow({
@@ -190,10 +194,11 @@ function CandidateRow({
   onStartMerge,
   onCancelMerge,
   onMergeInto,
+  updateStatus,
+  editCandidate,
+  mergeCandidates,
+  auditLog,
 }: CandidateRowProps) {
-  const updateStatus = useUpdateCandidateStatus();
-  const editCandidate = useEditCandidate();
-  const mergeCandidates = useMergeCandidates();
 
   const [expanded, setExpanded] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
