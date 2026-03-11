@@ -485,8 +485,8 @@ const CaseDetailPage = () => {
           </div>
         </div>
 
-        {/* Right rail — hidden on mobile, visible on lg+ */}
-        <div className="hidden lg:flex">
+        {/* Right rail — sticky on desktop, below content on mobile */}
+        <div className="hidden lg:flex lg:sticky lg:top-0 lg:h-full">
           <CaseRightRail caseData={caseData} documents={documents} />
         </div>
       </div>
