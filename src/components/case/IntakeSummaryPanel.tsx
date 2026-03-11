@@ -24,21 +24,15 @@ const IntakeSummaryPanel = ({ documents, loading }: IntakeSummaryPanelProps) => 
       (d) => new Date(d.created_at).toDateString() === today
     ).length;
 
-    const processingStatuses = [
-      "queued_for_text_extraction",
-      "extracting_text",
-      "queued_for_parsing",
-      "parsing",
-    ];
     const processing = documents.filter((d) =>
-      processingStatuses.includes(d.intake_status)
+      INTAKE_PROCESSING_STATUSES.includes(d.intake_status as any)
     ).length;
     const failed = documents.filter((d) => d.intake_status === "failed").length;
     const needsReview = documents.filter(
       (d) => d.intake_status === "needs_review"
     ).length;
     const complete = documents.filter(
-      (d) => d.intake_status === "parsed" || d.intake_status === "text_extracted"
+      (d) => isIntakeComplete(d.intake_status)
     ).length;
 
     return { total, totalPages, uploadedToday, processing, failed, needsReview, complete };
