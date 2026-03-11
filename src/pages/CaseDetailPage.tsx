@@ -233,37 +233,7 @@ const CaseDetailPage = () => {
                   )}
 
                   {activeTab === "assessment" && (
-                    <>
-                      <ModuleCompletionStatusPanel
-                        caseId={caseData.id}
-                        moduleId="demandiq"
-                        onCompleteClick={hasPermission(role, "complete_module") ? () => setShowCompletionDialog(true) : undefined}
-                      />
-                      <CaseNotesPanel />
-
-                      {hasReviewerIQ ? (
-                        <AnalysisCard
-                          icon={ClipboardCheck}
-                          title="Medical Review Snapshot"
-                          subtitle="ReviewerIQ"
-                          sections={MEDICAL_REVIEW_SECTIONS}
-                        />
-                      ) : (
-                        <div className="relative">
-                          <div className="absolute top-3 right-3 z-10">
-                            <ComingSoonBadge label="ReviewerIQ · Add-on" />
-                          </div>
-                          <div className="opacity-50 pointer-events-none">
-                            <AnalysisCard
-                              icon={ClipboardCheck}
-                              title="Medical Review Snapshot"
-                              subtitle="ReviewerIQ Preview"
-                              sections={MEDICAL_REVIEW_SECTIONS.slice(0, 1)}
-                            />
-                          </div>
-                        </div>
-                      )}
-                    </>
+                    <ClaimAssessmentTab />
                   )}
 
                   {activeTab === "chronology" && (
