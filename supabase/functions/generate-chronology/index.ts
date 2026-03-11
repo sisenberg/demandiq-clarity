@@ -61,7 +61,8 @@ Deno.serve(async (req: Request) => {
       );
     }
 
-    console.log("[generate-chronology] Case:", caseData.claimant, "tenant:", caseData.tenant_id);
+    // COMPLIANCE: Do not log claimant name (PII). Log only tenant prefix.
+    console.log("[generate-chronology] Case loaded, tenant:", caseData.tenant_id?.slice(0, 8));
 
     // 2. Gather all parsed document data for this case
     const [docsResult, pagesResult, metaResult, factsResult, typesResult] = await Promise.all([
@@ -163,9 +164,12 @@ Rules:
         model: "google/gemini-2.5-flash",
         messages: [
           { role: "system", content: systemPrompt },
-          {
-            role: "user",
-            content: `Case: ${caseData.claimant}, Claim #${caseData.claim_number}, DOL: ${caseData.date_of_loss ?? "unknown"}\n\nDocuments:\n${truncatedContext}`,
+            {
+              role: "user",
+              // COMPLIANCE: claimant name and claim_number are PII but required for
+              // accurate chronology. This is an approved AI boundary path (see ai-data-boundary.md).
+              content: `Case: ${caseData.claimant}, Claim #${caseData.claim_number}, DOL: ${caseData.date_of_loss ?? "unknown"}\n\nDocuments:\n${truncatedContext}`,
+            },
           },
         ],
         tools: [

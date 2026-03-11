@@ -92,7 +92,8 @@ Deno.serve(async (req: Request) => {
       );
     }
 
-    console.log("[classify-document] Found document:", doc.file_name, "tenant:", doc.tenant_id);
+    // COMPLIANCE: Do not log file_name (may contain claimant PII) or tenant_id in production
+    console.log("[classify-document] Found document, tenant:", doc.tenant_id?.slice(0, 8));
 
     // 2. Fetch extracted pages
     const { data: pages, error: pagesErr } = await supabase
@@ -149,6 +150,8 @@ Confidence scores:
           { role: "system", content: systemPrompt },
           {
             role: "user",
+            // COMPLIANCE: file_name may contain PII; extracted text contains PHI.
+            // This is an approved AI boundary path — see docs/compliance/ai-data-boundary.md.
             content: `Analyze this document. File name: "${doc.file_name}", File type: ${doc.file_type}\n\nExtracted text:\n${truncatedText}`,
           },
         ],

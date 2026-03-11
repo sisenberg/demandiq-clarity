@@ -32,7 +32,8 @@ const ExportsPage = () => {
     setDownloading(caseId);
     // TODO: When real export is implemented, use audit action "artifact_exported"
     // and generate filenames using case_number only (no claimant name).
-    console.log(`[Download] Generating ${format} for case ${caseId}`);
+    // COMPLIANCE: Do not log case ID or format in production — may correlate to PII.
+    console.log(`[Download] Export requested`);
     setTimeout(() => setDownloading(null), 2000);
   };
 

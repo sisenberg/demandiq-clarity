@@ -1,6 +1,12 @@
 import type { Case } from "@/types";
 import { CaseStatus } from "@/types";
 
+/**
+ * COMPLIANCE: All names, identifiers, and case details below are FICTIONAL.
+ * Do NOT replace with real claimant data. Do NOT copy production records here.
+ * See docs/compliance/data-handling-matrix.md — Non-Production zone requires
+ * synthetic data only.
+ */
 export const mockCases: Case[] = [
   {
     id: "case-001",

@@ -149,6 +149,8 @@ Deno.serve(async (req: Request) => {
       }
 
       // Multiple unique values - use AI to cluster
+      // COMPLIANCE: item.value contains PII (names, identifiers). This is sent to AI
+      // for entity resolution — an approved AI boundary path. Do NOT log item values.
       const itemList = items.map((item, idx) =>
         `[${idx}] "${item.value}" (confidence: ${item.confidence.toFixed(2)}, doc: ${item.document_id.slice(0, 8)})`
       ).join("\n");
