@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect, useMemo } from "react";
+import { useState, useRef, useEffect, useMemo, useCallback } from "react";
 import { useDocument } from "@/hooks/useDocuments";
 import { useDocumentPages } from "@/hooks/useDocumentPages";
 import { useDocumentExtractedFacts } from "@/hooks/useExtractedFacts";
