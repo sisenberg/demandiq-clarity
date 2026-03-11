@@ -171,13 +171,20 @@ const DocumentMetadataPanel = ({
                     </div>
                     {!isCurrentType && (
                       <button
-                        onClick={() =>
+                        onClick={() => {
+                          auditLog.mutate({
+                            actionType: "document_type_changed",
+                            entityType: "case_documents",
+                            entityId: documentId,
+                            beforeValue: { document_type: currentDocumentType },
+                            afterValue: { document_type: suggestion.suggested_type },
+                          });
                           acceptType.mutate({
                             suggestionId: suggestion.id,
                             documentId,
                             suggestedType: suggestion.suggested_type,
-                          })
-                        }
+                          });
+                        }}
                         disabled={acceptType.isPending}
                         className="flex items-center gap-1 text-[9px] font-medium px-2 py-1 rounded border border-border text-foreground hover:bg-accent transition-colors shrink-0"
                       >
