@@ -1,5 +1,5 @@
 /**
- * NegotiateIQ — Center Panel: Strategy generation + display + round management
+ * NegotiateIQ — Center Panel: Strategy generation + display + round management + calibration
  */
 
 import { useState, useMemo, useCallback } from "react";
@@ -8,14 +8,19 @@ import type { GeneratedStrategy, StrategyOverride } from "@/types/negotiate-stra
 import { generateStrategy } from "@/lib/negotiateStrategyEngine";
 import { useNegotiateStrategy, useSaveNegotiateStrategy } from "@/hooks/useNegotiateStrategy";
 import { useNegotiateSession, useNegotiationRounds } from "@/hooks/useNegotiateSession";
+import { useNegotiateCalibration } from "@/hooks/useNegotiateCalibration";
 import NegotiateStrategyCard from "@/components/negotiate/NegotiateStrategyCard";
 import RoundManagementPanel from "@/components/negotiate/RoundManagementPanel";
+import HistoricalCalibrationCard from "@/components/negotiate/HistoricalCalibrationCard";
 import { Zap, RefreshCw } from "lucide-react";
 
 interface NegotiateStrategyPanelProps {
   vm: NegotiationViewModel;
   caseId: string;
   evalPackageId: string;
+  attorneyName?: string;
+  attorneyFirm?: string;
+  jurisdictionState?: string;
 }
 
 const NegotiateStrategyPanel = ({ vm, caseId, evalPackageId }: NegotiateStrategyPanelProps) => {
