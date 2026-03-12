@@ -69,6 +69,14 @@ const App = () => (
                 }
               />
               <Route
+                path="/admin/calibration"
+                element={
+                  <RoleGuard permission="view_admin">
+                    <CalibrationPage />
+                  </RoleGuard>
+                }
+              />
+              <Route
                 path="/audit"
                 element={
                   <RoleGuard permission="view_audit_log">

@@ -38,6 +38,7 @@ const primaryNavItems = [
 
 const adminNavItems = [
   { label: "Admin", path: "/admin", icon: Settings },
+  { label: "Calibration", path: "/admin/calibration", icon: Database },
   { label: "Audit Log", path: "/audit", icon: ScrollText },
 ];
 

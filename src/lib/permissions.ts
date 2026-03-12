@@ -104,6 +104,7 @@ export function canAccessRoute(role: AppRole | null, route: string): boolean {
   if (!role) return false;
   switch (route) {
     case "/admin":
+    case "/admin/calibration":
       return hasPermission(role, "view_admin");
     case "/audit":
       return hasPermission(role, "view_audit_log");
