@@ -7,6 +7,8 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { useParams, Link } from "react-router-dom";
+import { useQuery } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
 import { useCase } from "@/hooks/useCases";
 import { useAuth } from "@/contexts/AuthContext";
 import { useNegotiateEvalPackage } from "@/hooks/useNegotiateEvalPackage";
