@@ -244,9 +244,12 @@ const NegotiateWorkspacePage = () => {
             </div>
 
             {/* Right: Notes / Timeline */}
-            <div className="w-[300px] shrink-0 border-l border-border bg-card/50 p-4 overflow-hidden">
-              <NegotiateRightPanel caseId={caseId} />
-            </div>
+            <div className="w-[320px] shrink-0 border-l border-border bg-card/50 p-4 overflow-y-auto">
+              <NegotiateRightPanel
+                caseId={caseId}
+                attorneyName={opposingCounsel?.full_name || undefined}
+                firmName={opposingCounsel?.organization || undefined}
+              />
           </div>
         )}
 
