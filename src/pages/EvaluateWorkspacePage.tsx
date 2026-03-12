@@ -110,7 +110,6 @@ const EvaluateWorkspacePage = () => {
   const isPending = startEvaluate.isPending || completeEvaluate.isPending;
 
   const claimVsInsured = caseData.title || `${caseData.claimant} v. ${caseData.insured}`;
-  const isWorkspaceActive = eligibility.eligible && moduleState !== EvaluateModuleState.NotStarted;
 
   return (
     <div className="flex flex-col h-full">
