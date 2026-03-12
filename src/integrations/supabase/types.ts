@@ -2129,6 +2129,85 @@ export type Database = {
           },
         ]
       }
+      negotiate_draft_versions: {
+        Row: {
+          case_id: string
+          context_snippets: Json
+          created_at: string
+          created_by: string
+          draft_type: string
+          engine_version: string
+          external_content: string
+          id: string
+          internal_notes: string
+          is_final: boolean
+          session_id: string
+          tenant_id: string
+          title: string
+          tone: string
+          updated_at: string
+          version: number
+        }
+        Insert: {
+          case_id: string
+          context_snippets?: Json
+          created_at?: string
+          created_by: string
+          draft_type?: string
+          engine_version?: string
+          external_content?: string
+          id?: string
+          internal_notes?: string
+          is_final?: boolean
+          session_id: string
+          tenant_id: string
+          title?: string
+          tone?: string
+          updated_at?: string
+          version?: number
+        }
+        Update: {
+          case_id?: string
+          context_snippets?: Json
+          created_at?: string
+          created_by?: string
+          draft_type?: string
+          engine_version?: string
+          external_content?: string
+          id?: string
+          internal_notes?: string
+          is_final?: boolean
+          session_id?: string
+          tenant_id?: string
+          title?: string
+          tone?: string
+          updated_at?: string
+          version?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "negotiate_draft_versions_case_id_fkey"
+            columns: ["case_id"]
+            isOneToOne: false
+            referencedRelation: "cases"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "negotiate_draft_versions_session_id_fkey"
+            columns: ["session_id"]
+            isOneToOne: false
+            referencedRelation: "negotiation_sessions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "negotiate_draft_versions_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       negotiate_strategies: {
         Row: {
           case_id: string
