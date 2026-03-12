@@ -1,10 +1,11 @@
 /**
- * NegotiateIQ — Right Panel: Live timeline, notes, drafts
+ * NegotiateIQ — Right Panel: Live timeline, notes, drafts, attorney intelligence
  */
 
 import { useMemo } from "react";
 import type { NegotiationEventRow, NegotiationNoteRow } from "@/types/negotiate-persistence";
 import { useNegotiationEvents, useNegotiationNotes, useNegotiateSession } from "@/hooks/useNegotiateSession";
+import AttorneyIntelligenceCard from "@/components/negotiate/AttorneyIntelligenceCard";
 import {
   History,
   StickyNote,
@@ -34,9 +35,11 @@ const EVENT_ICONS: Record<string, React.ElementType> = {
 
 interface NegotiateRightPanelProps {
   caseId?: string;
+  attorneyName?: string;
+  firmName?: string;
 }
 
-const NegotiateRightPanel = ({ caseId }: NegotiateRightPanelProps) => {
+const NegotiateRightPanel = ({ caseId, attorneyName, firmName }: NegotiateRightPanelProps) => {
   const { data: session } = useNegotiateSession(caseId);
   const { data: events = [] } = useNegotiationEvents(session?.id);
   const { data: notes = [] } = useNegotiationNotes(session?.id);
@@ -45,6 +48,14 @@ const NegotiateRightPanel = ({ caseId }: NegotiateRightPanelProps) => {
 
   return (
     <div className="flex flex-col gap-4 h-full overflow-y-auto pl-1">
+      {/* Attorney Intelligence */}
+      <AttorneyIntelligenceCard
+        attorneyName={attorneyName}
+        firmName={firmName}
+        caseId={caseId ?? ""}
+        sessionId={session?.id}
+      />
+
       {/* Negotiation Timeline */}
       <div>
         <div className="flex items-center gap-1.5 mb-3">

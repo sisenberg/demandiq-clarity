@@ -14,6 +14,63 @@ export type Database = {
   }
   public: {
     Tables: {
+      attorney_observations: {
+        Row: {
+          attorney_name: string
+          case_id: string | null
+          created_at: string
+          firm_name: string
+          id: string
+          observation_text: string
+          observation_type: string
+          observed_by: string
+          session_id: string | null
+          tenant_id: string
+          updated_at: string
+        }
+        Insert: {
+          attorney_name?: string
+          case_id?: string | null
+          created_at?: string
+          firm_name?: string
+          id?: string
+          observation_text?: string
+          observation_type?: string
+          observed_by: string
+          session_id?: string | null
+          tenant_id: string
+          updated_at?: string
+        }
+        Update: {
+          attorney_name?: string
+          case_id?: string | null
+          created_at?: string
+          firm_name?: string
+          id?: string
+          observation_text?: string
+          observation_type?: string
+          observed_by?: string
+          session_id?: string | null
+          tenant_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "attorney_observations_case_id_fkey"
+            columns: ["case_id"]
+            isOneToOne: false
+            referencedRelation: "cases"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "attorney_observations_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       audit_events: {
         Row: {
           action_type: string

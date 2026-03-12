@@ -7,6 +7,8 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { useParams, Link } from "react-router-dom";
+import { useQuery } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
 import { useCase } from "@/hooks/useCases";
 import { useAuth } from "@/contexts/AuthContext";
 import { useNegotiateEvalPackage } from "@/hooks/useNegotiateEvalPackage";
@@ -71,6 +73,21 @@ const NegotiateWorkspacePage = () => {
   const { data: session } = useNegotiateSession(caseId);
   const { data: savedStrategy } = useNegotiateStrategy(caseId);
   const { data: rounds = [] } = useNegotiationRounds(session?.id);
+
+  // Fetch opposing counsel for attorney intelligence
+  const { data: opposingCounsel } = useQuery({
+    queryKey: ["case-opposing-counsel", caseId],
+    enabled: !!caseId,
+    queryFn: async () => {
+      const { data } = await supabase
+        .from("case_parties")
+        .select("full_name, organization")
+        .eq("case_id", caseId!)
+        .eq("party_role", "attorney_claimant" as any)
+        .limit(1);
+      return data?.[0] ?? null;
+    },
+  });
 
   // Audit: module opened
   useEffect(() => {
@@ -227,8 +244,12 @@ const NegotiateWorkspacePage = () => {
             </div>
 
             {/* Right: Notes / Timeline */}
-            <div className="w-[300px] shrink-0 border-l border-border bg-card/50 p-4 overflow-hidden">
-              <NegotiateRightPanel caseId={caseId} />
+            <div className="w-[320px] shrink-0 border-l border-border bg-card/50 p-4 overflow-y-auto">
+              <NegotiateRightPanel
+                caseId={caseId}
+                attorneyName={opposingCounsel?.full_name || undefined}
+                firmName={opposingCounsel?.organization || undefined}
+              />
             </div>
           </div>
         )}
