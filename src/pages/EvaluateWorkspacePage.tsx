@@ -82,8 +82,23 @@ const EvaluateWorkspacePage = () => {
     if (!caseId) return;
     if (cta?.action === "start" || cta?.action === "resume") {
       startEvaluate.mutate(caseId);
+    } else if (cta?.action === "complete" && snapshot) {
+      const validation = validateEvaluateCompletion(snapshot, evalCompletion?.status);
+      if (!validation.valid) {
+        validation.errors.forEach((e) => toast.error(e));
+        return;
+      }
+      completeEvaluate.mutate({
+        caseId,
+        snapshot,
+        sourceModule: eligibility.inputSource ?? "demandiq",
+        sourceVersion: eligibility.sourceVersion ?? 1,
+        explanationLedger: null,
+      });
     }
   };
+
+  const isPending = startEvaluate.isPending || completeEvaluate.isPending;
 
   const claimVsInsured = caseData.title || `${caseData.claimant} v. ${caseData.insured}`;
   const isWorkspaceActive = eligibility.eligible && moduleState !== EvaluateModuleState.NotStarted;
