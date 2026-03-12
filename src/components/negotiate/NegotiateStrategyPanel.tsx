@@ -29,6 +29,7 @@ const NegotiateStrategyPanel = ({ vm, caseId, evalPackageId, attorneyName, attor
   const saveStrategy = useSaveNegotiateStrategy();
   const { data: session } = useNegotiateSession(caseId);
   const { data: rounds = [] } = useNegotiationRounds(session?.id);
+  const updateAuthority = useUpdateSessionAuthority();
 
   // Calibration
   const { data: calibration, isLoading: calLoading } = useNegotiateCalibration(vm, caseId, {
