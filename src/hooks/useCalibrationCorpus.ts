@@ -182,9 +182,9 @@ export function useImportHistoricalClaims() {
           status: errorCount === records.length ? "failed" : "completed",
           success_count: successCount,
           error_count: errorCount,
-          error_log: errors,
+          error_log: errors as any,
           completed_at: new Date().toISOString(),
-        } as Record<string, unknown>)
+        } as any)
         .eq("id", importId);
 
       return { importId, successCount, errorCount, errors };
