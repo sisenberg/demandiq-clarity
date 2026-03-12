@@ -39,6 +39,7 @@ const RoundManagementPanel = ({
   strategy,
   currentCeiling,
   openingDemand,
+  vm,
 }: RoundManagementPanelProps) => {
   const [showCaptureForm, setShowCaptureForm] = useState(false);
   const [selectedRoundIdx, setSelectedRoundIdx] = useState<number | null>(null);
