@@ -38,6 +38,7 @@ const EvaluateWorkspacePage = () => {
   const hasModule = isEntitlementActive(entitlements, ModuleId.EvaluateIQ);
   const moduleState = deriveEvaluateState(evalCompletion?.status);
   const cta = getEvaluateCTA(moduleState);
+  const { snapshot } = useEvaluateIntakeSnapshot(caseId);
 
   if (caseLoading) return <PageLoading message="Loading case…" />;
 
