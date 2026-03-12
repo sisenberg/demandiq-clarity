@@ -25,6 +25,7 @@ import IntakeDocumentsWorkstation from "@/components/case/IntakeDocumentsWorksta
 import SourcePagesWorkstation from "@/components/case/SourcePagesWorkstation";
 import DetectedEntitiesPanel from "@/components/case/DetectedEntitiesPanel";
 import MedicalReviewWorkspace from "@/components/case/MedicalReviewWorkspace";
+import EvaluateInlineWorkspace from "@/components/case/EvaluateInlineWorkspace";
 import DocumentUpload from "@/components/case/DocumentUpload";
 import JobsPanel from "@/components/case/JobsPanel";
 import DocumentTypeTag from "@/components/case/DocumentTypeTag";
