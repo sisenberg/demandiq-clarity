@@ -244,6 +244,56 @@ export function useAddNegotiationNote() {
   });
 }
 
+// ─── Update Authority ───────────────────────────────────
+
+export function useUpdateSessionAuthority() {
+  const qc = useQueryClient();
+  const { user, tenantId } = useAuth();
+
+  return useMutation({
+    mutationFn: async ({
+      sessionId,
+      caseId,
+      previousAuthority,
+      newAuthority,
+      reason,
+    }: {
+      sessionId: string;
+      caseId: string;
+      previousAuthority: number | null;
+      newAuthority: number;
+      reason: string;
+    }) => {
+      if (!user || !tenantId) throw new Error("Not authenticated");
+
+      const { error } = await T("negotiation_sessions")
+        .update({
+          current_authority: newAuthority,
+          updated_at: new Date().toISOString(),
+        })
+        .eq("id", sessionId);
+      if (error) throw error;
+
+      await logNegotiationEvent({
+        sessionId,
+        caseId,
+        tenantId,
+        actorId: user.id,
+        eventType: "authority_adjusted",
+        summary: `Authority updated: ${previousAuthority != null ? `$${previousAuthority.toLocaleString()}` : "unset"} → $${newAuthority.toLocaleString()}. ${reason}`,
+        beforeValue: { authority: previousAuthority },
+        afterValue: { authority: newAuthority, reason },
+      });
+    },
+    onSuccess: (_, { caseId }) => {
+      qc.invalidateQueries({ queryKey: ["negotiate-session", caseId] });
+      qc.invalidateQueries({ queryKey: ["negotiate-events"] });
+      toast.success("Authority updated");
+    },
+    onError: (err: Error) => toast.error(err.message),
+  });
+}
+
 // ─── Shared Event Logger ────────────────────────────────
 
 async function logNegotiationEvent({

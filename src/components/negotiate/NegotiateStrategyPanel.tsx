@@ -12,6 +12,7 @@ import { useNegotiateCalibration } from "@/hooks/useNegotiateCalibration";
 import NegotiateStrategyCard from "@/components/negotiate/NegotiateStrategyCard";
 import RoundManagementPanel from "@/components/negotiate/RoundManagementPanel";
 import HistoricalCalibrationCard from "@/components/negotiate/HistoricalCalibrationCard";
+import AuthorityCard from "@/components/negotiate/AuthorityCard";
 import { Zap, RefreshCw } from "lucide-react";
 
 interface NegotiateStrategyPanelProps {
