@@ -8,8 +8,11 @@
 import { useState, useMemo } from "react";
 import type { NegotiationRoundRow } from "@/types/negotiate-persistence";
 import type { GeneratedStrategy } from "@/types/negotiate-strategy";
+import type { NegotiationViewModel } from "@/lib/negotiateViewModel";
 import { computeCounterofferDeltas, computeRoundMetrics, type CounterofferDeltas } from "@/lib/negotiateDeltaEngine";
+import { generateResponseRecommendations, type ResponseEngineOutput } from "@/lib/negotiateResponseEngine";
 import CounterofferCaptureForm from "@/components/negotiate/CounterofferCaptureForm";
+import ResponseRecommendationCard from "@/components/negotiate/ResponseRecommendationCard";
 import {
   ArrowDownUp,
   Plus,
@@ -29,6 +32,7 @@ interface RoundManagementPanelProps {
   strategy: GeneratedStrategy | null;
   currentCeiling: number | null;
   openingDemand: number | null;
+  vm?: NegotiationViewModel;
 }
 
 const RoundManagementPanel = ({
@@ -38,6 +42,7 @@ const RoundManagementPanel = ({
   strategy,
   currentCeiling,
   openingDemand,
+  vm,
 }: RoundManagementPanelProps) => {
   const [showCaptureForm, setShowCaptureForm] = useState(false);
   const [selectedRoundIdx, setSelectedRoundIdx] = useState<number | null>(null);
@@ -61,6 +66,23 @@ const RoundManagementPanel = ({
       rounds,
     });
   }, [rounds, openingDemand, strategy, currentCeiling]);
+
+  // Response recommendations
+  const responseOutput = useMemo<ResponseEngineOutput | null>(() => {
+    const lastRoundWithCounter = [...rounds].reverse().find((r) => r.their_counteroffer != null);
+    if (!lastRoundWithCounter?.their_counteroffer || !strategy || !vm) return null;
+    const lastDefenseOffer = [...rounds].reverse().find((r) => r.our_offer != null)?.our_offer ?? null;
+
+    return generateResponseRecommendations({
+      strategy,
+      vm,
+      rounds,
+      currentCeiling,
+      openingDemand,
+      latestCounteroffer: lastRoundWithCounter.their_counteroffer,
+      lastDefenseOffer,
+    });
+  }, [rounds, strategy, vm, currentCeiling, openingDemand]);
 
   return (
     <div className="space-y-4">
@@ -156,6 +178,15 @@ const RoundManagementPanel = ({
             </div>
           </div>
         </div>
+      )}
+
+      {/* Response Recommendations */}
+      {responseOutput && (
+        <ResponseRecommendationCard
+          output={responseOutput}
+          sessionId={sessionId}
+          caseId={caseId}
+        />
       )}
 
       {/* Round History Table */}
