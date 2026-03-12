@@ -72,10 +72,10 @@ function assembleEvaluatePackage(input: PackageAssemblyInput): EvaluatePackagePa
 
   // Derive expanders/reducers from ledger
   const driverSummaries = (explanationLedger?.entries ?? [])
-    .filter((e) => e.magnitude >= 0.3)
+    .filter((e) => (e.magnitude.value ?? 0) >= 0.3 || e.direction !== "neutral")
     .map((e) => ({
-      key: e.driver_key,
-      label: e.driver_label,
+      key: e.driver_key ?? e.entry_key,
+      label: e.title,
       impact: e.direction === "increase" ? "expander" as const
         : e.direction === "decrease" ? "reducer" as const
         : "neutral" as const,
