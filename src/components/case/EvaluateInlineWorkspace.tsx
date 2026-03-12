@@ -3,7 +3,9 @@ import { isEntitlementActive } from "@/hooks/useModuleEntitlements";
 import { useModuleCompletion } from "@/hooks/useModuleCompletion";
 import { useEvaluateEligibility } from "@/hooks/useEvaluateEligibility";
 import { useStartEvaluate, deriveEvaluateState } from "@/hooks/useEvaluateState";
+import { useEvaluateIntakeSnapshot } from "@/hooks/useEvaluateIntakeSnapshot";
 import { ModuleId } from "@/types";
+import EvaluateIntakeSummaryPanel from "@/components/case/EvaluateIntakeSummaryPanel";
 import {
   EvaluateModuleState,
   EVALUATE_STATE_LABEL,
@@ -30,6 +32,7 @@ const EvaluateInlineWorkspace = ({ caseId }: Props) => {
   const { data: evalCompletion } = useModuleCompletion(caseId, "evaluateiq");
   const eligibility = useEvaluateEligibility(caseId);
   const startEvaluate = useStartEvaluate();
+  const { snapshot } = useEvaluateIntakeSnapshot(caseId);
 
   const moduleState = deriveEvaluateState(evalCompletion?.status);
   const cta = getEvaluateCTA(moduleState);
@@ -115,21 +118,31 @@ const EvaluateInlineWorkspace = ({ caseId }: Props) => {
       )}
 
       {eligibility.eligible && moduleState !== EvaluateModuleState.NotStarted && moduleState !== EvaluateModuleState.Completed && (
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          {[
-            { title: "Damages Summary", desc: "Economic and non-economic damages breakdown" },
-            { title: "Comparable Verdicts", desc: "Jurisdiction-specific verdict and settlement data" },
-            { title: "Settlement Range", desc: "Modeled settlement range with confidence intervals" },
-            { title: "Risk Factors", desc: "Liability, coverage, and documentation risk adjustments" },
-          ].map((card) => (
-            <div key={card.title} className="rounded-xl border border-border bg-card p-5">
-              <h3 className="text-[13px] font-semibold text-foreground mb-1">{card.title}</h3>
-              <p className="text-[11px] text-muted-foreground mb-4">{card.desc}</p>
-              <div className="h-24 rounded-lg bg-accent/50 border border-dashed border-border flex items-center justify-center">
-                <span className="text-[10px] text-muted-foreground font-medium uppercase tracking-wider">Coming Soon</span>
-              </div>
+        <div className="grid grid-cols-1 lg:grid-cols-[340px_1fr] gap-4">
+          {/* Left: Intake summary */}
+          {snapshot && (
+            <div className="lg:max-h-[calc(100vh-200px)] lg:overflow-y-auto">
+              <EvaluateIntakeSummaryPanel snapshot={snapshot} />
             </div>
-          ))}
+          )}
+
+          {/* Right: Valuation workspace (scaffold) */}
+          <div className="space-y-4">
+            {[
+              { title: "Damages Summary", desc: "Economic and non-economic damages breakdown" },
+              { title: "Comparable Verdicts", desc: "Jurisdiction-specific verdict and settlement data" },
+              { title: "Settlement Range", desc: "Modeled settlement range with confidence intervals" },
+              { title: "Risk Factors", desc: "Liability, coverage, and documentation risk adjustments" },
+            ].map((card) => (
+              <div key={card.title} className="rounded-xl border border-border bg-card p-5">
+                <h3 className="text-[13px] font-semibold text-foreground mb-1">{card.title}</h3>
+                <p className="text-[11px] text-muted-foreground mb-4">{card.desc}</p>
+                <div className="h-24 rounded-lg bg-accent/50 border border-dashed border-border flex items-center justify-center">
+                  <span className="text-[10px] text-muted-foreground font-medium uppercase tracking-wider">Coming Soon</span>
+                </div>
+              </div>
+            ))}
+          </div>
         </div>
       )}
 
