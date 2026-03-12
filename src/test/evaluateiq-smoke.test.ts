@@ -165,7 +165,8 @@ describe("EvaluateIQ — Range Generation", () => {
 
 describe("EvaluateIQ — Assumption Overrides", () => {
   it("human liability override changes range", () => {
-    const snapshot = SURGERY_STRONG_LIABILITY;
+    // Use soft tissue case (no policy cap) so liability actually affects output
+    const snapshot = SOFT_TISSUE_LOW_IMPACT;
     const drivers = extractValuationDrivers(snapshot);
 
     const baseRange = computeSettlementRange(snapshot, drivers);
