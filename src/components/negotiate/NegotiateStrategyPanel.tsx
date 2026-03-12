@@ -1,69 +1,120 @@
 /**
- * NegotiateIQ — Center Panel: Negotiation strategy & active round
+ * NegotiateIQ — Center Panel: Strategy generation + display
  */
 
-import {
-  DollarSign,
-  Target,
-  ArrowDownUp,
-  Zap,
-} from "lucide-react";
+import { useState, useMemo, useCallback } from "react";
+import type { NegotiationViewModel } from "@/lib/negotiateViewModel";
+import type { GeneratedStrategy, StrategyOverride } from "@/types/negotiate-strategy";
+import { generateStrategy } from "@/lib/negotiateStrategyEngine";
+import { useNegotiateStrategy, useSaveNegotiateStrategy } from "@/hooks/useNegotiateStrategy";
+import NegotiateStrategyCard from "@/components/negotiate/NegotiateStrategyCard";
+import { Zap, RefreshCw } from "lucide-react";
 
-const NegotiateStrategyPanel = () => {
+interface NegotiateStrategyPanelProps {
+  vm: NegotiationViewModel;
+  caseId: string;
+  evalPackageId: string;
+}
+
+const NegotiateStrategyPanel = ({ vm, caseId, evalPackageId }: NegotiateStrategyPanelProps) => {
+  const { data: savedStrategy, isLoading } = useNegotiateStrategy(caseId);
+  const saveStrategy = useSaveNegotiateStrategy();
+
+  // Generate or restore strategy
+  const [generatedStrategy, setGeneratedStrategy] = useState<GeneratedStrategy | null>(null);
+  const [overrides, setOverrides] = useState<StrategyOverride[]>([]);
+
+  const strategy = useMemo(() => {
+    // If we have a saved strategy for this eval package version, use it
+    if (savedStrategy && savedStrategy.eval_package_version === vm.provenance.packageVersion) {
+      if (!generatedStrategy) {
+        // Initialize from saved on first render
+        setGeneratedStrategy(savedStrategy.generated_strategy);
+        setOverrides(savedStrategy.overrides ?? []);
+        return savedStrategy.generated_strategy;
+      }
+    }
+    return generatedStrategy;
+  }, [savedStrategy, generatedStrategy, vm.provenance.packageVersion]);
+
+  const handleGenerate = useCallback(() => {
+    const s = generateStrategy(vm);
+    setGeneratedStrategy(s);
+    setOverrides([]);
+  }, [vm]);
+
+  const handleOverride = useCallback((override: StrategyOverride) => {
+    setOverrides((prev) => {
+      const filtered = prev.filter((o) => o.field !== override.field);
+      return [...filtered, override];
+    });
+  }, []);
+
+  const handleSave = useCallback(() => {
+    if (!strategy) return;
+    saveStrategy.mutate({
+      caseId,
+      evalPackageId,
+      evalPackageVersion: vm.provenance.packageVersion,
+      generated: strategy,
+      overrides,
+    });
+  }, [strategy, overrides, caseId, evalPackageId, vm.provenance.packageVersion, saveStrategy]);
+
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center py-16">
+        <div className="h-5 w-5 border-2 border-primary border-t-transparent rounded-full animate-spin" />
+      </div>
+    );
+  }
+
+  // No strategy yet — show generate CTA
+  if (!strategy) {
+    return (
+      <div className="flex flex-col items-center justify-center py-20 text-center">
+        <div className="h-12 w-12 rounded-xl bg-[hsl(var(--status-attention))]/10 flex items-center justify-center mb-4">
+          <Zap className="h-6 w-6 text-[hsl(var(--status-attention))]" />
+        </div>
+        <h3 className="text-[14px] font-semibold text-foreground mb-1">Generate Negotiation Strategy</h3>
+        <p className="text-[11px] text-muted-foreground max-w-sm leading-relaxed mb-5">
+          Generate an initial negotiation plan from EvaluatePackage v{vm.provenance.packageVersion}.
+          The strategy engine will recommend positions, movement plans, and tactical actions based on the evaluated range and driver profile.
+        </p>
+        <button
+          onClick={handleGenerate}
+          className="flex items-center gap-2 text-[12px] font-semibold px-5 py-2.5 rounded-lg bg-primary text-primary-foreground hover:bg-primary/90 transition-colors shadow-sm"
+        >
+          <Zap className="h-4 w-4" />
+          Generate Strategy
+        </button>
+      </div>
+    );
+  }
+
   return (
-    <div className="flex flex-col gap-4 h-full overflow-y-auto">
-      {/* Opening Position */}
-      <PlaceholderCard
-        icon={Target}
-        title="Opening Position"
-        description="Define the initial demand or offer position based on the evaluated range. Factor in anchor strategy and negotiation psychology."
-      />
+    <div className="space-y-4">
+      {/* Regenerate button */}
+      <div className="flex justify-end">
+        <button
+          onClick={handleGenerate}
+          className="flex items-center gap-1 text-[10px] font-medium text-muted-foreground hover:text-foreground transition-colors"
+        >
+          <RefreshCw className="h-3 w-3" />
+          Regenerate
+        </button>
+      </div>
 
-      {/* Active Round */}
-      <PlaceholderCard
-        icon={ArrowDownUp}
-        title="Active Round"
-        description="Track the current offer/counteroffer exchange. Each round captures positions, rationale, and adjuster notes."
-      />
-
-      {/* Concession Strategy */}
-      <PlaceholderCard
-        icon={DollarSign}
-        title="Concession Framework"
-        description="Model concession patterns: decrement sizing, floor protection, and final authority positioning."
-      />
-
-      {/* Quick Actions */}
-      <PlaceholderCard
-        icon={Zap}
-        title="Quick Actions"
-        description="Generate counteroffer, draft settlement letter, request supervisor authority, or escalate to litigation review."
+      <NegotiateStrategyCard
+        strategy={strategy}
+        overrides={overrides}
+        onOverride={handleOverride}
+        onSave={handleSave}
+        isSaving={saveStrategy.isPending}
+        strategyVersion={savedStrategy?.version ?? null}
       />
     </div>
   );
 };
-
-function PlaceholderCard({
-  icon: Icon,
-  title,
-  description,
-}: {
-  icon: React.ElementType;
-  title: string;
-  description: string;
-}) {
-  return (
-    <div className="rounded-xl border border-dashed border-border bg-card/50 p-4">
-      <div className="flex items-center gap-2 mb-2">
-        <Icon className="h-3.5 w-3.5 text-muted-foreground/50" />
-        <h3 className="text-[12px] font-semibold text-foreground">{title}</h3>
-        <span className="text-[8px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded bg-accent text-muted-foreground">
-          Coming Soon
-        </span>
-      </div>
-      <p className="text-[11px] text-muted-foreground leading-relaxed">{description}</p>
-    </div>
-  );
-}
 
 export default NegotiateStrategyPanel;

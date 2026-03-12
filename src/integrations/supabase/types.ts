@@ -2129,6 +2129,60 @@ export type Database = {
           },
         ]
       }
+      negotiate_strategies: {
+        Row: {
+          case_id: string
+          created_at: string
+          created_by: string | null
+          eval_package_id: string
+          eval_package_version: number
+          generated_strategy: Json
+          id: string
+          overrides: Json
+          tenant_id: string
+          version: number
+        }
+        Insert: {
+          case_id: string
+          created_at?: string
+          created_by?: string | null
+          eval_package_id: string
+          eval_package_version?: number
+          generated_strategy?: Json
+          id?: string
+          overrides?: Json
+          tenant_id: string
+          version?: number
+        }
+        Update: {
+          case_id?: string
+          created_at?: string
+          created_by?: string | null
+          eval_package_id?: string
+          eval_package_version?: number
+          generated_strategy?: Json
+          id?: string
+          overrides?: Json
+          tenant_id?: string
+          version?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "negotiate_strategies_case_id_fkey"
+            columns: ["case_id"]
+            isOneToOne: false
+            referencedRelation: "cases"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "negotiate_strategies_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       phi_readiness_config: {
         Row: {
           ai_retention_confirmed_at: string | null
