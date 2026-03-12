@@ -137,14 +137,14 @@ export function useImportHistoricalClaims() {
       // 1. Create import batch
       const { data: importRow, error: impErr } = await supabase
         .from("calibration_imports")
-        .insert({
+        .insert([{
           tenant_id: tenantId,
           import_type: importType,
           file_name: fileName,
           record_count: records.length,
           status: "processing",
           imported_by: user.id,
-        } as Record<string, unknown>)
+        }] as any)
         .select()
         .single();
 
