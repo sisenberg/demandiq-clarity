@@ -1,5 +1,5 @@
 /**
- * NegotiateIQ — Center Panel: Strategy generation + display + round management
+ * NegotiateIQ — Center Panel: Strategy generation + display + round management + calibration
  */
 
 import { useState, useMemo, useCallback } from "react";
@@ -8,21 +8,34 @@ import type { GeneratedStrategy, StrategyOverride } from "@/types/negotiate-stra
 import { generateStrategy } from "@/lib/negotiateStrategyEngine";
 import { useNegotiateStrategy, useSaveNegotiateStrategy } from "@/hooks/useNegotiateStrategy";
 import { useNegotiateSession, useNegotiationRounds } from "@/hooks/useNegotiateSession";
+import { useNegotiateCalibration } from "@/hooks/useNegotiateCalibration";
 import NegotiateStrategyCard from "@/components/negotiate/NegotiateStrategyCard";
 import RoundManagementPanel from "@/components/negotiate/RoundManagementPanel";
+import HistoricalCalibrationCard from "@/components/negotiate/HistoricalCalibrationCard";
 import { Zap, RefreshCw } from "lucide-react";
 
 interface NegotiateStrategyPanelProps {
   vm: NegotiationViewModel;
   caseId: string;
   evalPackageId: string;
+  attorneyName?: string;
+  attorneyFirm?: string;
+  jurisdictionState?: string;
 }
 
-const NegotiateStrategyPanel = ({ vm, caseId, evalPackageId }: NegotiateStrategyPanelProps) => {
+const NegotiateStrategyPanel = ({ vm, caseId, evalPackageId, attorneyName, attorneyFirm, jurisdictionState }: NegotiateStrategyPanelProps) => {
   const { data: savedStrategy, isLoading } = useNegotiateStrategy(caseId);
   const saveStrategy = useSaveNegotiateStrategy();
   const { data: session } = useNegotiateSession(caseId);
   const { data: rounds = [] } = useNegotiationRounds(session?.id);
+
+  // Calibration
+  const { data: calibration, isLoading: calLoading } = useNegotiateCalibration(vm, caseId, {
+    attorneyName,
+    attorneyFirm,
+    jurisdictionState,
+    currentCounteroffer: session?.current_counteroffer ?? null,
+  });
 
   // Generate or restore strategy
   const [generatedStrategy, setGeneratedStrategy] = useState<GeneratedStrategy | null>(null);
@@ -115,6 +128,9 @@ const NegotiateStrategyPanel = ({ vm, caseId, evalPackageId }: NegotiateStrategy
         isSaving={saveStrategy.isPending}
         strategyVersion={savedStrategy?.version ?? null}
       />
+
+      {/* Historical Calibration */}
+      <HistoricalCalibrationCard calibration={calibration} isLoading={calLoading} />
 
       {/* Round Management */}
       {session && (
