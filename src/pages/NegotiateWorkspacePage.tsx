@@ -307,6 +307,30 @@ const NegotiateWorkspacePage = () => {
           </div>
         )}
       </div>
+
+      {/* Complete Negotiation Dialog */}
+      {viewModel && session && (
+        <CompleteNegotiationDialog
+          open={showCompleteDialog}
+          onClose={() => setShowCompleteDialog(false)}
+          vm={viewModel}
+          session={session}
+          strategy={savedStrategy ? {
+            version: savedStrategy.version,
+            generated_strategy: savedStrategy.generated_strategy,
+            overrides: savedStrategy.overrides ?? [],
+          } : null}
+          rounds={rounds}
+          notes={negotiationNotes}
+          caseId={caseId!}
+          attorneyName={opposingCounsel?.full_name ?? null}
+          firmName={opposingCounsel?.organization ?? null}
+          observationsCount={0}
+          calibrationSignalsCount={0}
+          calibrationHighConfCount={0}
+          calibrationJurisdictionBand={null}
+        />
+      )}
     </div>
   );
 };
