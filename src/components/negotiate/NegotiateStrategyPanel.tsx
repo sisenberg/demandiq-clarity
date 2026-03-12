@@ -1,5 +1,5 @@
 /**
- * NegotiateIQ — Center Panel: Strategy generation + display
+ * NegotiateIQ — Center Panel: Strategy generation + display + round management
  */
 
 import { useState, useMemo, useCallback } from "react";
@@ -7,7 +7,9 @@ import type { NegotiationViewModel } from "@/lib/negotiateViewModel";
 import type { GeneratedStrategy, StrategyOverride } from "@/types/negotiate-strategy";
 import { generateStrategy } from "@/lib/negotiateStrategyEngine";
 import { useNegotiateStrategy, useSaveNegotiateStrategy } from "@/hooks/useNegotiateStrategy";
+import { useNegotiateSession, useNegotiationRounds } from "@/hooks/useNegotiateSession";
 import NegotiateStrategyCard from "@/components/negotiate/NegotiateStrategyCard";
+import RoundManagementPanel from "@/components/negotiate/RoundManagementPanel";
 import { Zap, RefreshCw } from "lucide-react";
 
 interface NegotiateStrategyPanelProps {
@@ -19,16 +21,16 @@ interface NegotiateStrategyPanelProps {
 const NegotiateStrategyPanel = ({ vm, caseId, evalPackageId }: NegotiateStrategyPanelProps) => {
   const { data: savedStrategy, isLoading } = useNegotiateStrategy(caseId);
   const saveStrategy = useSaveNegotiateStrategy();
+  const { data: session } = useNegotiateSession(caseId);
+  const { data: rounds = [] } = useNegotiationRounds(session?.id);
 
   // Generate or restore strategy
   const [generatedStrategy, setGeneratedStrategy] = useState<GeneratedStrategy | null>(null);
   const [overrides, setOverrides] = useState<StrategyOverride[]>([]);
 
   const strategy = useMemo(() => {
-    // If we have a saved strategy for this eval package version, use it
     if (savedStrategy && savedStrategy.eval_package_version === vm.provenance.packageVersion) {
       if (!generatedStrategy) {
-        // Initialize from saved on first render
         setGeneratedStrategy(savedStrategy.generated_strategy);
         setOverrides(savedStrategy.overrides ?? []);
         return savedStrategy.generated_strategy;
@@ -93,7 +95,7 @@ const NegotiateStrategyPanel = ({ vm, caseId, evalPackageId }: NegotiateStrategy
   }
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-6">
       {/* Regenerate button */}
       <div className="flex justify-end">
         <button
@@ -113,6 +115,18 @@ const NegotiateStrategyPanel = ({ vm, caseId, evalPackageId }: NegotiateStrategy
         isSaving={saveStrategy.isPending}
         strategyVersion={savedStrategy?.version ?? null}
       />
+
+      {/* Round Management */}
+      {session && (
+        <RoundManagementPanel
+          rounds={rounds}
+          sessionId={session.id}
+          caseId={caseId}
+          strategy={strategy}
+          currentCeiling={session.current_authority}
+          openingDemand={null}
+        />
+      )}
     </div>
   );
 };
