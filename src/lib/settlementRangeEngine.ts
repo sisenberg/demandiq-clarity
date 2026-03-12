@@ -221,9 +221,11 @@ function roundToNegotiationIncrement(value: number): number {
 export function computeSettlementRange(
   snapshot: EvaluateIntakeSnapshot,
   driverResult: DriverExtractionResult,
+  humanOverrides?: HumanAssumptionOverrides | null,
 ): RangeEngineOutput {
   const warnings: RangeWarning[] = [];
   const assumptions: ValuationRunAssumptionSummary[] = [];
+  const ov = humanOverrides ?? null;
 
   // ════════════════════════════════════════════════════
   // STEP 1: Compute Economic Base
@@ -235,10 +237,18 @@ export function computeSettlementRange(
     ? snapshot.medical_billing.reduce((s, b) => s + (b.reviewer_recommended_amount ?? b.billed_amount), 0)
     : null;
 
-  // Prefer reviewed amounts; fall back to billed
-  const medicalBase = totalReviewed ?? totalBilled;
-  const wageLoss = snapshot.wage_loss.total_lost_wages.value;
-  const futureMedical = snapshot.future_treatment.future_medical_estimate.value;
+  // Human can force billed or reviewed base
+  let medicalBase: number;
+  if (ov?.medical_base_preference === "billed") {
+    medicalBase = totalBilled;
+  } else if (ov?.medical_base_preference === "reviewed" && totalReviewed !== null) {
+    medicalBase = totalReviewed;
+  } else {
+    medicalBase = totalReviewed ?? totalBilled;
+  }
+
+  const wageLoss = ov?.wage_loss_override ?? snapshot.wage_loss.total_lost_wages.value;
+  const futureMedical = ov?.future_medical_override ?? snapshot.future_treatment.future_medical_estimate.value;
 
   const economicBase = medicalBase + wageLoss + futureMedical;
 
