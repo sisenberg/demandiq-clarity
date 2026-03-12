@@ -58,6 +58,7 @@ const NegotiateWorkspacePage = () => {
   const hasModule = isEntitlementActive(entitlements, ModuleId.NegotiateIQ);
 
   const [activeTab, setActiveTab] = useState<WorkspaceTab>("strategy");
+  const [showCompleteDialog, setShowCompleteDialog] = useState(false);
 
   // Build view model (memoized, never mutates package)
   const viewModel = useMemo(
