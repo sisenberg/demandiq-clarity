@@ -50,15 +50,15 @@ const EvaluateWorkspacePage = () => {
   const reopenEvaluate = useReopenEvaluate();
   const { snapshot } = useEvaluateIntakeSnapshot(caseId);
 
-  // Upstream freshness — detect stale valuations
-  const upstreamModuleId = eligibility.inputSource === "revieweriq" ? "revieweriq" : "demandiq";
-  const { data: upstreamFreshness } = useIsUpstreamCurrent(caseId, "evaluateiq", upstreamModuleId);
-  const isStale = isWorkspaceActiveCheck && upstreamFreshness ? !upstreamFreshness.isCurrent : false;
-
   const hasModule = isEntitlementActive(entitlements, ModuleId.EvaluateIQ);
   const moduleState = deriveEvaluateState(evalCompletion?.status);
   const cta = getEvaluateCTA(moduleState);
-  const isWorkspaceActiveCheck = eligibility.eligible && moduleState !== EvaluateModuleState.NotStarted;
+  const isWorkspaceActive = eligibility.eligible && moduleState !== EvaluateModuleState.NotStarted;
+
+  // Upstream freshness — detect stale valuations
+  const upstreamModuleId = eligibility.inputSource === "revieweriq" ? "revieweriq" : "demandiq";
+  const { data: upstreamFreshness } = useIsUpstreamCurrent(caseId, "evaluateiq", upstreamModuleId);
+  const isStale = isWorkspaceActive && upstreamFreshness ? !upstreamFreshness.isCurrent : false;
 
   const [activeTab, setActiveTab] = useState<EvalTab>("overview");
 
