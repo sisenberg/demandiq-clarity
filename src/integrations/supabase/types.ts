@@ -2703,6 +2703,63 @@ export type Database = {
           },
         ]
       }
+      negotiation_packages: {
+        Row: {
+          case_id: string
+          completed_at: string | null
+          completed_by: string | null
+          created_at: string
+          final_settlement_amount: number | null
+          id: string
+          outcome_type: string
+          package_payload: Json
+          session_id: string
+          tenant_id: string
+          version: number
+        }
+        Insert: {
+          case_id: string
+          completed_at?: string | null
+          completed_by?: string | null
+          created_at?: string
+          final_settlement_amount?: number | null
+          id?: string
+          outcome_type?: string
+          package_payload?: Json
+          session_id: string
+          tenant_id: string
+          version?: number
+        }
+        Update: {
+          case_id?: string
+          completed_at?: string | null
+          completed_by?: string | null
+          created_at?: string
+          final_settlement_amount?: number | null
+          id?: string
+          outcome_type?: string
+          package_payload?: Json
+          session_id?: string
+          tenant_id?: string
+          version?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "negotiation_packages_case_id_fkey"
+            columns: ["case_id"]
+            isOneToOne: false
+            referencedRelation: "cases"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "negotiation_packages_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       negotiation_party_profiles: {
         Row: {
           aggressiveness_rating: number | null
