@@ -1,18 +1,18 @@
 /**
  * NegotiateIQ — Workspace Page
  *
- * 3-panel layout consuming EvaluatePackage v1 via read-only view model.
- * Left: evaluation-backed claim context
- * Center: negotiation strategy + active round
- * Right: notes, drafts, timeline
+ * Tabbed layout: Strategy & Rounds | Drafting
+ * Consuming EvaluatePackage v1 via read-only view model.
  */
 
-import { useEffect, useMemo } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useParams, Link } from "react-router-dom";
 import { useCase } from "@/hooks/useCases";
 import { useAuth } from "@/contexts/AuthContext";
 import { useNegotiateEvalPackage } from "@/hooks/useNegotiateEvalPackage";
 import { useNegotiateStaleDetection } from "@/hooks/useNegotiateStaleDetection";
+import { useNegotiateStrategy } from "@/hooks/useNegotiateStrategy";
+import { useNegotiateSession, useNegotiationRounds } from "@/hooks/useNegotiateSession";
 import { useAuditLog } from "@/hooks/useAuditLog";
 import { isEntitlementActive } from "@/hooks/useModuleEntitlements";
 import { ModuleId } from "@/types";
@@ -21,6 +21,7 @@ import NegotiateClaimContext from "@/components/negotiate/NegotiateClaimContext"
 import NegotiateStrategyPanel from "@/components/negotiate/NegotiateStrategyPanel";
 import NegotiateRightPanel from "@/components/negotiate/NegotiateRightPanel";
 import NegotiateStaleBanner from "@/components/negotiate/NegotiateStaleBanner";
+import NegotiateDraftingWorkspace from "@/components/negotiate/NegotiateDraftingWorkspace";
 import { PageLoading } from "@/components/ui/LoadingSkeleton";
 import EmptyState from "@/components/ui/EmptyState";
 import {
@@ -32,7 +33,11 @@ import {
   Calculator,
   Clock,
   Package,
+  FileEdit,
+  Target,
 } from "lucide-react";
+
+type WorkspaceTab = "strategy" | "drafting";
 
 const NegotiateWorkspacePage = () => {
   const { caseId } = useParams<{ caseId: string }>();
@@ -48,6 +53,8 @@ const NegotiateWorkspacePage = () => {
 
   const hasModule = isEntitlementActive(entitlements, ModuleId.NegotiateIQ);
 
+  const [activeTab, setActiveTab] = useState<WorkspaceTab>("strategy");
+
   // Build view model (memoized, never mutates package)
   const viewModel = useMemo(
     () => (evalPackage ? buildNegotiationViewModel(evalPackage) : null),
@@ -59,6 +66,11 @@ const NegotiateWorkspacePage = () => {
     caseId,
     evalPackage?.version
   );
+
+  // Session + strategy + rounds for drafting tab
+  const { data: session } = useNegotiateSession(caseId);
+  const { data: savedStrategy } = useNegotiateStrategy(caseId);
+  const { data: rounds = [] } = useNegotiationRounds(session?.id);
 
   // Audit: module opened
   useEffect(() => {
@@ -120,6 +132,12 @@ const NegotiateWorkspacePage = () => {
               <p className="text-[11px] text-muted-foreground mt-0.5">
                 {claimVsInsured} · {caseData.case_number}
               </p>
+            </div>
+
+            {/* Workspace Tabs */}
+            <div className="flex items-center gap-1 ml-6 bg-accent/50 rounded-lg p-0.5">
+              <TabButton active={activeTab === "strategy"} onClick={() => setActiveTab("strategy")} icon={Target} label="Strategy & Rounds" />
+              <TabButton active={activeTab === "drafting"} onClick={() => setActiveTab("drafting")} icon={FileEdit} label="Drafting" />
             </div>
           </div>
 
@@ -195,8 +213,8 @@ const NegotiateWorkspacePage = () => {
           </div>
         )}
 
-        {/* 3-panel workspace */}
-        {viewModel && (
+        {/* Strategy & Rounds Tab */}
+        {viewModel && activeTab === "strategy" && (
           <div className="flex h-full">
             {/* Left: Claim Context */}
             <div className="w-[320px] shrink-0 border-r border-border bg-card/50 p-4 overflow-hidden">
@@ -214,9 +232,56 @@ const NegotiateWorkspacePage = () => {
             </div>
           </div>
         )}
+
+        {/* Drafting Tab */}
+        {viewModel && activeTab === "drafting" && session && (
+          <NegotiateDraftingWorkspace
+            vm={viewModel}
+            strategy={savedStrategy?.generated_strategy ?? null}
+            rounds={rounds}
+            sessionId={session.id}
+            caseId={caseId!}
+          />
+        )}
+
+        {/* Drafting tab but no session yet */}
+        {viewModel && activeTab === "drafting" && !session && (
+          <div className="flex items-center justify-center h-full">
+            <EmptyState
+              icon={FileEdit}
+              title="Start Negotiation First"
+              description="Generate a strategy on the Strategy & Rounds tab to create a negotiation session before drafting."
+              action={
+                <button
+                  onClick={() => setActiveTab("strategy")}
+                  className="inline-flex items-center gap-1.5 text-[11px] font-semibold px-4 py-2 rounded-lg bg-primary text-primary-foreground hover:bg-primary/90 transition-colors"
+                >
+                  <Target className="h-3.5 w-3.5" />
+                  Go to Strategy
+                </button>
+              }
+            />
+          </div>
+        )}
       </div>
     </div>
   );
 };
+
+function TabButton({ active, onClick, icon: Icon, label }: { active: boolean; onClick: () => void; icon: React.ElementType; label: string }) {
+  return (
+    <button
+      onClick={onClick}
+      className={`flex items-center gap-1.5 text-[10px] font-semibold px-3 py-1.5 rounded-md transition-colors ${
+        active
+          ? "bg-background text-foreground shadow-sm"
+          : "text-muted-foreground hover:text-foreground"
+      }`}
+    >
+      <Icon className="h-3 w-3" />
+      {label}
+    </button>
+  );
+}
 
 export default NegotiateWorkspacePage;
