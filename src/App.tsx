@@ -51,6 +51,14 @@ const App = () => (
                   </ModuleGuard>
                 }
               />
+              <Route
+                path="/cases/:caseId/negotiate"
+                element={
+                  <ModuleGuard moduleId="negotiateiq">
+                    <NegotiateWorkspacePage />
+                  </ModuleGuard>
+                }
+              />
               <Route path="/documents" element={<DocumentsPage />} />
               <Route path="/documents/:docId" element={<DocumentDetailPage />} />
               <Route
