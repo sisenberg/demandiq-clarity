@@ -76,6 +76,7 @@ const NegotiateWorkspacePage = () => {
   const { data: session } = useNegotiateSession(caseId);
   const { data: savedStrategy } = useNegotiateStrategy(caseId);
   const { data: rounds = [] } = useNegotiationRounds(session?.id);
+  const { data: negotiationNotes = [] } = useNegotiationNotes(session?.id);
 
   // Fetch opposing counsel for attorney intelligence
   const { data: opposingCounsel } = useQuery({
