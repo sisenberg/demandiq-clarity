@@ -43,6 +43,8 @@ const EvaluateWorkspacePage = () => {
   const { data: evalCompletion } = useModuleCompletion(caseId, "evaluateiq");
   const eligibility = useEvaluateEligibility(caseId);
   const startEvaluate = useStartEvaluate();
+  const completeEvaluate = useCompleteEvaluate();
+  const reopenEvaluate = useReopenEvaluate();
   const { snapshot } = useEvaluateIntakeSnapshot(caseId);
 
   const hasModule = isEntitlementActive(entitlements, ModuleId.EvaluateIQ);
