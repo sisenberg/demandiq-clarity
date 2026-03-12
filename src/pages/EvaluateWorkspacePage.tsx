@@ -165,11 +165,14 @@ const EvaluateWorkspacePage = () => {
             </div>
           )}
 
-          {/* In progress — scaffold workspace */}
           {eligibility.eligible && moduleState !== EvaluateModuleState.NotStarted && moduleState !== EvaluateModuleState.Completed && (
-            <div className="space-y-4">
-              {/* Workspace cards placeholder */}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 lg:grid-cols-[340px_1fr] gap-4">
+              {snapshot && (
+                <div className="lg:max-h-[calc(100vh-200px)] lg:overflow-y-auto">
+                  <EvaluateIntakeSummaryPanel snapshot={snapshot} />
+                </div>
+              )}
+              <div className="space-y-4">
                 {[
                   { title: "Damages Summary", desc: "Economic and non-economic damages breakdown" },
                   { title: "Comparable Verdicts", desc: "Jurisdiction-specific verdict and settlement data" },
