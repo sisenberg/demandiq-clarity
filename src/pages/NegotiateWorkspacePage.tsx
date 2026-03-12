@@ -14,7 +14,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useNegotiateEvalPackage } from "@/hooks/useNegotiateEvalPackage";
 import { useNegotiateStaleDetection } from "@/hooks/useNegotiateStaleDetection";
 import { useNegotiateStrategy } from "@/hooks/useNegotiateStrategy";
-import { useNegotiateSession, useNegotiationRounds } from "@/hooks/useNegotiateSession";
+import { useNegotiateSession, useNegotiationRounds, useNegotiationNotes } from "@/hooks/useNegotiateSession";
 import { useAuditLog } from "@/hooks/useAuditLog";
 import { isEntitlementActive } from "@/hooks/useModuleEntitlements";
 import { ModuleId } from "@/types";
@@ -24,6 +24,7 @@ import NegotiateStrategyPanel from "@/components/negotiate/NegotiateStrategyPane
 import NegotiateRightPanel from "@/components/negotiate/NegotiateRightPanel";
 import NegotiateStaleBanner from "@/components/negotiate/NegotiateStaleBanner";
 import NegotiateDraftingWorkspace from "@/components/negotiate/NegotiateDraftingWorkspace";
+import CompleteNegotiationDialog from "@/components/negotiate/CompleteNegotiationDialog";
 import { PageLoading } from "@/components/ui/LoadingSkeleton";
 import EmptyState from "@/components/ui/EmptyState";
 import {
@@ -37,6 +38,7 @@ import {
   Package,
   FileEdit,
   Target,
+  CheckCircle,
 } from "lucide-react";
 
 type WorkspaceTab = "strategy" | "drafting";
