@@ -210,7 +210,7 @@ const NegotiateWorkspacePage = () => {
 
             {/* Right: Notes / Timeline */}
             <div className="w-[300px] shrink-0 border-l border-border bg-card/50 p-4 overflow-hidden">
-              <NegotiateRightPanel />
+              <NegotiateRightPanel caseId={caseId} />
             </div>
           </div>
         )}
