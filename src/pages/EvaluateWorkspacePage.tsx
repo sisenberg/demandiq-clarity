@@ -1,11 +1,13 @@
 import { useState } from "react";
 import { useParams, Link } from "react-router-dom";
+import { toast } from "sonner";
 import { useCase } from "@/hooks/useCases";
 import { useAuth } from "@/contexts/AuthContext";
 import { useModuleCompletion } from "@/hooks/useModuleCompletion";
 import { useEvaluateEligibility } from "@/hooks/useEvaluateEligibility";
 import { useStartEvaluate, deriveEvaluateState } from "@/hooks/useEvaluateState";
 import { useEvaluateIntakeSnapshot } from "@/hooks/useEvaluateIntakeSnapshot";
+import { useCompleteEvaluate, useReopenEvaluate, validateEvaluateCompletion } from "@/hooks/useEvaluateCompletion";
 import { isEntitlementActive } from "@/hooks/useModuleEntitlements";
 import { ModuleId } from "@/types";
 import {
@@ -23,6 +25,7 @@ import EvalDriversTab from "@/components/evaluate/EvalDriversTab";
 import EvalRangeTab from "@/components/evaluate/EvalRangeTab";
 import EvalEvidenceTab from "@/components/evaluate/EvalEvidenceTab";
 import EvalExplanationTab from "@/components/evaluate/EvalExplanationTab";
+import EvalHandoffTab from "@/components/evaluate/EvalHandoffTab";
 import EvalPlaceholderTab from "@/components/evaluate/EvalPlaceholderTab";
 import EvalStickyActions from "@/components/evaluate/EvalStickyActions";
 import {
@@ -41,6 +44,8 @@ const EvaluateWorkspacePage = () => {
   const { data: evalCompletion } = useModuleCompletion(caseId, "evaluateiq");
   const eligibility = useEvaluateEligibility(caseId);
   const startEvaluate = useStartEvaluate();
+  const completeEvaluate = useCompleteEvaluate();
+  const reopenEvaluate = useReopenEvaluate();
   const { snapshot } = useEvaluateIntakeSnapshot(caseId);
 
   const hasModule = isEntitlementActive(entitlements, ModuleId.EvaluateIQ);
@@ -78,8 +83,23 @@ const EvaluateWorkspacePage = () => {
     if (!caseId) return;
     if (cta?.action === "start" || cta?.action === "resume") {
       startEvaluate.mutate(caseId);
+    } else if (cta?.action === "complete" && snapshot) {
+      const validation = validateEvaluateCompletion(snapshot, evalCompletion?.status);
+      if (!validation.valid) {
+        validation.errors.forEach((e) => toast.error(e));
+        return;
+      }
+      completeEvaluate.mutate({
+        caseId,
+        snapshot,
+        sourceModule: eligibility.inputSource ?? "demandiq",
+        sourceVersion: eligibility.sourceVersion ?? 1,
+        explanationLedger: null,
+      });
     }
   };
+
+  const isPending = startEvaluate.isPending || completeEvaluate.isPending;
 
   const claimVsInsured = caseData.title || `${caseData.claimant} v. ${caseData.insured}`;
   const isWorkspaceActive = eligibility.eligible && moduleState !== EvaluateModuleState.NotStarted;
@@ -171,7 +191,7 @@ const EvaluateWorkspacePage = () => {
               {activeTab === "explanation" && <EvalExplanationTab snapshot={snapshot} />}
               {activeTab === "evidence" && <EvalEvidenceTab snapshot={snapshot} />}
               {activeTab === "calibration" && <EvalPlaceholderTab tab="calibration" />}
-              {activeTab === "handoff" && <EvalPlaceholderTab tab="handoff" />}
+              {activeTab === "handoff" && <EvalHandoffTab snapshot={snapshot} />}
             </div>
           )}
         </div>
@@ -182,7 +202,7 @@ const EvaluateWorkspacePage = () => {
         <EvalStickyActions
           moduleState={moduleState}
           onCTA={handleCTA}
-          isPending={startEvaluate.isPending}
+          isPending={isPending}
         />
       )}
     </div>
