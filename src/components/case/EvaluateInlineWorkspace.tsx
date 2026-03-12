@@ -20,7 +20,9 @@ import {
   CheckCircle2,
   Play,
   RotateCcw,
+  ExternalLink,
 } from "lucide-react";
+import { Link } from "react-router-dom";
 
 interface Props {
   caseId: string;
@@ -58,8 +60,8 @@ const EvaluateInlineWorkspace = ({ caseId }: Props) => {
       {/* Status bar */}
       <div className="flex items-center justify-between rounded-xl border border-border bg-card px-5 py-3">
         <div className="flex items-center gap-3">
-          <div className="h-8 w-8 rounded-lg bg-[hsl(var(--status-approved))]/10 flex items-center justify-center">
-            <Calculator className="h-4 w-4 text-[hsl(var(--status-approved))]" />
+          <div className="h-8 w-8 rounded-lg bg-primary/10 flex items-center justify-center">
+            <Calculator className="h-4 w-4 text-primary" />
           </div>
           <div>
             <h3 className="text-[13px] font-semibold text-foreground">EvaluateIQ</h3>
@@ -74,11 +76,22 @@ const EvaluateInlineWorkspace = ({ caseId }: Props) => {
               Source: {eligibility.inputSource === "revieweriq" ? "ReviewerIQ" : "DemandIQ"} v{eligibility.sourceVersion}
             </span>
           )}
+
+          {/* Open workspace link */}
+          {eligibility.eligible && moduleState !== EvaluateModuleState.NotStarted && (
+            <Link
+              to={`/cases/${caseId}/evaluate`}
+              className="btn-secondary"
+            >
+              <ExternalLink className="h-3 w-3" /> Open Workspace
+            </Link>
+          )}
+
           {cta && eligibility.eligible && (
             <button
               onClick={handleCTA}
               disabled={startEvaluate.isPending}
-              className="flex items-center gap-1.5 text-[11px] font-semibold px-3.5 py-2 rounded-lg bg-primary text-primary-foreground hover:bg-primary/90 shadow-sm transition-all disabled:opacity-50"
+              className="btn-primary"
             >
               {cta.action === "start" && <Play className="h-3.5 w-3.5" />}
               {cta.action === "resume" && <RotateCcw className="h-3.5 w-3.5" />}
@@ -117,31 +130,20 @@ const EvaluateInlineWorkspace = ({ caseId }: Props) => {
         />
       )}
 
-      {eligibility.eligible && moduleState !== EvaluateModuleState.NotStarted && moduleState !== EvaluateModuleState.Completed && (
+      {eligibility.eligible && moduleState !== EvaluateModuleState.NotStarted && moduleState !== EvaluateModuleState.Completed && snapshot && (
         <div className="grid grid-cols-1 lg:grid-cols-[340px_1fr] gap-4">
-          {/* Left: Intake summary */}
-          {snapshot && (
-            <div className="lg:max-h-[calc(100vh-200px)] lg:overflow-y-auto">
-              <EvaluateIntakeSummaryPanel snapshot={snapshot} />
-            </div>
-          )}
-
-          {/* Right: Valuation workspace (scaffold) */}
+          <div className="lg:max-h-[calc(100vh-200px)] lg:overflow-y-auto">
+            <EvaluateIntakeSummaryPanel snapshot={snapshot} />
+          </div>
           <div className="space-y-4">
-            {[
-              { title: "Damages Summary", desc: "Economic and non-economic damages breakdown" },
-              { title: "Comparable Verdicts", desc: "Jurisdiction-specific verdict and settlement data" },
-              { title: "Settlement Range", desc: "Modeled settlement range with confidence intervals" },
-              { title: "Risk Factors", desc: "Liability, coverage, and documentation risk adjustments" },
-            ].map((card) => (
-              <div key={card.title} className="rounded-xl border border-border bg-card p-5">
-                <h3 className="text-[13px] font-semibold text-foreground mb-1">{card.title}</h3>
-                <p className="text-[11px] text-muted-foreground mb-4">{card.desc}</p>
-                <div className="h-24 rounded-lg bg-accent/50 border border-dashed border-border flex items-center justify-center">
-                  <span className="text-[10px] text-muted-foreground font-medium uppercase tracking-wider">Coming Soon</span>
-                </div>
-              </div>
-            ))}
+            <div className="card-elevated p-5 text-center">
+              <p className="text-[11px] text-muted-foreground mb-3">
+                Full valuation workspace is available in the dedicated view.
+              </p>
+              <Link to={`/cases/${caseId}/evaluate`} className="btn-primary">
+                <ExternalLink className="h-3.5 w-3.5" /> Open Full Workspace
+              </Link>
+            </div>
           </div>
         </div>
       )}
