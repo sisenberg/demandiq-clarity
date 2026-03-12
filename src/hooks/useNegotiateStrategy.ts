@@ -26,7 +26,7 @@ export function useNegotiateStrategy(caseId: string | undefined) {
     queryKey: ["negotiate-strategy", caseId],
     enabled: !!caseId,
     queryFn: async () => {
-      const { data, error } = await (supabase.from("negotiate_strategies") as any)
+      const { data, error } = await (supabase.from("negotiate_strategies" as any) as any)
         .select("*")
         .eq("case_id", caseId!)
         .order("version", { ascending: false })
