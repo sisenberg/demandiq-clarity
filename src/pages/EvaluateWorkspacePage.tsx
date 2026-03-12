@@ -185,6 +185,18 @@ const EvaluateWorkspacePage = () => {
           {/* Active workspace */}
           {isWorkspaceActive && snapshot && (
             <div className="space-y-5">
+              {/* Stale data warning */}
+              <EvalStaleDataBanner
+                isStale={isStale}
+                staleReason=""
+                upstreamModule={upstreamModuleId}
+                upstreamVersion={eligibility.sourceVersion}
+                onRefresh={() => {
+                  // Re-fetch snapshot — in production this would rebuild from updated upstream
+                  toast.info("Refreshing inputs from upstream package…");
+                }}
+              />
+
               <EvalSummaryHeader
                 snapshot={snapshot}
                 moduleState={moduleState}
