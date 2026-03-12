@@ -2183,6 +2183,644 @@ export type Database = {
           },
         ]
       }
+      negotiation_counteroffers: {
+        Row: {
+          amount: number
+          attachment_path: string | null
+          case_id: string
+          created_at: string
+          direction: string
+          id: string
+          notes: string
+          received_at: string
+          recorded_by: string
+          round_id: string | null
+          session_id: string
+          source_channel: string
+          tenant_id: string
+        }
+        Insert: {
+          amount?: number
+          attachment_path?: string | null
+          case_id: string
+          created_at?: string
+          direction?: string
+          id?: string
+          notes?: string
+          received_at?: string
+          recorded_by: string
+          round_id?: string | null
+          session_id: string
+          source_channel?: string
+          tenant_id: string
+        }
+        Update: {
+          amount?: number
+          attachment_path?: string | null
+          case_id?: string
+          created_at?: string
+          direction?: string
+          id?: string
+          notes?: string
+          received_at?: string
+          recorded_by?: string
+          round_id?: string | null
+          session_id?: string
+          source_channel?: string
+          tenant_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "negotiation_counteroffers_case_id_fkey"
+            columns: ["case_id"]
+            isOneToOne: false
+            referencedRelation: "cases"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "negotiation_counteroffers_round_id_fkey"
+            columns: ["round_id"]
+            isOneToOne: false
+            referencedRelation: "negotiation_rounds"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "negotiation_counteroffers_session_id_fkey"
+            columns: ["session_id"]
+            isOneToOne: false
+            referencedRelation: "negotiation_sessions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "negotiation_counteroffers_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      negotiation_drafts: {
+        Row: {
+          case_id: string
+          content_json: Json
+          content_text: string
+          created_at: string
+          created_by: string
+          draft_type: string
+          id: string
+          round_id: string | null
+          session_id: string
+          tenant_id: string
+          title: string
+          updated_at: string
+          version: number
+        }
+        Insert: {
+          case_id: string
+          content_json?: Json
+          content_text?: string
+          created_at?: string
+          created_by: string
+          draft_type?: string
+          id?: string
+          round_id?: string | null
+          session_id: string
+          tenant_id: string
+          title?: string
+          updated_at?: string
+          version?: number
+        }
+        Update: {
+          case_id?: string
+          content_json?: Json
+          content_text?: string
+          created_at?: string
+          created_by?: string
+          draft_type?: string
+          id?: string
+          round_id?: string | null
+          session_id?: string
+          tenant_id?: string
+          title?: string
+          updated_at?: string
+          version?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "negotiation_drafts_case_id_fkey"
+            columns: ["case_id"]
+            isOneToOne: false
+            referencedRelation: "cases"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "negotiation_drafts_round_id_fkey"
+            columns: ["round_id"]
+            isOneToOne: false
+            referencedRelation: "negotiation_rounds"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "negotiation_drafts_session_id_fkey"
+            columns: ["session_id"]
+            isOneToOne: false
+            referencedRelation: "negotiation_sessions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "negotiation_drafts_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      negotiation_events: {
+        Row: {
+          actor_user_id: string
+          after_value: Json | null
+          before_value: Json | null
+          case_id: string
+          created_at: string
+          event_type: Database["public"]["Enums"]["negotiation_event_type"]
+          id: string
+          metadata: Json
+          round_id: string | null
+          session_id: string
+          summary: string
+          tenant_id: string
+        }
+        Insert: {
+          actor_user_id: string
+          after_value?: Json | null
+          before_value?: Json | null
+          case_id: string
+          created_at?: string
+          event_type: Database["public"]["Enums"]["negotiation_event_type"]
+          id?: string
+          metadata?: Json
+          round_id?: string | null
+          session_id: string
+          summary?: string
+          tenant_id: string
+        }
+        Update: {
+          actor_user_id?: string
+          after_value?: Json | null
+          before_value?: Json | null
+          case_id?: string
+          created_at?: string
+          event_type?: Database["public"]["Enums"]["negotiation_event_type"]
+          id?: string
+          metadata?: Json
+          round_id?: string | null
+          session_id?: string
+          summary?: string
+          tenant_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "negotiation_events_case_id_fkey"
+            columns: ["case_id"]
+            isOneToOne: false
+            referencedRelation: "cases"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "negotiation_events_round_id_fkey"
+            columns: ["round_id"]
+            isOneToOne: false
+            referencedRelation: "negotiation_rounds"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "negotiation_events_session_id_fkey"
+            columns: ["session_id"]
+            isOneToOne: false
+            referencedRelation: "negotiation_sessions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "negotiation_events_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      negotiation_notes: {
+        Row: {
+          author_id: string
+          case_id: string
+          content: string
+          created_at: string
+          id: string
+          is_internal: boolean
+          note_type: string
+          round_id: string | null
+          session_id: string
+          tenant_id: string
+          updated_at: string
+        }
+        Insert: {
+          author_id: string
+          case_id: string
+          content?: string
+          created_at?: string
+          id?: string
+          is_internal?: boolean
+          note_type?: string
+          round_id?: string | null
+          session_id: string
+          tenant_id: string
+          updated_at?: string
+        }
+        Update: {
+          author_id?: string
+          case_id?: string
+          content?: string
+          created_at?: string
+          id?: string
+          is_internal?: boolean
+          note_type?: string
+          round_id?: string | null
+          session_id?: string
+          tenant_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "negotiation_notes_case_id_fkey"
+            columns: ["case_id"]
+            isOneToOne: false
+            referencedRelation: "cases"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "negotiation_notes_round_id_fkey"
+            columns: ["round_id"]
+            isOneToOne: false
+            referencedRelation: "negotiation_rounds"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "negotiation_notes_session_id_fkey"
+            columns: ["session_id"]
+            isOneToOne: false
+            referencedRelation: "negotiation_sessions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "negotiation_notes_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      negotiation_outcomes: {
+        Row: {
+          case_id: string
+          created_at: string
+          eval_range_floor: number | null
+          eval_range_likely: number | null
+          eval_range_stretch: number | null
+          final_counteroffer: number | null
+          final_offer: number | null
+          id: string
+          initial_counteroffer: number | null
+          initial_offer: number | null
+          outcome_notes: string
+          outcome_type: string
+          resolved_at: string | null
+          resolved_by: string | null
+          session_id: string
+          settlement_amount: number | null
+          tenant_id: string
+          total_rounds: number
+        }
+        Insert: {
+          case_id: string
+          created_at?: string
+          eval_range_floor?: number | null
+          eval_range_likely?: number | null
+          eval_range_stretch?: number | null
+          final_counteroffer?: number | null
+          final_offer?: number | null
+          id?: string
+          initial_counteroffer?: number | null
+          initial_offer?: number | null
+          outcome_notes?: string
+          outcome_type?: string
+          resolved_at?: string | null
+          resolved_by?: string | null
+          session_id: string
+          settlement_amount?: number | null
+          tenant_id: string
+          total_rounds?: number
+        }
+        Update: {
+          case_id?: string
+          created_at?: string
+          eval_range_floor?: number | null
+          eval_range_likely?: number | null
+          eval_range_stretch?: number | null
+          final_counteroffer?: number | null
+          final_offer?: number | null
+          id?: string
+          initial_counteroffer?: number | null
+          initial_offer?: number | null
+          outcome_notes?: string
+          outcome_type?: string
+          resolved_at?: string | null
+          resolved_by?: string | null
+          session_id?: string
+          settlement_amount?: number | null
+          tenant_id?: string
+          total_rounds?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "negotiation_outcomes_case_id_fkey"
+            columns: ["case_id"]
+            isOneToOne: false
+            referencedRelation: "cases"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "negotiation_outcomes_session_id_fkey"
+            columns: ["session_id"]
+            isOneToOne: false
+            referencedRelation: "negotiation_sessions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "negotiation_outcomes_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      negotiation_party_profiles: {
+        Row: {
+          aggressiveness_rating: number | null
+          case_id: string
+          created_at: string
+          created_by: string
+          display_name: string
+          firm_name: string
+          id: string
+          known_style: string
+          observations: Json
+          party_id: string | null
+          party_role: string
+          prior_case_notes: string
+          session_id: string
+          tenant_id: string
+          updated_at: string
+        }
+        Insert: {
+          aggressiveness_rating?: number | null
+          case_id: string
+          created_at?: string
+          created_by: string
+          display_name?: string
+          firm_name?: string
+          id?: string
+          known_style?: string
+          observations?: Json
+          party_id?: string | null
+          party_role?: string
+          prior_case_notes?: string
+          session_id: string
+          tenant_id: string
+          updated_at?: string
+        }
+        Update: {
+          aggressiveness_rating?: number | null
+          case_id?: string
+          created_at?: string
+          created_by?: string
+          display_name?: string
+          firm_name?: string
+          id?: string
+          known_style?: string
+          observations?: Json
+          party_id?: string | null
+          party_role?: string
+          prior_case_notes?: string
+          session_id?: string
+          tenant_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "negotiation_party_profiles_case_id_fkey"
+            columns: ["case_id"]
+            isOneToOne: false
+            referencedRelation: "cases"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "negotiation_party_profiles_party_id_fkey"
+            columns: ["party_id"]
+            isOneToOne: false
+            referencedRelation: "case_parties"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "negotiation_party_profiles_session_id_fkey"
+            columns: ["session_id"]
+            isOneToOne: false
+            referencedRelation: "negotiation_sessions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "negotiation_party_profiles_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      negotiation_rounds: {
+        Row: {
+          authority_at_round: number | null
+          case_id: string
+          created_at: string
+          id: string
+          notes: string
+          our_offer: number | null
+          our_offer_at: string | null
+          round_number: number
+          session_id: string
+          strategy_version_id: string | null
+          tenant_id: string
+          their_counteroffer: number | null
+          their_counteroffer_at: string | null
+          updated_at: string
+        }
+        Insert: {
+          authority_at_round?: number | null
+          case_id: string
+          created_at?: string
+          id?: string
+          notes?: string
+          our_offer?: number | null
+          our_offer_at?: string | null
+          round_number?: number
+          session_id: string
+          strategy_version_id?: string | null
+          tenant_id: string
+          their_counteroffer?: number | null
+          their_counteroffer_at?: string | null
+          updated_at?: string
+        }
+        Update: {
+          authority_at_round?: number | null
+          case_id?: string
+          created_at?: string
+          id?: string
+          notes?: string
+          our_offer?: number | null
+          our_offer_at?: string | null
+          round_number?: number
+          session_id?: string
+          strategy_version_id?: string | null
+          tenant_id?: string
+          their_counteroffer?: number | null
+          their_counteroffer_at?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "negotiation_rounds_case_id_fkey"
+            columns: ["case_id"]
+            isOneToOne: false
+            referencedRelation: "cases"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "negotiation_rounds_session_id_fkey"
+            columns: ["session_id"]
+            isOneToOne: false
+            referencedRelation: "negotiation_sessions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "negotiation_rounds_strategy_version_id_fkey"
+            columns: ["strategy_version_id"]
+            isOneToOne: false
+            referencedRelation: "negotiate_strategies"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "negotiation_rounds_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      negotiation_sessions: {
+        Row: {
+          active_strategy_id: string | null
+          case_id: string
+          completed_at: string | null
+          completed_by: string | null
+          created_at: string
+          current_authority: number | null
+          current_counteroffer: number | null
+          current_last_offer: number | null
+          current_range_ceiling: number | null
+          current_range_floor: number | null
+          eval_package_id: string
+          eval_package_version: number
+          final_outcome_notes: string
+          final_settlement_amount: number | null
+          id: string
+          started_at: string | null
+          started_by: string | null
+          status: Database["public"]["Enums"]["negotiation_session_status"]
+          tenant_id: string
+          updated_at: string
+        }
+        Insert: {
+          active_strategy_id?: string | null
+          case_id: string
+          completed_at?: string | null
+          completed_by?: string | null
+          created_at?: string
+          current_authority?: number | null
+          current_counteroffer?: number | null
+          current_last_offer?: number | null
+          current_range_ceiling?: number | null
+          current_range_floor?: number | null
+          eval_package_id: string
+          eval_package_version?: number
+          final_outcome_notes?: string
+          final_settlement_amount?: number | null
+          id?: string
+          started_at?: string | null
+          started_by?: string | null
+          status?: Database["public"]["Enums"]["negotiation_session_status"]
+          tenant_id: string
+          updated_at?: string
+        }
+        Update: {
+          active_strategy_id?: string | null
+          case_id?: string
+          completed_at?: string | null
+          completed_by?: string | null
+          created_at?: string
+          current_authority?: number | null
+          current_counteroffer?: number | null
+          current_last_offer?: number | null
+          current_range_ceiling?: number | null
+          current_range_floor?: number | null
+          eval_package_id?: string
+          eval_package_version?: number
+          final_outcome_notes?: string
+          final_settlement_amount?: number | null
+          id?: string
+          started_at?: string | null
+          started_by?: string | null
+          status?: Database["public"]["Enums"]["negotiation_session_status"]
+          tenant_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "negotiation_sessions_active_strategy_id_fkey"
+            columns: ["active_strategy_id"]
+            isOneToOne: false
+            referencedRelation: "negotiate_strategies"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "negotiation_sessions_case_id_fkey"
+            columns: ["case_id"]
+            isOneToOne: false
+            referencedRelation: "cases"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "negotiation_sessions_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       phi_readiness_config: {
         Row: {
           ai_retention_confirmed_at: string | null
@@ -3637,6 +4275,28 @@ export type Database = {
         | "completed"
         | "reopened"
       module_entitlement_status: "enabled" | "disabled" | "trial" | "suspended"
+      negotiation_event_type:
+        | "offer_made"
+        | "counteroffer_received"
+        | "hold"
+        | "bracket_proposed"
+        | "support_requested"
+        | "authority_adjusted"
+        | "draft_generated"
+        | "note_added"
+        | "session_completed"
+        | "status_changed"
+        | "strategy_override"
+      negotiation_session_status:
+        | "not_started"
+        | "strategy_ready"
+        | "active_negotiation"
+        | "pending_response"
+        | "settled"
+        | "impasse"
+        | "escalated"
+        | "closed_no_settlement"
+        | "transferred_to_litiq_candidate"
       party_role:
         | "claimant"
         | "insured"
@@ -4037,6 +4697,30 @@ export const Constants = {
         "reopened",
       ],
       module_entitlement_status: ["enabled", "disabled", "trial", "suspended"],
+      negotiation_event_type: [
+        "offer_made",
+        "counteroffer_received",
+        "hold",
+        "bracket_proposed",
+        "support_requested",
+        "authority_adjusted",
+        "draft_generated",
+        "note_added",
+        "session_completed",
+        "status_changed",
+        "strategy_override",
+      ],
+      negotiation_session_status: [
+        "not_started",
+        "strategy_ready",
+        "active_negotiation",
+        "pending_response",
+        "settled",
+        "impasse",
+        "escalated",
+        "closed_no_settlement",
+        "transferred_to_litiq_candidate",
+      ],
       party_role: [
         "claimant",
         "insured",
