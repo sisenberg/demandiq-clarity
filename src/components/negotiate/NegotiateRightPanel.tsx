@@ -1,10 +1,11 @@
 /**
- * NegotiateIQ — Right Panel: Live timeline, notes, drafts
+ * NegotiateIQ — Right Panel: Live timeline, notes, drafts, attorney intelligence
  */
 
 import { useMemo } from "react";
 import type { NegotiationEventRow, NegotiationNoteRow } from "@/types/negotiate-persistence";
 import { useNegotiationEvents, useNegotiationNotes, useNegotiateSession } from "@/hooks/useNegotiateSession";
+import AttorneyIntelligenceCard from "@/components/negotiate/AttorneyIntelligenceCard";
 import {
   History,
   StickyNote,
