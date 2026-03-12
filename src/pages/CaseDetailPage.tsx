@@ -264,6 +264,11 @@ const CaseDetailPage = () => {
                 <EvaluateInlineWorkspace caseId={caseData.id} />
               )}
 
+              {/* ── NEGOTIATEIQ ────────────────────── */}
+              {activeSection === "negotiate" && (
+                <NegotiateInlineWorkspace caseId={caseData.id} />
+              )}
+
               {/* ── CHAT ──────────────────────────── */}
               {activeSection === "chat" && (
                 <CaseChatView />
