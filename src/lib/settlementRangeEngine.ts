@@ -28,6 +28,7 @@
 import type { EvaluateIntakeSnapshot } from "@/types/evaluate-intake";
 import type { ExtractedDriver, DriverExtractionResult } from "./valuationDriverEngine";
 import type { ValuationRunAssumptionSummary } from "@/types/evaluate-persistence";
+import type { HumanAssumptionOverrides } from "@/hooks/useAssumptionOverrides";
 
 // ─── Engine Version ────────────────────────────────────
 
@@ -220,9 +221,11 @@ function roundToNegotiationIncrement(value: number): number {
 export function computeSettlementRange(
   snapshot: EvaluateIntakeSnapshot,
   driverResult: DriverExtractionResult,
+  humanOverrides?: HumanAssumptionOverrides | null,
 ): RangeEngineOutput {
   const warnings: RangeWarning[] = [];
   const assumptions: ValuationRunAssumptionSummary[] = [];
+  const ov = humanOverrides ?? null;
 
   // ════════════════════════════════════════════════════
   // STEP 1: Compute Economic Base
@@ -234,10 +237,18 @@ export function computeSettlementRange(
     ? snapshot.medical_billing.reduce((s, b) => s + (b.reviewer_recommended_amount ?? b.billed_amount), 0)
     : null;
 
-  // Prefer reviewed amounts; fall back to billed
-  const medicalBase = totalReviewed ?? totalBilled;
-  const wageLoss = snapshot.wage_loss.total_lost_wages.value;
-  const futureMedical = snapshot.future_treatment.future_medical_estimate.value;
+  // Human can force billed or reviewed base
+  let medicalBase: number;
+  if (ov?.medical_base_preference === "billed") {
+    medicalBase = totalBilled;
+  } else if (ov?.medical_base_preference === "reviewed" && totalReviewed !== null) {
+    medicalBase = totalReviewed;
+  } else {
+    medicalBase = totalReviewed ?? totalBilled;
+  }
+
+  const wageLoss = ov?.wage_loss_override ?? snapshot.wage_loss.total_lost_wages.value;
+  const futureMedical = ov?.future_medical_override ?? snapshot.future_treatment.future_medical_estimate.value;
 
   const economicBase = medicalBase + wageLoss + futureMedical;
 
@@ -314,7 +325,7 @@ export function computeSettlementRange(
   // ════════════════════════════════════════════════════
 
   const { factor: liabilityFactor, reasons: liabilityReasons } =
-    computeLiabilityFactor(snapshot, driverResult, assumptions);
+    computeLiabilityFactor(snapshot, driverResult, assumptions, ov);
 
   // ════════════════════════════════════════════════════
   // STEP 4: Treatment Reliability Adjustment
@@ -555,38 +566,97 @@ function computeLiabilityFactor(
   s: EvaluateIntakeSnapshot,
   dr: DriverExtractionResult,
   assumptions: ValuationRunAssumptionSummary[],
+  humanOverrides?: HumanAssumptionOverrides | null,
 ): { factor: number; reasons: string[] } {
   const reasons: string[] = [];
   let factor = 1.0;
+  const ov = humanOverrides ?? null;
 
-  // Liability fact ratio
-  const supporting = s.liability_facts.filter((f) => f.supports_liability).length;
-  const adverse = s.liability_facts.filter((f) => !f.supports_liability).length;
-  const total = supporting + adverse;
-
-  if (total > 0) {
-    const ratio = supporting / total;
-    // Scale: ratio 1.0 → factor 1.0; ratio 0.0 → factor 0.30
-    factor = 0.30 + ratio * 0.70;
-    reasons.push(`Liability fact ratio: ${supporting}/${total} supporting (${Math.round(ratio * 100)}%)`);
+  // Check if human has overridden liability percentage directly
+  if (ov?.liability_percentage !== null && ov?.liability_percentage !== undefined) {
+    factor = ov.liability_percentage / 100;
+    reasons.push(`Human-adopted liability: ${ov.liability_percentage}% (overrides system-derived)`);
+    assumptions.push({
+      key: "human_liability",
+      label: `Liability set to ${ov.liability_percentage}% by reviewer`,
+      impact: factor < 0.8 ? "reducer" : "neutral",
+      description: "Human-adopted assumption overrides system-derived liability calculation",
+    });
   } else {
-    // No liability facts — assume moderate uncertainty
-    factor = 0.75;
-    reasons.push("No liability facts available — assumed moderate liability");
+    // Liability fact ratio (system-derived)
+    const supporting = s.liability_facts.filter((f) => f.supports_liability).length;
+    const adverse = s.liability_facts.filter((f) => !f.supports_liability).length;
+    const total = supporting + adverse;
+
+    if (total > 0) {
+      const ratio = supporting / total;
+      factor = 0.30 + ratio * 0.70;
+      reasons.push(`Liability fact ratio: ${supporting}/${total} supporting (${Math.round(ratio * 100)}%)`);
+    } else {
+      factor = 0.75;
+      reasons.push("No liability facts available — assumed moderate liability");
+    }
   }
 
-  // Comparative negligence
-  const compNeg = s.comparative_negligence.claimant_negligence_percentage.value;
+  // Comparative negligence — human override or system-derived
+  const compNeg = ov?.comparative_negligence_percentage ?? s.comparative_negligence.claimant_negligence_percentage.value;
   if (compNeg !== null && compNeg > 0) {
-    // Direct reduction by comparative fault percentage
     const compReduction = compNeg / 100;
     factor *= (1 - compReduction);
-    reasons.push(`Comparative negligence: ${compNeg}% reduction applied`);
+    const isOverride = ov?.comparative_negligence_percentage !== null && ov?.comparative_negligence_percentage !== undefined;
+    reasons.push(`Comparative negligence: ${compNeg}% reduction applied${isOverride ? " (human-adopted)" : ""}`);
     assumptions.push({
       key: "comp_negligence",
-      label: `${compNeg}% comparative negligence reduces range`,
+      label: `${compNeg}% comparative negligence reduces range${isOverride ? " (adopted)" : ""}`,
       impact: "reducer",
       description: `Claimant fault of ${compNeg}% directly reduces recoverable damages`,
+    });
+  }
+
+  // Venue severity override
+  if (ov?.venue_severity) {
+    const venueAdj = ov.venue_severity === "plaintiff_friendly" ? 1.05
+      : ov.venue_severity === "defense_friendly" ? 0.90
+      : 1.0;
+    if (venueAdj !== 1.0) {
+      factor *= venueAdj;
+      reasons.push(`Venue severity: ${ov.venue_severity.replace("_", " ")} (${venueAdj > 1 ? "+" : ""}${Math.round((venueAdj - 1) * 100)}%)`);
+      assumptions.push({
+        key: "venue_severity",
+        label: `Venue: ${ov.venue_severity.replace("_", " ")}`,
+        impact: venueAdj > 1 ? "expander" : "reducer",
+        description: `${Math.abs(Math.round((venueAdj - 1) * 100))}% venue adjustment applied by reviewer`,
+      });
+    }
+  }
+
+  // Credibility impact override
+  if (ov?.credibility_impact && ov.credibility_impact !== "none") {
+    const credAdj = ov.credibility_impact === "significant" ? 0.90
+      : ov.credibility_impact === "moderate" ? 0.95
+      : 0.98;
+    factor *= credAdj;
+    reasons.push(`Credibility impact: ${ov.credibility_impact} (${Math.round((credAdj - 1) * 100)}%)`);
+    assumptions.push({
+      key: "credibility_impact",
+      label: `Credibility: ${ov.credibility_impact} impact adopted`,
+      impact: "reducer",
+      description: `${Math.abs(Math.round((1 - credAdj) * 100))}% reduction for credibility concerns`,
+    });
+  }
+
+  // Prior condition impact override
+  if (ov?.prior_condition_impact && ov.prior_condition_impact !== "none") {
+    const priorAdj = ov.prior_condition_impact === "significant" ? 0.85
+      : ov.prior_condition_impact === "moderate" ? 0.92
+      : 0.97;
+    factor *= priorAdj;
+    reasons.push(`Prior condition impact: ${ov.prior_condition_impact} (${Math.round((priorAdj - 1) * 100)}%)`);
+    assumptions.push({
+      key: "prior_condition",
+      label: `Prior conditions: ${ov.prior_condition_impact} impact adopted`,
+      impact: "reducer",
+      description: `${Math.abs(Math.round((1 - priorAdj) * 100))}% reduction for pre-existing conditions`,
     });
   }
 
