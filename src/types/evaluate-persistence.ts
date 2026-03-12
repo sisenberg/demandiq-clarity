@@ -248,6 +248,9 @@ export interface EvaluatePackagePayload {
   /** Key driver summaries */
   driver_summaries: ValuationRunAssumptionSummary[];
 
+  /** Explanation ledger — full traceable rationale for the range */
+  explanation_ledger: ExplanationLedger | null;
+
   /** Assumptions adopted */
   assumptions: Array<{
     category: AssumptionCategory;
