@@ -3,7 +3,9 @@ import { isEntitlementActive } from "@/hooks/useModuleEntitlements";
 import { useModuleCompletion } from "@/hooks/useModuleCompletion";
 import { useEvaluateEligibility } from "@/hooks/useEvaluateEligibility";
 import { useStartEvaluate, deriveEvaluateState } from "@/hooks/useEvaluateState";
+import { useEvaluateIntakeSnapshot } from "@/hooks/useEvaluateIntakeSnapshot";
 import { ModuleId } from "@/types";
+import EvaluateIntakeSummaryPanel from "@/components/case/EvaluateIntakeSummaryPanel";
 import {
   EvaluateModuleState,
   EVALUATE_STATE_LABEL,
