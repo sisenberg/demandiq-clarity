@@ -4,8 +4,10 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useModuleCompletion } from "@/hooks/useModuleCompletion";
 import { useEvaluateEligibility } from "@/hooks/useEvaluateEligibility";
 import { useStartEvaluate, deriveEvaluateState } from "@/hooks/useEvaluateState";
+import { useEvaluateIntakeSnapshot } from "@/hooks/useEvaluateIntakeSnapshot";
 import { isEntitlementActive } from "@/hooks/useModuleEntitlements";
 import { ModuleId, ModuleCompletionStatus } from "@/types";
+import EvaluateIntakeSummaryPanel from "@/components/case/EvaluateIntakeSummaryPanel";
 import {
   EvaluateModuleState,
   EVALUATE_STATE_LABEL,
