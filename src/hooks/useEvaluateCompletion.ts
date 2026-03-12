@@ -44,8 +44,9 @@ export function validateEvaluateCompletion(
     errors.push("EvaluateIQ is already completed. Reopen to make changes.");
   }
 
-  // Check medical totals
-  if (snapshot.total_billed === 0) {
+  // Check medical billing totals
+  const totalBilled = snapshot.medical_billing.reduce((s, b) => s + b.billed_amount, 0);
+  if (totalBilled === 0) {
     warnings.push("Total billed amount is $0. Confirm this is intentional.");
   }
 
