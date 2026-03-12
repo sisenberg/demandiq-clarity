@@ -14,6 +14,7 @@ import {
   FileStack,
   Users,
   Stethoscope,
+  Calculator,
 } from "lucide-react";
 
 export type CaseSection =
