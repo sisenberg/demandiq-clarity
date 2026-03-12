@@ -37,7 +37,6 @@ function estimateSeverityTier(claim: HistoricalClaim): "baseline" | "moderate" |
 function predictRange(
   claim: HistoricalClaim,
   severityMults: SeverityMultiplierConfig,
-  reliabilityReductions?: ReliabilityReductionConfig,
 ): { floor: number; likely: number; stretch: number } {
   const medicalBase = claim.reviewed_specials ?? claim.billed_specials ?? 0;
   const wageLoss = claim.wage_loss ?? 0;
