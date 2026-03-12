@@ -14,7 +14,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useNegotiateEvalPackage } from "@/hooks/useNegotiateEvalPackage";
 import { useNegotiateStaleDetection } from "@/hooks/useNegotiateStaleDetection";
 import { useNegotiateStrategy } from "@/hooks/useNegotiateStrategy";
-import { useNegotiateSession, useNegotiationRounds } from "@/hooks/useNegotiateSession";
+import { useNegotiateSession, useNegotiationRounds, useNegotiationNotes } from "@/hooks/useNegotiateSession";
 import { useAuditLog } from "@/hooks/useAuditLog";
 import { isEntitlementActive } from "@/hooks/useModuleEntitlements";
 import { ModuleId } from "@/types";
@@ -24,6 +24,7 @@ import NegotiateStrategyPanel from "@/components/negotiate/NegotiateStrategyPane
 import NegotiateRightPanel from "@/components/negotiate/NegotiateRightPanel";
 import NegotiateStaleBanner from "@/components/negotiate/NegotiateStaleBanner";
 import NegotiateDraftingWorkspace from "@/components/negotiate/NegotiateDraftingWorkspace";
+import CompleteNegotiationDialog from "@/components/negotiate/CompleteNegotiationDialog";
 import { PageLoading } from "@/components/ui/LoadingSkeleton";
 import EmptyState from "@/components/ui/EmptyState";
 import {
@@ -37,6 +38,7 @@ import {
   Package,
   FileEdit,
   Target,
+  CheckCircle,
 } from "lucide-react";
 
 type WorkspaceTab = "strategy" | "drafting";
@@ -56,6 +58,7 @@ const NegotiateWorkspacePage = () => {
   const hasModule = isEntitlementActive(entitlements, ModuleId.NegotiateIQ);
 
   const [activeTab, setActiveTab] = useState<WorkspaceTab>("strategy");
+  const [showCompleteDialog, setShowCompleteDialog] = useState(false);
 
   // Build view model (memoized, never mutates package)
   const viewModel = useMemo(
@@ -73,6 +76,7 @@ const NegotiateWorkspacePage = () => {
   const { data: session } = useNegotiateSession(caseId);
   const { data: savedStrategy } = useNegotiateStrategy(caseId);
   const { data: rounds = [] } = useNegotiationRounds(session?.id);
+  const { data: negotiationNotes = [] } = useNegotiationNotes(session?.id);
 
   // Fetch opposing counsel for attorney intelligence
   const { data: opposingCounsel } = useQuery({
@@ -180,6 +184,15 @@ const NegotiateWorkspacePage = () => {
                     year: "numeric",
                   })}
                 </div>
+              )}
+              {session && (
+                <button
+                  onClick={() => setShowCompleteDialog(true)}
+                  className="flex items-center gap-1.5 text-[10px] font-semibold px-3 py-1.5 rounded-lg bg-primary text-primary-foreground hover:bg-primary/90 transition-colors"
+                >
+                  <CheckCircle className="h-3 w-3" />
+                  Complete Negotiation
+                </button>
               )}
             </div>
           )}
@@ -292,6 +305,30 @@ const NegotiateWorkspacePage = () => {
           </div>
         )}
       </div>
+
+      {/* Complete Negotiation Dialog */}
+      {viewModel && session && (
+        <CompleteNegotiationDialog
+          open={showCompleteDialog}
+          onClose={() => setShowCompleteDialog(false)}
+          vm={viewModel}
+          session={session}
+          strategy={savedStrategy ? {
+            version: savedStrategy.version,
+            generated_strategy: savedStrategy.generated_strategy,
+            overrides: savedStrategy.overrides ?? [],
+          } : null}
+          rounds={rounds}
+          notes={negotiationNotes}
+          caseId={caseId!}
+          attorneyName={opposingCounsel?.full_name ?? null}
+          firmName={opposingCounsel?.organization ?? null}
+          observationsCount={0}
+          calibrationSignalsCount={0}
+          calibrationHighConfCount={0}
+          calibrationJurisdictionBand={null}
+        />
+      )}
     </div>
   );
 };
