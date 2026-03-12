@@ -185,7 +185,6 @@ const NegotiateWorkspacePage = () => {
                   })}
                 </div>
               )}
-            </div>
               {session && (
                 <button
                   onClick={() => setShowCompleteDialog(true)}
@@ -195,9 +194,8 @@ const NegotiateWorkspacePage = () => {
                   Complete Negotiation
                 </button>
               )}
+            </div>
           )}
-        </div>
-      </div>
         </div>
       </div>
 
