@@ -162,7 +162,7 @@ export function useImportHistoricalClaims() {
           const claim = normalizeRecord(raw, tenantId, importId);
           const { error } = await supabase
             .from("historical_claims")
-            .insert(claim as Record<string, unknown>);
+            .insert([claim] as any);
           if (error) {
             errorCount++;
             errors.push({ row: i + 1, message: error.message });
