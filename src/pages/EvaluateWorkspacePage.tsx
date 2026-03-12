@@ -168,6 +168,7 @@ const EvaluateWorkspacePage = () => {
               {activeTab === "overview" && <EvalOverviewTab snapshot={snapshot} />}
               {activeTab === "drivers" && <EvalDriversTab snapshot={snapshot} />}
               {activeTab === "range" && <EvalRangeTab snapshot={snapshot} />}
+              {activeTab === "explanation" && <EvalExplanationTab snapshot={snapshot} />}
               {activeTab === "evidence" && <EvalEvidenceTab snapshot={snapshot} />}
               {activeTab === "calibration" && <EvalPlaceholderTab tab="calibration" />}
               {activeTab === "handoff" && <EvalPlaceholderTab tab="handoff" />}
