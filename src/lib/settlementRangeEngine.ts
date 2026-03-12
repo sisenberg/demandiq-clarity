@@ -28,6 +28,7 @@
 import type { EvaluateIntakeSnapshot } from "@/types/evaluate-intake";
 import type { ExtractedDriver, DriverExtractionResult } from "./valuationDriverEngine";
 import type { ValuationRunAssumptionSummary } from "@/types/evaluate-persistence";
+import type { HumanAssumptionOverrides } from "@/hooks/useAssumptionOverrides";
 
 // ─── Engine Version ────────────────────────────────────
 
