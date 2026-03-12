@@ -9,6 +9,7 @@ import { hasPermission } from "@/lib/permissions";
 import { CasePackageProvider } from "@/hooks/useCasePackage";
 import { isEntitlementActive } from "@/hooks/useModuleEntitlements";
 import { useModuleCompletion } from "@/hooks/useModuleCompletion";
+import { useEvaluateEligibility } from "@/hooks/useEvaluateEligibility";
 import { ModuleId, ModuleCompletionStatus } from "@/types";
 import CaseOverview from "@/components/case/CaseOverview";
 import CoverPageTab from "@/components/case/CoverPageTab";
@@ -24,6 +25,7 @@ import IntakeDocumentsWorkstation from "@/components/case/IntakeDocumentsWorksta
 import SourcePagesWorkstation from "@/components/case/SourcePagesWorkstation";
 import DetectedEntitiesPanel from "@/components/case/DetectedEntitiesPanel";
 import MedicalReviewWorkspace from "@/components/case/MedicalReviewWorkspace";
+import EvaluateInlineWorkspace from "@/components/case/EvaluateInlineWorkspace";
 import DocumentUpload from "@/components/case/DocumentUpload";
 import JobsPanel from "@/components/case/JobsPanel";
 import DocumentTypeTag from "@/components/case/DocumentTypeTag";
@@ -254,6 +256,11 @@ const CaseDetailPage = () => {
               {/* ── MEDICAL REVIEW ────────────────── */}
               {activeSection === "medical-review" && (
                 <MedicalReviewWorkspace caseId={caseData.id} />
+              )}
+
+              {/* ── EVALUATEIQ ─────────────────────── */}
+              {activeSection === "evaluate" && (
+                <EvaluateInlineWorkspace caseId={caseData.id} />
               )}
 
               {/* ── CHAT ──────────────────────────── */}

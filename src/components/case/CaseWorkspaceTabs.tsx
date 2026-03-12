@@ -19,7 +19,7 @@ const PRIMARY_TABS: { key: WorkspaceTab; label: string }[] = [
 ];
 
 const MORE_TABS: { key: string; label: string; disabled?: boolean }[] = [
-  { key: "evaluateiq", label: "EvaluateIQ", disabled: true },
+  { key: "evaluateiq", label: "EvaluateIQ", disabled: false },
   { key: "negotiateiq", label: "NegotiateIQ", disabled: true },
   { key: "litiq", label: "LitIQ", disabled: true },
 ];
