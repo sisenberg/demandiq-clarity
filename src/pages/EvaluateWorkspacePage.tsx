@@ -8,6 +8,7 @@ import { useEvaluateEligibility } from "@/hooks/useEvaluateEligibility";
 import { useStartEvaluate, deriveEvaluateState } from "@/hooks/useEvaluateState";
 import { useEvaluateIntakeSnapshot } from "@/hooks/useEvaluateIntakeSnapshot";
 import { useCompleteEvaluate, useReopenEvaluate, validateEvaluateCompletion } from "@/hooks/useEvaluateCompletion";
+import { useIsUpstreamCurrent } from "@/hooks/useUpstreamSnapshot";
 import { isEntitlementActive } from "@/hooks/useModuleEntitlements";
 import { ModuleId } from "@/types";
 import {
