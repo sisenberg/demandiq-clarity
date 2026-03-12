@@ -330,13 +330,9 @@ export const SCENARIO_KNOWN_ATTORNEY = {
       primary_body_parts: ["Lumbar Spine"],
       has_surgery: false,
       has_injections: false,
-      has_imaging: true,
       has_permanency: false,
-      has_hospitalization: false,
       liability_posture: "clear",
-      provider_names: ["Chiro Plus"],
       treatment_duration_days: 120,
-      treatment_provider_count: 2,
     },
   ] as HistoricalClaimForCalibration[],
   expectedState: {
