@@ -22,6 +22,7 @@ import EvalOverviewTab from "@/components/evaluate/EvalOverviewTab";
 import EvalDriversTab from "@/components/evaluate/EvalDriversTab";
 import EvalRangeTab from "@/components/evaluate/EvalRangeTab";
 import EvalEvidenceTab from "@/components/evaluate/EvalEvidenceTab";
+import EvalExplanationTab from "@/components/evaluate/EvalExplanationTab";
 import EvalPlaceholderTab from "@/components/evaluate/EvalPlaceholderTab";
 import EvalStickyActions from "@/components/evaluate/EvalStickyActions";
 import {
