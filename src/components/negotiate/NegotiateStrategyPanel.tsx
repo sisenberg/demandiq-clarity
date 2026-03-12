@@ -125,6 +125,7 @@ const NegotiateStrategyPanel = ({ vm, caseId, evalPackageId }: NegotiateStrategy
           strategy={strategy}
           currentCeiling={session.current_authority}
           openingDemand={null}
+          vm={vm}
         />
       )}
     </div>
