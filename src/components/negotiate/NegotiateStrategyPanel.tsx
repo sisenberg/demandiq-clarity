@@ -87,7 +87,6 @@ const NegotiateStrategyPanel = ({ vm, caseId, evalPackageId, attorneyName, attor
       reason,
     });
   }, [session, caseId, updateAuthority]);
-  }, [strategy, overrides, caseId, evalPackageId, vm.provenance.packageVersion, saveStrategy]);
 
   if (isLoading) {
     return (
