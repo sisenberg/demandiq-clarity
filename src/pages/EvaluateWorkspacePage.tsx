@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useParams, Link } from "react-router-dom";
+import { toast } from "sonner";
 import { useCase } from "@/hooks/useCases";
 import { useAuth } from "@/contexts/AuthContext";
 import { useModuleCompletion } from "@/hooks/useModuleCompletion";
