@@ -191,7 +191,7 @@ const EvaluateWorkspacePage = () => {
               {activeTab === "explanation" && <EvalExplanationTab snapshot={snapshot} />}
               {activeTab === "evidence" && <EvalEvidenceTab snapshot={snapshot} />}
               {activeTab === "calibration" && <EvalPlaceholderTab tab="calibration" />}
-              {activeTab === "handoff" && <EvalPlaceholderTab tab="handoff" />}
+              {activeTab === "handoff" && <EvalHandoffTab snapshot={snapshot} />}
             </div>
           )}
         </div>
