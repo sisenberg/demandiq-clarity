@@ -32,6 +32,7 @@ const EvaluateInlineWorkspace = ({ caseId }: Props) => {
   const { data: evalCompletion } = useModuleCompletion(caseId, "evaluateiq");
   const eligibility = useEvaluateEligibility(caseId);
   const startEvaluate = useStartEvaluate();
+  const { snapshot } = useEvaluateIntakeSnapshot(caseId);
 
   const moduleState = deriveEvaluateState(evalCompletion?.status);
   const cta = getEvaluateCTA(moduleState);
