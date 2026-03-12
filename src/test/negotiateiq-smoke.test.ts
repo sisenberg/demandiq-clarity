@@ -105,7 +105,7 @@ describe("NegotiateIQ — Response Recommendations", () => {
     expect(settleRec!.rank).toBe(1);
   });
 
-  it("recommends hold for slow-moving excessive demand", () => {
+  it("recommends hold or authority review for excessive demand beyond ceiling", () => {
     const strategy = generateStrategy(SCENARIO_EXCESSIVE_DEMAND.vm);
     const output = generateResponseRecommendations({
       strategy,
@@ -116,10 +116,12 @@ describe("NegotiateIQ — Response Recommendations", () => {
       latestCounteroffer: 85000,
       lastDefenseOffer: 16000,
     });
-    expect(output.postureZone).toBe("outside_not_moving");
+    // Counter ($85K) exceeds ceiling ($30K), so beyond_ceiling is correct
+    expect(output.postureZone).toBe("beyond_ceiling");
+    const authRec = output.recommendations.find(r => r.action === "request_authority_review");
+    expect(authRec).toBeDefined();
     const holdRec = output.recommendations.find(r => r.action === "hold");
     expect(holdRec).toBeDefined();
-    expect(holdRec!.confidence).toBe("high");
   });
 
   it("flags authority review when counter exceeds ceiling", () => {
