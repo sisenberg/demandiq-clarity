@@ -7,7 +7,7 @@ import type { NegotiationViewModel } from "@/lib/negotiateViewModel";
 import type { GeneratedStrategy, StrategyOverride } from "@/types/negotiate-strategy";
 import { generateStrategy } from "@/lib/negotiateStrategyEngine";
 import { useNegotiateStrategy, useSaveNegotiateStrategy } from "@/hooks/useNegotiateStrategy";
-import { useNegotiateSession, useNegotiationRounds } from "@/hooks/useNegotiateSession";
+import { useNegotiateSession, useNegotiationRounds, useUpdateSessionAuthority } from "@/hooks/useNegotiateSession";
 import { useNegotiateCalibration } from "@/hooks/useNegotiateCalibration";
 import NegotiateStrategyCard from "@/components/negotiate/NegotiateStrategyCard";
 import RoundManagementPanel from "@/components/negotiate/RoundManagementPanel";
