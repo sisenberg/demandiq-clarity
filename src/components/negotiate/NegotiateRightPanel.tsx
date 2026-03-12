@@ -35,6 +35,8 @@ const EVENT_ICONS: Record<string, React.ElementType> = {
 
 interface NegotiateRightPanelProps {
   caseId?: string;
+  attorneyName?: string;
+  firmName?: string;
 }
 
 const NegotiateRightPanel = ({ caseId }: NegotiateRightPanelProps) => {
