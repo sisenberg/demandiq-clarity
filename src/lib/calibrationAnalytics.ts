@@ -10,9 +10,7 @@ import type { HistoricalClaim } from "@/types/calibration";
 import type {
   DriftDataPoint, DriftSlice, DriftSummary,
   ConfigImpactPreview,
-  SeverityMultiplierConfig, SeverityBandConfig,
-  ReliabilityReductionConfig, VenueMultiplierConfig,
-  DEFAULT_SEVERITY_MULTIPLIERS, DEFAULT_RELIABILITY_REDUCTIONS,
+  SeverityMultiplierConfig,
 } from "@/types/calibration-config";
 
 // ─── Simplified range prediction for historical claims ────
