@@ -142,6 +142,19 @@ const NegotiateStrategyPanel = ({ vm, caseId, evalPackageId, attorneyName, attor
         strategyVersion={savedStrategy?.version ?? null}
       />
 
+      {/* Authority Management */}
+      {session && (
+        <AuthorityCard
+          vm={vm}
+          strategy={strategy}
+          session={session}
+          rounds={rounds}
+          caseId={caseId}
+          onUpdateAuthority={handleUpdateAuthority}
+          isUpdating={updateAuthority.isPending}
+        />
+      )}
+
       {/* Historical Calibration */}
       <HistoricalCalibrationCard calibration={calibration} isLoading={calLoading} />
 
