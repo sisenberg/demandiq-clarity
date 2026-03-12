@@ -8,8 +8,11 @@
 import { useState, useMemo } from "react";
 import type { NegotiationRoundRow } from "@/types/negotiate-persistence";
 import type { GeneratedStrategy } from "@/types/negotiate-strategy";
+import type { NegotiationViewModel } from "@/lib/negotiateViewModel";
 import { computeCounterofferDeltas, computeRoundMetrics, type CounterofferDeltas } from "@/lib/negotiateDeltaEngine";
+import { generateResponseRecommendations, type ResponseEngineOutput } from "@/lib/negotiateResponseEngine";
 import CounterofferCaptureForm from "@/components/negotiate/CounterofferCaptureForm";
+import ResponseRecommendationCard from "@/components/negotiate/ResponseRecommendationCard";
 import {
   ArrowDownUp,
   Plus,
