@@ -67,6 +67,23 @@ const RoundManagementPanel = ({
     });
   }, [rounds, openingDemand, strategy, currentCeiling]);
 
+  // Response recommendations
+  const responseOutput = useMemo<ResponseEngineOutput | null>(() => {
+    const lastRoundWithCounter = [...rounds].reverse().find((r) => r.their_counteroffer != null);
+    if (!lastRoundWithCounter?.their_counteroffer || !strategy || !vm) return null;
+    const lastDefenseOffer = [...rounds].reverse().find((r) => r.our_offer != null)?.our_offer ?? null;
+
+    return generateResponseRecommendations({
+      strategy,
+      vm,
+      rounds,
+      currentCeiling,
+      openingDemand,
+      latestCounteroffer: lastRoundWithCounter.their_counteroffer,
+      lastDefenseOffer,
+    });
+  }, [rounds, strategy, vm, currentCeiling, openingDemand]);
+
   return (
     <div className="space-y-4">
       {/* Header */}
