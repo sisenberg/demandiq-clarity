@@ -34,6 +34,7 @@ const NAV_ITEMS: { key: CaseSection; label: string; icon: React.ElementType }[] 
   { key: "notes", label: "Case Notes", icon: StickyNote },
   { key: "chronology", label: "Chronology", icon: Calendar },
   { key: "medical-review", label: "Medical Review", icon: Stethoscope },
+  { key: "evaluate", label: "EvaluateIQ", icon: Calculator },
   { key: "billing", label: "Billing", icon: DollarSign },
   { key: "chat", label: "Chat", icon: MessageSquare },
   { key: "documents", label: "Documents", icon: FileText },
