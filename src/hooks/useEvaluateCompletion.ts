@@ -106,10 +106,10 @@ function assembleEvaluatePackage(input: PackageAssemblyInput): EvaluatePackagePa
 
     assumptions: [],
 
-    total_billed: snapshot.total_billed,
-    total_reviewed: snapshot.total_reviewed ?? null,
+    total_billed: snapshot.medical_billing.reduce((s, b) => s + b.billed_amount, 0),
+    total_reviewed: snapshot.medical_billing.reduce((s, b) => s + (b.reviewer_recommended_amount ?? b.billed_amount), 0),
 
-    completeness_score: snapshot.completeness?.score ?? 0,
+    completeness_score: snapshot.overall_completeness_score ?? 0,
   };
 }
 
