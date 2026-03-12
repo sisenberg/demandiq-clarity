@@ -129,6 +129,9 @@ const NegotiateStrategyPanel = ({ vm, caseId, evalPackageId, attorneyName, attor
         strategyVersion={savedStrategy?.version ?? null}
       />
 
+      {/* Historical Calibration */}
+      <HistoricalCalibrationCard calibration={calibration} isLoading={calLoading} />
+
       {/* Round Management */}
       {session && (
         <RoundManagementPanel
