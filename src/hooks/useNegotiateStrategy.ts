@@ -66,7 +66,7 @@ export function useSaveNegotiateStrategy() {
         .limit(1);
       const nextVersion = existing && existing.length > 0 ? existing[0].version + 1 : 1;
 
-      const { data, error } = await (supabase.from("negotiate_strategies") as any)
+      const { data, error } = await (supabase.from("negotiate_strategies" as any) as any)
         .insert({
           case_id: caseId,
           tenant_id: tenantId,
