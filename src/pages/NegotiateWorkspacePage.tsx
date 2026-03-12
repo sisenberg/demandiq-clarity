@@ -1,18 +1,26 @@
 /**
  * NegotiateIQ — Workspace Page
  *
- * Downstream module that consumes EvaluatePackage v1.
- * Shows blocked state when no completed evaluation exists.
+ * 3-panel layout consuming EvaluatePackage v1 via read-only view model.
+ * Left: evaluation-backed claim context
+ * Center: negotiation strategy + active round
+ * Right: notes, drafts, timeline
  */
 
-import { useEffect } from "react";
+import { useEffect, useMemo } from "react";
 import { useParams, Link } from "react-router-dom";
 import { useCase } from "@/hooks/useCases";
 import { useAuth } from "@/contexts/AuthContext";
 import { useNegotiateEvalPackage } from "@/hooks/useNegotiateEvalPackage";
+import { useNegotiateStaleDetection } from "@/hooks/useNegotiateStaleDetection";
 import { useAuditLog } from "@/hooks/useAuditLog";
 import { isEntitlementActive } from "@/hooks/useModuleEntitlements";
 import { ModuleId } from "@/types";
+import { buildNegotiationViewModel } from "@/lib/negotiateViewModel";
+import NegotiateClaimContext from "@/components/negotiate/NegotiateClaimContext";
+import NegotiateStrategyPanel from "@/components/negotiate/NegotiateStrategyPanel";
+import NegotiateRightPanel from "@/components/negotiate/NegotiateRightPanel";
+import NegotiateStaleBanner from "@/components/negotiate/NegotiateStaleBanner";
 import { PageLoading } from "@/components/ui/LoadingSkeleton";
 import EmptyState from "@/components/ui/EmptyState";
 import {
@@ -22,23 +30,35 @@ import {
   Inbox,
   AlertTriangle,
   Calculator,
-  MessageSquare,
-  History,
-  FileEdit,
-  DollarSign,
-  TrendingUp,
-  TrendingDown,
-  Info,
+  Clock,
+  Package,
 } from "lucide-react";
 
 const NegotiateWorkspacePage = () => {
   const { caseId } = useParams<{ caseId: string }>();
   const { entitlements } = useAuth();
   const { data: caseData, isLoading: caseLoading } = useCase(caseId);
-  const { data: evalPackage, isLoading: pkgLoading, isError } = useNegotiateEvalPackage(caseId);
+  const {
+    data: evalPackage,
+    isLoading: pkgLoading,
+    isError,
+    refetch: refetchPackage,
+  } = useNegotiateEvalPackage(caseId);
   const audit = useAuditLog();
 
   const hasModule = isEntitlementActive(entitlements, ModuleId.NegotiateIQ);
+
+  // Build view model (memoized, never mutates package)
+  const viewModel = useMemo(
+    () => (evalPackage ? buildNegotiationViewModel(evalPackage) : null),
+    [evalPackage]
+  );
+
+  // Stale detection
+  const { data: staleInfo } = useNegotiateStaleDetection(
+    caseId,
+    evalPackage?.version
+  );
 
   // Audit: module opened
   useEffect(() => {
@@ -48,7 +68,10 @@ const NegotiateWorkspacePage = () => {
       entityType: "negotiate_module",
       entityId: caseId,
       caseId,
-      afterValue: { action: "module_opened" },
+      afterValue: {
+        action: "module_opened",
+        eval_package_version: evalPackage?.version ?? null,
+      },
     });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [caseId, caseData?.id]);
@@ -79,7 +102,6 @@ const NegotiateWorkspacePage = () => {
   }
 
   const claimVsInsured = caseData.title || `${caseData.claimant} v. ${caseData.insured}`;
-  const payload = evalPackage?.package_payload;
 
   return (
     <div className="flex flex-col h-full">
@@ -101,20 +123,50 @@ const NegotiateWorkspacePage = () => {
             </div>
           </div>
 
-          {evalPackage && (
-            <span className="text-[10px] font-medium text-muted-foreground bg-accent px-2 py-1 rounded-md">
-              EvaluatePackage v{evalPackage.version}
-            </span>
+          {/* Provenance badge */}
+          {evalPackage && viewModel && (
+            <div className="flex items-center gap-2">
+              <div className="flex items-center gap-1.5 text-[10px] text-muted-foreground bg-accent px-2.5 py-1.5 rounded-md border border-border">
+                <Package className="h-3 w-3" />
+                <span className="font-medium">
+                  EvaluatePackage v{viewModel.provenance.packageVersion}
+                </span>
+                <span className="text-muted-foreground/60">·</span>
+                <span>
+                  {viewModel.provenance.sourceModule === "revieweriq" ? "ReviewerIQ" : "DemandIQ"} v{viewModel.provenance.sourcePackageVersion}
+                </span>
+              </div>
+              {evalPackage.completed_at && (
+                <div className="flex items-center gap-1 text-[10px] text-muted-foreground">
+                  <Clock className="h-3 w-3" />
+                  {new Date(evalPackage.completed_at).toLocaleDateString("en-US", {
+                    month: "short",
+                    day: "numeric",
+                    year: "numeric",
+                  })}
+                </div>
+              )}
+            </div>
           )}
         </div>
       </div>
 
+      {/* ── Stale Banner ──────────────────────────── */}
+      {staleInfo && (
+        <div className="px-6 pt-3">
+          <NegotiateStaleBanner
+            staleInfo={staleInfo}
+            onRefresh={() => refetchPackage()}
+          />
+        </div>
+      )}
+
       {/* ── Body ──────────────────────────────────── */}
-      <div className="flex-1 overflow-y-auto">
-        <div className="p-6 max-w-5xl mx-auto">
-          {/* ── Blocked state ────────────────────── */}
-          {!evalPackage && !isError && (
-            <div className="mt-12">
+      <div className="flex-1 overflow-hidden">
+        {/* Blocked state */}
+        {!evalPackage && !isError && (
+          <div className="flex items-center justify-center h-full">
+            <div className="max-w-md">
               <EmptyState
                 icon={AlertTriangle}
                 title="Complete Evaluation Required"
@@ -130,123 +182,41 @@ const NegotiateWorkspacePage = () => {
                 }
               />
             </div>
-          )}
+          </div>
+        )}
 
-          {isError && (
-            <div className="mt-12">
-              <EmptyState
-                icon={AlertTriangle}
-                title="Failed to Load Evaluation"
-                description="An error occurred resolving the upstream EvaluatePackage. Please try again."
-              />
+        {isError && (
+          <div className="flex items-center justify-center h-full">
+            <EmptyState
+              icon={AlertTriangle}
+              title="Failed to Load Evaluation"
+              description="An error occurred resolving the upstream EvaluatePackage. Please try again."
+            />
+          </div>
+        )}
+
+        {/* 3-panel workspace */}
+        {viewModel && (
+          <div className="flex h-full">
+            {/* Left: Claim Context */}
+            <div className="w-[320px] shrink-0 border-r border-border bg-card/50 p-4 overflow-hidden">
+              <NegotiateClaimContext vm={viewModel} />
             </div>
-          )}
 
-          {/* ── Active workspace shell ───────────── */}
-          {evalPackage && payload && (
-            <div className="space-y-5">
-              {/* Evaluation Snapshot Summary */}
-              <div className="rounded-xl border border-border bg-card p-5">
-                <div className="flex items-center gap-2 mb-4">
-                  <Calculator className="h-4 w-4 text-primary" />
-                  <h2 className="text-[13px] font-semibold text-foreground">Evaluation Snapshot</h2>
-                  <span className="text-[9px] font-bold uppercase tracking-wider px-2 py-0.5 rounded bg-[hsl(var(--status-approved))]/10 text-[hsl(var(--status-approved))]">
-                    v{evalPackage.version} · Published
-                  </span>
-                </div>
-
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                  <MetricCard label="Total Billed" value={fmtCurrency(payload.total_billed)} />
-                  <MetricCard label="Total Reviewed" value={fmtCurrency(payload.total_reviewed)} />
-                  <MetricCard label="Range Floor" value={fmtCurrency(payload.range_floor ?? payload.selected_floor)} />
-                  <MetricCard label="Range Stretch" value={fmtCurrency(payload.range_stretch ?? payload.selected_stretch)} />
-                </div>
-
-                {payload.authority_recommendation != null && (
-                  <div className="mt-3 px-3 py-2 rounded-lg bg-accent/50 border border-border">
-                    <span className="text-[10px] font-medium text-muted-foreground">Authority Recommendation: </span>
-                    <span className="text-[12px] font-semibold text-foreground">{fmtCurrency(payload.authority_recommendation)}</span>
-                  </div>
-                )}
-
-                {/* Value drivers summary */}
-                {payload.driver_summaries && payload.driver_summaries.length > 0 && (
-                  <div className="mt-4 space-y-1.5">
-                    <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground mb-2">Key Drivers</p>
-                    {payload.driver_summaries.slice(0, 6).map((d, i) => (
-                      <div key={i} className="flex items-center gap-2 text-[11px]">
-                        {d.impact === "expander" ? (
-                          <TrendingUp className="h-3 w-3 text-[hsl(var(--status-approved))]" />
-                        ) : d.impact === "reducer" ? (
-                          <TrendingDown className="h-3 w-3 text-destructive" />
-                        ) : (
-                          <Info className="h-3 w-3 text-muted-foreground" />
-                        )}
-                        <span className="text-foreground font-medium">{d.label}</span>
-                        <span className="text-muted-foreground truncate flex-1">{d.description}</span>
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </div>
-
-              {/* Negotiation Strategy Panel — Placeholder */}
-              <PlaceholderPanel
-                icon={DollarSign}
-                title="Negotiation Strategy"
-                description="Opening position, target range, and concession strategy will be configured here."
-              />
-
-              {/* Negotiation History Panel — Placeholder */}
-              <PlaceholderPanel
-                icon={History}
-                title="Negotiation History"
-                description="All offers, counteroffers, and position changes will be tracked chronologically."
-              />
-
-              {/* Drafting Panel — Placeholder */}
-              <PlaceholderPanel
-                icon={FileEdit}
-                title="Drafting"
-                description="Generate and edit negotiation correspondence, demand responses, and settlement proposals."
-              />
+            {/* Center: Strategy */}
+            <div className="flex-1 min-w-0 p-5 overflow-y-auto">
+              <NegotiateStrategyPanel />
             </div>
-          )}
-        </div>
+
+            {/* Right: Notes / Timeline */}
+            <div className="w-[300px] shrink-0 border-l border-border bg-card/50 p-4 overflow-hidden">
+              <NegotiateRightPanel />
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );
 };
-
-// ─── Helpers ─────────────────────────────────────────────
-
-function fmtCurrency(value: number | null | undefined): string {
-  if (value == null) return "—";
-  return new Intl.NumberFormat("en-US", { style: "currency", currency: "USD", maximumFractionDigits: 0 }).format(value);
-}
-
-function MetricCard({ label, value }: { label: string; value: string }) {
-  return (
-    <div className="rounded-lg border border-border bg-accent/30 px-3 py-2.5">
-      <p className="text-[9px] font-semibold uppercase tracking-wider text-muted-foreground mb-0.5">{label}</p>
-      <p className="text-[14px] font-bold text-foreground">{value}</p>
-    </div>
-  );
-}
-
-function PlaceholderPanel({ icon: Icon, title, description }: { icon: React.ElementType; title: string; description: string }) {
-  return (
-    <div className="rounded-xl border border-dashed border-border bg-card/50 p-5">
-      <div className="flex items-center gap-2 mb-2">
-        <Icon className="h-4 w-4 text-muted-foreground/50" />
-        <h2 className="text-[13px] font-semibold text-foreground">{title}</h2>
-        <span className="text-[8px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded bg-accent text-muted-foreground">
-          Coming Soon
-        </span>
-      </div>
-      <p className="text-[11px] text-muted-foreground leading-relaxed">{description}</p>
-    </div>
-  );
-}
 
 export default NegotiateWorkspacePage;
