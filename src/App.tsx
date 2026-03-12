@@ -18,6 +18,7 @@ import AdminPage from "@/pages/AdminPage";
 import AuditLogPage from "@/pages/AuditLogPage";
 import EvaluateWorkspacePage from "@/pages/EvaluateWorkspacePage";
 import ModuleGuard from "@/components/auth/ModuleGuard";
+import CalibrationPage from "@/pages/CalibrationPage";
 import NotFound from "@/pages/NotFound";
 
 const queryClient = new QueryClient();
