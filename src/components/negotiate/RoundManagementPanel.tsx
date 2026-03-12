@@ -180,6 +180,15 @@ const RoundManagementPanel = ({
         </div>
       )}
 
+      {/* Response Recommendations */}
+      {responseOutput && (
+        <ResponseRecommendationCard
+          output={responseOutput}
+          sessionId={sessionId}
+          caseId={caseId}
+        />
+      )}
+
       {/* Round History Table */}
       {rounds.length > 0 ? (
         <div className="rounded-xl border border-border bg-card overflow-hidden">
