@@ -75,7 +75,18 @@ const NegotiateStrategyPanel = ({ vm, caseId, evalPackageId, attorneyName, attor
       evalPackageVersion: vm.provenance.packageVersion,
       generated: strategy,
       overrides,
+  });
+
+  const handleUpdateAuthority = useCallback((amount: number, reason: string) => {
+    if (!session) return;
+    updateAuthority.mutate({
+      sessionId: session.id,
+      caseId,
+      previousAuthority: session.current_authority,
+      newAuthority: amount,
+      reason,
     });
+  }, [session, caseId, updateAuthority]);
   }, [strategy, overrides, caseId, evalPackageId, vm.provenance.packageVersion, saveStrategy]);
 
   if (isLoading) {
