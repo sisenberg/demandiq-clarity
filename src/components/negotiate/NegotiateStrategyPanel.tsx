@@ -23,11 +23,19 @@ interface NegotiateStrategyPanelProps {
   jurisdictionState?: string;
 }
 
-const NegotiateStrategyPanel = ({ vm, caseId, evalPackageId }: NegotiateStrategyPanelProps) => {
+const NegotiateStrategyPanel = ({ vm, caseId, evalPackageId, attorneyName, attorneyFirm, jurisdictionState }: NegotiateStrategyPanelProps) => {
   const { data: savedStrategy, isLoading } = useNegotiateStrategy(caseId);
   const saveStrategy = useSaveNegotiateStrategy();
   const { data: session } = useNegotiateSession(caseId);
   const { data: rounds = [] } = useNegotiationRounds(session?.id);
+
+  // Calibration
+  const { data: calibration, isLoading: calLoading } = useNegotiateCalibration(vm, caseId, {
+    attorneyName,
+    attorneyFirm,
+    jurisdictionState,
+    currentCounteroffer: session?.current_counteroffer ?? null,
+  });
 
   // Generate or restore strategy
   const [generatedStrategy, setGeneratedStrategy] = useState<GeneratedStrategy | null>(null);
