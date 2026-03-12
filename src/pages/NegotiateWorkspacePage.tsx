@@ -74,6 +74,21 @@ const NegotiateWorkspacePage = () => {
   const { data: savedStrategy } = useNegotiateStrategy(caseId);
   const { data: rounds = [] } = useNegotiationRounds(session?.id);
 
+  // Fetch opposing counsel for attorney intelligence
+  const { data: opposingCounsel } = useQuery({
+    queryKey: ["case-opposing-counsel", caseId],
+    enabled: !!caseId,
+    queryFn: async () => {
+      const { data } = await supabase
+        .from("case_parties")
+        .select("full_name, organization")
+        .eq("case_id", caseId!)
+        .eq("party_role", "attorney_claimant" as any)
+        .limit(1);
+      return data?.[0] ?? null;
+    },
+  });
+
   // Audit: module opened
   useEffect(() => {
     if (!caseId || !caseData) return;
