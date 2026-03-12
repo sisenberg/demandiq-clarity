@@ -186,7 +186,18 @@ const NegotiateWorkspacePage = () => {
                 </div>
               )}
             </div>
+              {session && (
+                <button
+                  onClick={() => setShowCompleteDialog(true)}
+                  className="flex items-center gap-1.5 text-[10px] font-semibold px-3 py-1.5 rounded-lg bg-primary text-primary-foreground hover:bg-primary/90 transition-colors"
+                >
+                  <CheckCircle className="h-3 w-3" />
+                  Complete Negotiation
+                </button>
+              )}
           )}
+        </div>
+      </div>
         </div>
       </div>
 
