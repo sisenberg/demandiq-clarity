@@ -159,8 +159,10 @@ export function buildEvaluateIntakeSnapshot(input: SnapshotBuildInput): Evaluate
   const reviewerBillMap = new Map<string, number>();
   if (rPkg) {
     for (const bl of rPkg.bill_lines) {
-      if (bl.recommended_amount != null) {
-        reviewerBillMap.set(bl.id, bl.recommended_amount);
+      // Use accepted_amount (reviewer disposition) or reference_amount as fallback
+      const amt = bl.accepted_amount ?? bl.reference_amount;
+      if (amt != null) {
+        reviewerBillMap.set(bl.id, amt);
       }
     }
   }
