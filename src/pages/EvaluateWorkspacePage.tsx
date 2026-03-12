@@ -29,6 +29,7 @@ import EvalExplanationTab from "@/components/evaluate/EvalExplanationTab";
 import EvalHandoffTab from "@/components/evaluate/EvalHandoffTab";
 import EvalPlaceholderTab from "@/components/evaluate/EvalPlaceholderTab";
 import EvalStickyActions from "@/components/evaluate/EvalStickyActions";
+import EvalStaleDataBanner from "@/components/evaluate/EvalStaleDataBanner";
 import {
   ArrowLeft,
   Calculator,
