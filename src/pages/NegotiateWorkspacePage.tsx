@@ -205,7 +205,7 @@ const NegotiateWorkspacePage = () => {
 
             {/* Center: Strategy */}
             <div className="flex-1 min-w-0 p-5 overflow-y-auto">
-              <NegotiateStrategyPanel />
+              <NegotiateStrategyPanel vm={viewModel} caseId={caseId!} evalPackageId={evalPackage!.id} />
             </div>
 
             {/* Right: Notes / Timeline */}
