@@ -325,7 +325,7 @@ export function computeSettlementRange(
   // ════════════════════════════════════════════════════
 
   const { factor: liabilityFactor, reasons: liabilityReasons } =
-    computeLiabilityFactor(snapshot, driverResult, assumptions);
+    computeLiabilityFactor(snapshot, driverResult, assumptions, ov);
 
   // ════════════════════════════════════════════════════
   // STEP 4: Treatment Reliability Adjustment
