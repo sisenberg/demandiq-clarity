@@ -6,6 +6,7 @@ import { useModuleCompletion } from "@/hooks/useModuleCompletion";
 import { useEvaluateEligibility } from "@/hooks/useEvaluateEligibility";
 import { useStartEvaluate, deriveEvaluateState } from "@/hooks/useEvaluateState";
 import { useEvaluateIntakeSnapshot } from "@/hooks/useEvaluateIntakeSnapshot";
+import { useCompleteEvaluate, useReopenEvaluate, validateEvaluateCompletion } from "@/hooks/useEvaluateCompletion";
 import { isEntitlementActive } from "@/hooks/useModuleEntitlements";
 import { ModuleId } from "@/types";
 import {
@@ -23,6 +24,7 @@ import EvalDriversTab from "@/components/evaluate/EvalDriversTab";
 import EvalRangeTab from "@/components/evaluate/EvalRangeTab";
 import EvalEvidenceTab from "@/components/evaluate/EvalEvidenceTab";
 import EvalExplanationTab from "@/components/evaluate/EvalExplanationTab";
+import EvalHandoffTab from "@/components/evaluate/EvalHandoffTab";
 import EvalPlaceholderTab from "@/components/evaluate/EvalPlaceholderTab";
 import EvalStickyActions from "@/components/evaluate/EvalStickyActions";
 import {
