@@ -8,6 +8,7 @@ import { useEvaluateEligibility } from "@/hooks/useEvaluateEligibility";
 import { useStartEvaluate, deriveEvaluateState } from "@/hooks/useEvaluateState";
 import { useEvaluateIntakeSnapshot } from "@/hooks/useEvaluateIntakeSnapshot";
 import { useCompleteEvaluate, useReopenEvaluate, validateEvaluateCompletion } from "@/hooks/useEvaluateCompletion";
+import { useIsUpstreamCurrent } from "@/hooks/useUpstreamSnapshot";
 import { isEntitlementActive } from "@/hooks/useModuleEntitlements";
 import { ModuleId } from "@/types";
 import {
@@ -28,6 +29,7 @@ import EvalExplanationTab from "@/components/evaluate/EvalExplanationTab";
 import EvalHandoffTab from "@/components/evaluate/EvalHandoffTab";
 import EvalPlaceholderTab from "@/components/evaluate/EvalPlaceholderTab";
 import EvalStickyActions from "@/components/evaluate/EvalStickyActions";
+import EvalStaleDataBanner from "@/components/evaluate/EvalStaleDataBanner";
 import {
   ArrowLeft,
   Calculator,
@@ -51,6 +53,12 @@ const EvaluateWorkspacePage = () => {
   const hasModule = isEntitlementActive(entitlements, ModuleId.EvaluateIQ);
   const moduleState = deriveEvaluateState(evalCompletion?.status);
   const cta = getEvaluateCTA(moduleState);
+  const isWorkspaceActive = eligibility.eligible && moduleState !== EvaluateModuleState.NotStarted;
+
+  // Upstream freshness — detect stale valuations
+  const upstreamModuleId = eligibility.inputSource === "revieweriq" ? "revieweriq" : "demandiq";
+  const { data: upstreamFreshness } = useIsUpstreamCurrent(caseId, "evaluateiq", upstreamModuleId);
+  const isStale = isWorkspaceActive && upstreamFreshness ? !upstreamFreshness.isCurrent : false;
 
   const [activeTab, setActiveTab] = useState<EvalTab>("overview");
 
@@ -102,7 +110,6 @@ const EvaluateWorkspacePage = () => {
   const isPending = startEvaluate.isPending || completeEvaluate.isPending;
 
   const claimVsInsured = caseData.title || `${caseData.claimant} v. ${caseData.insured}`;
-  const isWorkspaceActive = eligibility.eligible && moduleState !== EvaluateModuleState.NotStarted;
 
   return (
     <div className="flex flex-col h-full">
@@ -178,6 +185,18 @@ const EvaluateWorkspacePage = () => {
           {/* Active workspace */}
           {isWorkspaceActive && snapshot && (
             <div className="space-y-5">
+              {/* Stale data warning */}
+              <EvalStaleDataBanner
+                isStale={isStale}
+                staleReason=""
+                upstreamModule={upstreamModuleId}
+                upstreamVersion={eligibility.sourceVersion}
+                onRefresh={() => {
+                  // Re-fetch snapshot — in production this would rebuild from updated upstream
+                  toast.info("Refreshing inputs from upstream package…");
+                }}
+              />
+
               <EvalSummaryHeader
                 snapshot={snapshot}
                 moduleState={moduleState}
