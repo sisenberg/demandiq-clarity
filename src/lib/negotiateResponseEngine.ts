@@ -52,7 +52,7 @@ export interface ResponseRecommendation {
   rank: number;
 }
 
-export interface NegotiationPostureZone =
+export type NegotiationPostureZone =
   | "within_target"
   | "above_likely_moving"
   | "outside_not_moving"
