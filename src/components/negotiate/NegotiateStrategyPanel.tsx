@@ -7,11 +7,12 @@ import type { NegotiationViewModel } from "@/lib/negotiateViewModel";
 import type { GeneratedStrategy, StrategyOverride } from "@/types/negotiate-strategy";
 import { generateStrategy } from "@/lib/negotiateStrategyEngine";
 import { useNegotiateStrategy, useSaveNegotiateStrategy } from "@/hooks/useNegotiateStrategy";
-import { useNegotiateSession, useNegotiationRounds } from "@/hooks/useNegotiateSession";
+import { useNegotiateSession, useNegotiationRounds, useUpdateSessionAuthority } from "@/hooks/useNegotiateSession";
 import { useNegotiateCalibration } from "@/hooks/useNegotiateCalibration";
 import NegotiateStrategyCard from "@/components/negotiate/NegotiateStrategyCard";
 import RoundManagementPanel from "@/components/negotiate/RoundManagementPanel";
 import HistoricalCalibrationCard from "@/components/negotiate/HistoricalCalibrationCard";
+import AuthorityCard from "@/components/negotiate/AuthorityCard";
 import { Zap, RefreshCw } from "lucide-react";
 
 interface NegotiateStrategyPanelProps {
@@ -28,6 +29,7 @@ const NegotiateStrategyPanel = ({ vm, caseId, evalPackageId, attorneyName, attor
   const saveStrategy = useSaveNegotiateStrategy();
   const { data: session } = useNegotiateSession(caseId);
   const { data: rounds = [] } = useNegotiationRounds(session?.id);
+  const updateAuthority = useUpdateSessionAuthority();
 
   // Calibration
   const { data: calibration, isLoading: calLoading } = useNegotiateCalibration(vm, caseId, {
@@ -75,6 +77,17 @@ const NegotiateStrategyPanel = ({ vm, caseId, evalPackageId, attorneyName, attor
       overrides,
     });
   }, [strategy, overrides, caseId, evalPackageId, vm.provenance.packageVersion, saveStrategy]);
+
+  const handleUpdateAuthority = useCallback((amount: number, reason: string) => {
+    if (!session) return;
+    updateAuthority.mutate({
+      sessionId: session.id,
+      caseId,
+      previousAuthority: session.current_authority,
+      newAuthority: amount,
+      reason,
+    });
+  }, [session, caseId, updateAuthority]);
 
   if (isLoading) {
     return (
@@ -128,6 +141,19 @@ const NegotiateStrategyPanel = ({ vm, caseId, evalPackageId, attorneyName, attor
         isSaving={saveStrategy.isPending}
         strategyVersion={savedStrategy?.version ?? null}
       />
+
+      {/* Authority Management */}
+      {session && (
+        <AuthorityCard
+          vm={vm}
+          strategy={strategy}
+          session={session}
+          rounds={rounds}
+          caseId={caseId}
+          onUpdateAuthority={handleUpdateAuthority}
+          isUpdating={updateAuthority.isPending}
+        />
+      )}
 
       {/* Historical Calibration */}
       <HistoricalCalibrationCard calibration={calibration} isLoading={calLoading} />
