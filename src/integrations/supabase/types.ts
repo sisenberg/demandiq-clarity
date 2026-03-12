@@ -926,6 +926,218 @@ export type Database = {
           },
         ]
       }
+      evaluation_cases: {
+        Row: {
+          active_snapshot_id: string | null
+          active_valuation_id: string | null
+          case_id: string
+          completed_at: string | null
+          completed_by: string | null
+          created_at: string
+          id: string
+          module_status: Database["public"]["Enums"]["evaluation_case_status"]
+          started_at: string | null
+          started_by: string | null
+          tenant_id: string
+          updated_at: string
+        }
+        Insert: {
+          active_snapshot_id?: string | null
+          active_valuation_id?: string | null
+          case_id: string
+          completed_at?: string | null
+          completed_by?: string | null
+          created_at?: string
+          id?: string
+          module_status?: Database["public"]["Enums"]["evaluation_case_status"]
+          started_at?: string | null
+          started_by?: string | null
+          tenant_id: string
+          updated_at?: string
+        }
+        Update: {
+          active_snapshot_id?: string | null
+          active_valuation_id?: string | null
+          case_id?: string
+          completed_at?: string | null
+          completed_by?: string | null
+          created_at?: string
+          id?: string
+          module_status?: Database["public"]["Enums"]["evaluation_case_status"]
+          started_at?: string | null
+          started_by?: string | null
+          tenant_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "evaluation_cases_active_snapshot_id_fkey"
+            columns: ["active_snapshot_id"]
+            isOneToOne: false
+            referencedRelation: "evaluation_snapshots"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "evaluation_cases_active_valuation_id_fkey"
+            columns: ["active_valuation_id"]
+            isOneToOne: false
+            referencedRelation: "valuation_runs"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "evaluation_cases_case_id_fkey"
+            columns: ["case_id"]
+            isOneToOne: false
+            referencedRelation: "cases"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "evaluation_cases_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      evaluation_packages: {
+        Row: {
+          case_id: string
+          completed_at: string | null
+          completed_by: string | null
+          created_at: string
+          id: string
+          package_payload: Json
+          selection_id: string | null
+          snapshot_id: string | null
+          tenant_id: string
+          valuation_run_id: string | null
+          version: number
+        }
+        Insert: {
+          case_id: string
+          completed_at?: string | null
+          completed_by?: string | null
+          created_at?: string
+          id?: string
+          package_payload?: Json
+          selection_id?: string | null
+          snapshot_id?: string | null
+          tenant_id: string
+          valuation_run_id?: string | null
+          version?: number
+        }
+        Update: {
+          case_id?: string
+          completed_at?: string | null
+          completed_by?: string | null
+          created_at?: string
+          id?: string
+          package_payload?: Json
+          selection_id?: string | null
+          snapshot_id?: string | null
+          tenant_id?: string
+          valuation_run_id?: string | null
+          version?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "evaluation_packages_case_id_fkey"
+            columns: ["case_id"]
+            isOneToOne: false
+            referencedRelation: "cases"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "evaluation_packages_selection_id_fkey"
+            columns: ["selection_id"]
+            isOneToOne: false
+            referencedRelation: "valuation_selections"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "evaluation_packages_snapshot_id_fkey"
+            columns: ["snapshot_id"]
+            isOneToOne: false
+            referencedRelation: "evaluation_snapshots"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "evaluation_packages_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "evaluation_packages_valuation_run_id_fkey"
+            columns: ["valuation_run_id"]
+            isOneToOne: false
+            referencedRelation: "valuation_runs"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      evaluation_snapshots: {
+        Row: {
+          case_id: string
+          completeness_score: number | null
+          completeness_warnings: Json
+          created_at: string
+          created_by: string | null
+          id: string
+          is_current: boolean
+          snapshot_payload: Json
+          source_module: string
+          source_package_version: number
+          source_snapshot_id: string | null
+          tenant_id: string
+        }
+        Insert: {
+          case_id: string
+          completeness_score?: number | null
+          completeness_warnings?: Json
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          is_current?: boolean
+          snapshot_payload?: Json
+          source_module: string
+          source_package_version?: number
+          source_snapshot_id?: string | null
+          tenant_id: string
+        }
+        Update: {
+          case_id?: string
+          completeness_score?: number | null
+          completeness_warnings?: Json
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          is_current?: boolean
+          snapshot_payload?: Json
+          source_module?: string
+          source_package_version?: number
+          source_snapshot_id?: string | null
+          tenant_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "evaluation_snapshots_case_id_fkey"
+            columns: ["case_id"]
+            isOneToOne: false
+            referencedRelation: "cases"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "evaluation_snapshots_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       extracted_facts: {
         Row: {
           case_id: string
@@ -2621,6 +2833,299 @@ export type Database = {
         }
         Relationships: []
       }
+      valuation_assumptions: {
+        Row: {
+          adopted_at: string | null
+          adopted_by: string | null
+          assumption_key: string
+          assumption_value: string
+          case_id: string
+          category: Database["public"]["Enums"]["assumption_category"]
+          created_at: string
+          id: string
+          reason_notes: string
+          tenant_id: string
+          updated_at: string
+          valuation_run_id: string | null
+        }
+        Insert: {
+          adopted_at?: string | null
+          adopted_by?: string | null
+          assumption_key?: string
+          assumption_value?: string
+          case_id: string
+          category?: Database["public"]["Enums"]["assumption_category"]
+          created_at?: string
+          id?: string
+          reason_notes?: string
+          tenant_id: string
+          updated_at?: string
+          valuation_run_id?: string | null
+        }
+        Update: {
+          adopted_at?: string | null
+          adopted_by?: string | null
+          assumption_key?: string
+          assumption_value?: string
+          case_id?: string
+          category?: Database["public"]["Enums"]["assumption_category"]
+          created_at?: string
+          id?: string
+          reason_notes?: string
+          tenant_id?: string
+          updated_at?: string
+          valuation_run_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "valuation_assumptions_case_id_fkey"
+            columns: ["case_id"]
+            isOneToOne: false
+            referencedRelation: "cases"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "valuation_assumptions_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "valuation_assumptions_valuation_run_id_fkey"
+            columns: ["valuation_run_id"]
+            isOneToOne: false
+            referencedRelation: "valuation_runs"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      valuation_driver_records: {
+        Row: {
+          case_id: string
+          created_at: string
+          driver_family: Database["public"]["Enums"]["driver_family"]
+          driver_key: string
+          evidence_ref_ids: string[]
+          id: string
+          narrative: string
+          normalized_value: number | null
+          raw_input_value: string
+          score: number | null
+          snapshot_id: string | null
+          tenant_id: string
+          updated_at: string
+          valuation_run_id: string | null
+          weight: number | null
+        }
+        Insert: {
+          case_id: string
+          created_at?: string
+          driver_family?: Database["public"]["Enums"]["driver_family"]
+          driver_key?: string
+          evidence_ref_ids?: string[]
+          id?: string
+          narrative?: string
+          normalized_value?: number | null
+          raw_input_value?: string
+          score?: number | null
+          snapshot_id?: string | null
+          tenant_id: string
+          updated_at?: string
+          valuation_run_id?: string | null
+          weight?: number | null
+        }
+        Update: {
+          case_id?: string
+          created_at?: string
+          driver_family?: Database["public"]["Enums"]["driver_family"]
+          driver_key?: string
+          evidence_ref_ids?: string[]
+          id?: string
+          narrative?: string
+          normalized_value?: number | null
+          raw_input_value?: string
+          score?: number | null
+          snapshot_id?: string | null
+          tenant_id?: string
+          updated_at?: string
+          valuation_run_id?: string | null
+          weight?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "valuation_driver_records_case_id_fkey"
+            columns: ["case_id"]
+            isOneToOne: false
+            referencedRelation: "cases"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "valuation_driver_records_snapshot_id_fkey"
+            columns: ["snapshot_id"]
+            isOneToOne: false
+            referencedRelation: "evaluation_snapshots"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "valuation_driver_records_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "valuation_driver_records_valuation_run_id_fkey"
+            columns: ["valuation_run_id"]
+            isOneToOne: false
+            referencedRelation: "valuation_runs"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      valuation_runs: {
+        Row: {
+          case_id: string
+          confidence: number | null
+          created_at: string
+          created_by: string | null
+          engine_version: string
+          id: string
+          inputs_summary: Json
+          range_floor: number | null
+          range_likely: number | null
+          range_stretch: number | null
+          run_type: Database["public"]["Enums"]["valuation_run_type"]
+          snapshot_id: string | null
+          tenant_id: string
+          top_assumptions: Json
+        }
+        Insert: {
+          case_id: string
+          confidence?: number | null
+          created_at?: string
+          created_by?: string | null
+          engine_version?: string
+          id?: string
+          inputs_summary?: Json
+          range_floor?: number | null
+          range_likely?: number | null
+          range_stretch?: number | null
+          run_type?: Database["public"]["Enums"]["valuation_run_type"]
+          snapshot_id?: string | null
+          tenant_id: string
+          top_assumptions?: Json
+        }
+        Update: {
+          case_id?: string
+          confidence?: number | null
+          created_at?: string
+          created_by?: string | null
+          engine_version?: string
+          id?: string
+          inputs_summary?: Json
+          range_floor?: number | null
+          range_likely?: number | null
+          range_stretch?: number | null
+          run_type?: Database["public"]["Enums"]["valuation_run_type"]
+          snapshot_id?: string | null
+          tenant_id?: string
+          top_assumptions?: Json
+        }
+        Relationships: [
+          {
+            foreignKeyName: "valuation_runs_case_id_fkey"
+            columns: ["case_id"]
+            isOneToOne: false
+            referencedRelation: "cases"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "valuation_runs_snapshot_id_fkey"
+            columns: ["snapshot_id"]
+            isOneToOne: false
+            referencedRelation: "evaluation_snapshots"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "valuation_runs_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      valuation_selections: {
+        Row: {
+          authority_recommendation: number | null
+          case_id: string
+          created_at: string
+          id: string
+          rationale_notes: string
+          selected_at: string | null
+          selected_by: string | null
+          selected_floor: number | null
+          selected_likely: number | null
+          selected_stretch: number | null
+          tenant_id: string
+          updated_at: string
+          valuation_run_id: string | null
+        }
+        Insert: {
+          authority_recommendation?: number | null
+          case_id: string
+          created_at?: string
+          id?: string
+          rationale_notes?: string
+          selected_at?: string | null
+          selected_by?: string | null
+          selected_floor?: number | null
+          selected_likely?: number | null
+          selected_stretch?: number | null
+          tenant_id: string
+          updated_at?: string
+          valuation_run_id?: string | null
+        }
+        Update: {
+          authority_recommendation?: number | null
+          case_id?: string
+          created_at?: string
+          id?: string
+          rationale_notes?: string
+          selected_at?: string | null
+          selected_by?: string | null
+          selected_floor?: number | null
+          selected_likely?: number | null
+          selected_stretch?: number | null
+          tenant_id?: string
+          updated_at?: string
+          valuation_run_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "valuation_selections_case_id_fkey"
+            columns: ["case_id"]
+            isOneToOne: false
+            referencedRelation: "cases"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "valuation_selections_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "valuation_selections_valuation_run_id_fkey"
+            columns: ["valuation_run_id"]
+            isOneToOne: false
+            referencedRelation: "valuation_runs"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never
@@ -2660,6 +3165,16 @@ export type Database = {
         | "settlement_memo"
         | "negotiation_letter"
         | "litigation_brief"
+      assumption_category:
+        | "liability"
+        | "damages"
+        | "comparative_fault"
+        | "future_medical"
+        | "wage_loss"
+        | "policy_limits"
+        | "venue"
+        | "credibility"
+        | "other"
       bill_linkage_status:
         | "pending"
         | "linked"
@@ -2730,8 +3245,30 @@ export type Database = {
         | "expert_report"
         | "photograph"
         | "other"
+      driver_family:
+        | "injury_severity"
+        | "treatment_intensity"
+        | "liability"
+        | "credibility"
+        | "venue"
+        | "policy_limits"
+        | "wage_loss"
+        | "future_treatment"
+        | "permanency"
+        | "surgery"
+        | "imaging"
+        | "pre_existing"
+        | "other"
       duplicate_flag_status: "flagged" | "dismissed" | "confirmed"
       environment_designation: "development" | "staging" | "production"
+      evaluation_case_status:
+        | "not_started"
+        | "intake_ready"
+        | "intake_in_progress"
+        | "valuation_ready"
+        | "valuation_in_review"
+        | "valued"
+        | "completed"
       extraction_confidence_tier: "high" | "medium" | "low" | "unknown"
       extraction_review_state:
         | "draft"
@@ -2876,6 +3413,7 @@ export type Database = {
         | "dme"
         | "mental_health"
         | "other"
+      valuation_run_type: "initial" | "refresh" | "manual_override"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -3013,6 +3551,17 @@ export const Constants = {
         "negotiation_letter",
         "litigation_brief",
       ],
+      assumption_category: [
+        "liability",
+        "damages",
+        "comparative_fault",
+        "future_medical",
+        "wage_loss",
+        "policy_limits",
+        "venue",
+        "credibility",
+        "other",
+      ],
       bill_linkage_status: [
         "pending",
         "linked",
@@ -3091,8 +3640,32 @@ export const Constants = {
         "photograph",
         "other",
       ],
+      driver_family: [
+        "injury_severity",
+        "treatment_intensity",
+        "liability",
+        "credibility",
+        "venue",
+        "policy_limits",
+        "wage_loss",
+        "future_treatment",
+        "permanency",
+        "surgery",
+        "imaging",
+        "pre_existing",
+        "other",
+      ],
       duplicate_flag_status: ["flagged", "dismissed", "confirmed"],
       environment_designation: ["development", "staging", "production"],
+      evaluation_case_status: [
+        "not_started",
+        "intake_ready",
+        "intake_in_progress",
+        "valuation_ready",
+        "valuation_in_review",
+        "valued",
+        "completed",
+      ],
       extraction_confidence_tier: ["high", "medium", "low", "unknown"],
       extraction_review_state: [
         "draft",
@@ -3248,6 +3821,7 @@ export const Constants = {
         "mental_health",
         "other",
       ],
+      valuation_run_type: ["initial", "refresh", "manual_override"],
     },
   },
 } as const

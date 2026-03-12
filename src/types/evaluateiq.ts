@@ -74,4 +74,13 @@ export type EvaluateAuditAction =
   | "evaluate_started"
   | "evaluate_status_changed"
   | "evaluate_completed"
-  | "evaluate_reopened";
+  | "evaluate_reopened"
+  | "evaluate_snapshot_created"
+  | "evaluate_snapshot_refreshed"
+  | "evaluate_valuation_run_created"
+  | "evaluate_assumption_adopted"
+  | "evaluate_assumption_updated"
+  | "evaluate_selection_saved"
+  | "evaluate_selection_updated"
+  | "evaluate_package_published"
+  | "evaluate_status_transition";
