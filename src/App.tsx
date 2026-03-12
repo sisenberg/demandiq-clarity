@@ -41,6 +41,14 @@ const App = () => (
               <Route path="/cases" element={<CasesPage />} />
               <Route path="/cases/new" element={<NewCasePage />} />
               <Route path="/cases/:caseId" element={<CaseDetailPage />} />
+              <Route
+                path="/cases/:caseId/evaluate"
+                element={
+                  <ModuleGuard moduleId="evaluateiq">
+                    <EvaluateWorkspacePage />
+                  </ModuleGuard>
+                }
+              />
               <Route path="/documents" element={<DocumentsPage />} />
               <Route path="/documents/:docId" element={<DocumentDetailPage />} />
               <Route
