@@ -19,6 +19,7 @@ import AuditLogPage from "@/pages/AuditLogPage";
 import EvaluateWorkspacePage from "@/pages/EvaluateWorkspacePage";
 import ModuleGuard from "@/components/auth/ModuleGuard";
 import CalibrationPage from "@/pages/CalibrationPage";
+import NegotiateWorkspacePage from "@/pages/NegotiateWorkspacePage";
 import NotFound from "@/pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -47,6 +48,14 @@ const App = () => (
                 element={
                   <ModuleGuard moduleId="evaluateiq">
                     <EvaluateWorkspacePage />
+                  </ModuleGuard>
+                }
+              />
+              <Route
+                path="/cases/:caseId/negotiate"
+                element={
+                  <ModuleGuard moduleId="negotiateiq">
+                    <NegotiateWorkspacePage />
                   </ModuleGuard>
                 }
               />
