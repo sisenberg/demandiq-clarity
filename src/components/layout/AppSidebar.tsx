@@ -15,6 +15,7 @@ import {
   ChevronLeft,
   ChevronRight,
   HelpCircle,
+  Database,
 } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { canAccessRoute } from "@/lib/permissions";
