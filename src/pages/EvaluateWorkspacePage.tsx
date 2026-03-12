@@ -202,7 +202,7 @@ const EvaluateWorkspacePage = () => {
         <EvalStickyActions
           moduleState={moduleState}
           onCTA={handleCTA}
-          isPending={startEvaluate.isPending}
+          isPending={isPending}
         />
       )}
     </div>
