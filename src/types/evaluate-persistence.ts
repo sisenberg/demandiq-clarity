@@ -6,6 +6,7 @@
  */
 
 import type { EvaluateIntakeSnapshot, CompletenessWarning } from "./evaluate-intake";
+import type { ExplanationLedger } from "./explanation-ledger";
 
 // ─── Enums (match DB enums) ────────────────────────────
 
@@ -246,6 +247,9 @@ export interface EvaluatePackagePayload {
 
   /** Key driver summaries */
   driver_summaries: ValuationRunAssumptionSummary[];
+
+  /** Explanation ledger — full traceable rationale for the range */
+  explanation_ledger: ExplanationLedger | null;
 
   /** Assumptions adopted */
   assumptions: Array<{

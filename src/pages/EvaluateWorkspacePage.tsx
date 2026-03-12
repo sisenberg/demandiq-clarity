@@ -22,6 +22,7 @@ import EvalOverviewTab from "@/components/evaluate/EvalOverviewTab";
 import EvalDriversTab from "@/components/evaluate/EvalDriversTab";
 import EvalRangeTab from "@/components/evaluate/EvalRangeTab";
 import EvalEvidenceTab from "@/components/evaluate/EvalEvidenceTab";
+import EvalExplanationTab from "@/components/evaluate/EvalExplanationTab";
 import EvalPlaceholderTab from "@/components/evaluate/EvalPlaceholderTab";
 import EvalStickyActions from "@/components/evaluate/EvalStickyActions";
 import {
@@ -167,6 +168,7 @@ const EvaluateWorkspacePage = () => {
               {activeTab === "overview" && <EvalOverviewTab snapshot={snapshot} />}
               {activeTab === "drivers" && <EvalDriversTab snapshot={snapshot} />}
               {activeTab === "range" && <EvalRangeTab snapshot={snapshot} />}
+              {activeTab === "explanation" && <EvalExplanationTab snapshot={snapshot} />}
               {activeTab === "evidence" && <EvalEvidenceTab snapshot={snapshot} />}
               {activeTab === "calibration" && <EvalPlaceholderTab tab="calibration" />}
               {activeTab === "handoff" && <EvalPlaceholderTab tab="handoff" />}
