@@ -151,6 +151,65 @@ export type Database = {
           },
         ]
       }
+      calibration_configs: {
+        Row: {
+          change_reason: string
+          change_summary: string
+          changed_by: string
+          clinical_adjustments: Json
+          confidence_rules: Json
+          created_at: string
+          id: string
+          is_active: boolean
+          reliability_reductions: Json
+          rounding_rules: Json
+          severity_multipliers: Json
+          tenant_id: string
+          venue_multipliers: Json
+          version: number
+        }
+        Insert: {
+          change_reason?: string
+          change_summary?: string
+          changed_by: string
+          clinical_adjustments?: Json
+          confidence_rules?: Json
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          reliability_reductions?: Json
+          rounding_rules?: Json
+          severity_multipliers?: Json
+          tenant_id: string
+          venue_multipliers?: Json
+          version?: number
+        }
+        Update: {
+          change_reason?: string
+          change_summary?: string
+          changed_by?: string
+          clinical_adjustments?: Json
+          confidence_rules?: Json
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          reliability_reductions?: Json
+          rounding_rules?: Json
+          severity_multipliers?: Json
+          tenant_id?: string
+          venue_multipliers?: Json
+          version?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "calibration_configs_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       calibration_imports: {
         Row: {
           completed_at: string | null
