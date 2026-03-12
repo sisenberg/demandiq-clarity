@@ -9,6 +9,7 @@ import { hasPermission } from "@/lib/permissions";
 import { CasePackageProvider } from "@/hooks/useCasePackage";
 import { isEntitlementActive } from "@/hooks/useModuleEntitlements";
 import { useModuleCompletion } from "@/hooks/useModuleCompletion";
+import { useEvaluateEligibility } from "@/hooks/useEvaluateEligibility";
 import { ModuleId, ModuleCompletionStatus } from "@/types";
 import CaseOverview from "@/components/case/CaseOverview";
 import CoverPageTab from "@/components/case/CoverPageTab";
