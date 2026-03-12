@@ -29,6 +29,7 @@ interface RoundManagementPanelProps {
   strategy: GeneratedStrategy | null;
   currentCeiling: number | null;
   openingDemand: number | null;
+  vm?: NegotiationViewModel;
 }
 
 const RoundManagementPanel = ({
