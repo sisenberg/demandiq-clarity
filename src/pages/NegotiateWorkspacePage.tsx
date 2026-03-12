@@ -250,6 +250,7 @@ const NegotiateWorkspacePage = () => {
                 attorneyName={opposingCounsel?.full_name || undefined}
                 firmName={opposingCounsel?.organization || undefined}
               />
+            </div>
           </div>
         )}
 
