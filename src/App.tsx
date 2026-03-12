@@ -18,6 +18,7 @@ import AdminPage from "@/pages/AdminPage";
 import AuditLogPage from "@/pages/AuditLogPage";
 import EvaluateWorkspacePage from "@/pages/EvaluateWorkspacePage";
 import ModuleGuard from "@/components/auth/ModuleGuard";
+import CalibrationPage from "@/pages/CalibrationPage";
 import NotFound from "@/pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -64,6 +65,14 @@ const App = () => (
                 element={
                   <RoleGuard permission="view_admin">
                     <AdminPage />
+                  </RoleGuard>
+                }
+              />
+              <Route
+                path="/admin/calibration"
+                element={
+                  <RoleGuard permission="view_admin">
+                    <CalibrationPage />
                   </RoleGuard>
                 }
               />

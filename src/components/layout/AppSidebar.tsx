@@ -15,6 +15,7 @@ import {
   ChevronLeft,
   ChevronRight,
   HelpCircle,
+  Database,
 } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { canAccessRoute } from "@/lib/permissions";
@@ -37,6 +38,7 @@ const primaryNavItems = [
 
 const adminNavItems = [
   { label: "Admin", path: "/admin", icon: Settings },
+  { label: "Calibration", path: "/admin/calibration", icon: Database },
   { label: "Audit Log", path: "/audit", icon: ScrollText },
 ];
 

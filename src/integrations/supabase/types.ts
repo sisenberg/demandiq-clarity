@@ -151,6 +151,59 @@ export type Database = {
           },
         ]
       }
+      calibration_imports: {
+        Row: {
+          completed_at: string | null
+          created_at: string
+          error_count: number
+          error_log: Json
+          file_name: string
+          id: string
+          import_type: string
+          imported_by: string
+          record_count: number
+          status: string
+          success_count: number
+          tenant_id: string
+        }
+        Insert: {
+          completed_at?: string | null
+          created_at?: string
+          error_count?: number
+          error_log?: Json
+          file_name?: string
+          id?: string
+          import_type?: string
+          imported_by: string
+          record_count?: number
+          status?: string
+          success_count?: number
+          tenant_id: string
+        }
+        Update: {
+          completed_at?: string | null
+          created_at?: string
+          error_count?: number
+          error_log?: Json
+          file_name?: string
+          id?: string
+          import_type?: string
+          imported_by?: string
+          record_count?: number
+          status?: string
+          success_count?: number
+          tenant_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "calibration_imports_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       case_documents: {
         Row: {
           case_id: string
@@ -1338,6 +1391,135 @@ export type Database = {
           },
           {
             foreignKeyName: "generated_artifacts_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      historical_claims: {
+        Row: {
+          attorney_firm: string
+          attorney_name: string
+          billed_specials: number | null
+          claim_number: string
+          comparative_negligence_pct: number | null
+          completeness_score: number
+          confidence_flags: Json
+          corpus_type: string
+          created_at: string
+          final_settlement_amount: number | null
+          has_hospitalization: boolean
+          has_imaging: boolean
+          has_injections: boolean
+          has_permanency: boolean
+          has_surgery: boolean
+          id: string
+          import_id: string | null
+          injury_categories: string[]
+          jurisdiction: string
+          liability_posture: string
+          loss_date: string | null
+          outcome_notes: string
+          policy_limits: number | null
+          policy_type: string
+          primary_body_parts: string[]
+          provider_names: string[]
+          raw_source: Json
+          reviewed_specials: number | null
+          tenant_id: string
+          treatment_duration_days: number | null
+          treatment_provider_count: number | null
+          updated_at: string
+          venue_county: string
+          venue_state: string
+          wage_loss: number | null
+        }
+        Insert: {
+          attorney_firm?: string
+          attorney_name?: string
+          billed_specials?: number | null
+          claim_number?: string
+          comparative_negligence_pct?: number | null
+          completeness_score?: number
+          confidence_flags?: Json
+          corpus_type?: string
+          created_at?: string
+          final_settlement_amount?: number | null
+          has_hospitalization?: boolean
+          has_imaging?: boolean
+          has_injections?: boolean
+          has_permanency?: boolean
+          has_surgery?: boolean
+          id?: string
+          import_id?: string | null
+          injury_categories?: string[]
+          jurisdiction?: string
+          liability_posture?: string
+          loss_date?: string | null
+          outcome_notes?: string
+          policy_limits?: number | null
+          policy_type?: string
+          primary_body_parts?: string[]
+          provider_names?: string[]
+          raw_source?: Json
+          reviewed_specials?: number | null
+          tenant_id: string
+          treatment_duration_days?: number | null
+          treatment_provider_count?: number | null
+          updated_at?: string
+          venue_county?: string
+          venue_state?: string
+          wage_loss?: number | null
+        }
+        Update: {
+          attorney_firm?: string
+          attorney_name?: string
+          billed_specials?: number | null
+          claim_number?: string
+          comparative_negligence_pct?: number | null
+          completeness_score?: number
+          confidence_flags?: Json
+          corpus_type?: string
+          created_at?: string
+          final_settlement_amount?: number | null
+          has_hospitalization?: boolean
+          has_imaging?: boolean
+          has_injections?: boolean
+          has_permanency?: boolean
+          has_surgery?: boolean
+          id?: string
+          import_id?: string | null
+          injury_categories?: string[]
+          jurisdiction?: string
+          liability_posture?: string
+          loss_date?: string | null
+          outcome_notes?: string
+          policy_limits?: number | null
+          policy_type?: string
+          primary_body_parts?: string[]
+          provider_names?: string[]
+          raw_source?: Json
+          reviewed_specials?: number | null
+          tenant_id?: string
+          treatment_duration_days?: number | null
+          treatment_provider_count?: number | null
+          updated_at?: string
+          venue_county?: string
+          venue_state?: string
+          wage_loss?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "historical_claims_import_id_fkey"
+            columns: ["import_id"]
+            isOneToOne: false
+            referencedRelation: "calibration_imports"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "historical_claims_tenant_id_fkey"
             columns: ["tenant_id"]
             isOneToOne: false
             referencedRelation: "tenants"
