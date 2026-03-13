@@ -96,7 +96,7 @@ export function useAppendRepresentationEvent() {
       await supabase.from('audit_events').insert({
         tenant_id: tenantId,
         case_id: input.caseId,
-        actor_user_id: profile?.id ?? '00000000-0000-0000-0000-000000000000',
+        actor_user_id: user?.id ?? '00000000-0000-0000-0000-000000000000',
         entity_type: 'claimant_representation_history',
         entity_id: (data as any).id,
         action_type: 'created',
