@@ -36,6 +36,7 @@ import EvalStaleDataBanner from "@/components/evaluate/EvalStaleDataBanner";
 import EvalClaimProfileCard from "@/components/evaluate/EvalClaimProfileCard";
 import { classifyClaimProfile } from "@/lib/claimProfileClassifier";
 import EvalFactorTaxonomyPanel from "@/components/evaluate/EvalFactorTaxonomyPanel";
+import EvalScoringRankedSummary from "@/components/evaluate/EvalScoringRankedSummary";
 import {
   ArrowLeft,
   Calculator,
@@ -230,6 +231,7 @@ const EvaluateWorkspacePage = () => {
 
                 {activeTab === "overview" && claimProfile && <EvalClaimProfileCard profile={claimProfile} />}
                 {activeTab === "overview" && <EvalOverviewTab snapshot={snapshot} />}
+                {activeTab === "drivers" && <EvalScoringRankedSummary snapshot={snapshot} />}
                 {activeTab === "drivers" && <EvalFactorTaxonomyPanel snapshot={snapshot} />}
                 {activeTab === "drivers" && <EvalDriversTab snapshot={snapshot} />}
                 {activeTab === "range" && <EvalRangeTab snapshot={snapshot} />}

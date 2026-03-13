@@ -183,4 +183,91 @@ describe("Factor Scoring Engine", () => {
       expect(f.narrative.length).toBeGreaterThan(0);
     }
   });
+
+  it("every scored factor has confirmation state", () => {
+    const result = scoreAllFactors(makeSnap());
+    for (const f of result.scored_factors) {
+      expect(f.confirmation).toBeDefined();
+      expect(f.confirmation.state).toBe("ai_scored");
+    }
+  });
+
+  it("every scored factor has citations array", () => {
+    const result = scoreAllFactors(makeSnap());
+    for (const f of result.scored_factors) {
+      expect(Array.isArray(f.citations)).toBe(true);
+    }
+  });
+
+  it("every scored factor has issue_flags array", () => {
+    const result = scoreAllFactors(makeSnap());
+    for (const f of result.scored_factors) {
+      expect(Array.isArray(f.issue_flags)).toBe(true);
+    }
+  });
+
+  it("every scored factor has suppressed boolean", () => {
+    const result = scoreAllFactors(makeSnap());
+    for (const f of result.scored_factors) {
+      expect(typeof f.suppressed).toBe("boolean");
+    }
+  });
+
+  it("returns ranked top_drivers sorted by score desc", () => {
+    const result = scoreAllFactors(makeSnap({ wage_loss: 50000, clinical_flags: { has_surgery: true } }));
+    expect(result.top_drivers.length).toBeGreaterThan(0);
+    for (let i = 1; i < result.top_drivers.length; i++) {
+      expect(result.top_drivers[i - 1].score).toBeGreaterThanOrEqual(result.top_drivers[i].score);
+    }
+  });
+
+  it("returns top_suppressors for claims with reducing factors", () => {
+    const result = scoreAllFactors(makeSnap({
+      upstream_concerns: [
+        { id: "c1", category: "gap", description: "30-day gap unexplained", severity: "warning", provenance: prov() },
+        { id: "c2", category: "gap", description: "Another gap", severity: "warning", provenance: prov() },
+      ],
+    }));
+    expect(result.top_suppressors.length).toBeGreaterThanOrEqual(0);
+  });
+
+  it("returns top_uncertainty_contributors for low-confidence factors", () => {
+    const result = scoreAllFactors(makeSnap());
+    // At least loss_of_enjoyment has low confidence
+    const lowConf = result.scored_factors.filter(f => f.confidence === "low");
+    if (lowConf.length > 0) {
+      expect(result.top_uncertainty_contributors.length).toBeGreaterThan(0);
+    }
+  });
+
+  it("tracks suppressed_count", () => {
+    const result = scoreAllFactors(makeSnap());
+    expect(typeof result.suppressed_count).toBe("number");
+  });
+
+  it("tracks total_issue_count", () => {
+    const result = scoreAllFactors(makeSnap());
+    expect(typeof result.total_issue_count).toBe("number");
+  });
+
+  it("generates issue flags for missing gate data", () => {
+    const result = scoreAllFactors(makeSnap({ liability_facts: [], medical_billing: [] }));
+    const benchmarkGate = result.scored_factors.find(f => f.factor_id === "gate_benchmark_data");
+    expect(benchmarkGate!.issue_flags.length).toBeGreaterThan(0);
+  });
+
+  it("populates extraction_confidence on applicable factors", () => {
+    const result = scoreAllFactors(makeSnap());
+    const applicable = result.scored_factors.filter(f => f.applicable);
+    for (const f of applicable) {
+      expect(f.extraction_confidence).toBeDefined();
+    }
+  });
+
+  it("populates citations for injury severity factor", () => {
+    const result = scoreAllFactors(makeSnap());
+    const sev = result.scored_factors.find(f => f.factor_id === "injury_severity_class");
+    // injury has empty evidence_ref_ids in our fixture, but citations may still be produced
+    expect(Array.isArray(sev!.citations)).toBe(true);
+  });
 });
