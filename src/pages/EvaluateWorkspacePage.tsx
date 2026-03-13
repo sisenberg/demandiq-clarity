@@ -327,6 +327,9 @@ const EvaluateWorkspacePage = () => {
                 {activeTab === "overview" && (
                   <div className="space-y-4">
                     <EvalCorridorSummary snapshot={snapshot} isProvisional={isProvisional} />
+                    {repValuation && <EvalDualRangeCard valuation={repValuation} />}
+                    {repValuation && <EvalRepresentationCard valuation={repValuation} />}
+                    {repValuation && <EvalScenarioCard valuation={repValuation} />}
                     {claimProfile && <EvalClaimProfileCard profile={claimProfile} />}
                     <div className="grid grid-cols-1 xl:grid-cols-2 gap-4">
                       <EvalMeritsScoreCard snapshot={snapshot} />
