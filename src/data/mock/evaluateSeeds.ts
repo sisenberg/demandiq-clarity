@@ -92,6 +92,26 @@ export interface DemoOverride {
   requires_supervisor_review: boolean;
 }
 
+export interface DemoValuationRun {
+  run_id: string;
+  run_version: number;
+  computed_at: string;
+  floor: number;
+  likely: number;
+  stretch: number;
+  confidence: number;
+  confidence_label: "high" | "moderate" | "low" | "very_low";
+  factor_count: number;
+  override_count: number;
+}
+
+export interface DemoStaleState {
+  is_stale: boolean;
+  stale_reason: string;
+  upstream_module: string;
+  upstream_version: number;
+}
+
 export interface EvaluateDemoSeed {
   id: string;
   label: string;
@@ -109,6 +129,16 @@ export interface EvaluateDemoSeed {
   benchmark_support: DemoBenchmarkSupport;
   override?: DemoOverride;
   module_status: "not_started" | "in_progress" | "valued" | "completed" | "published";
+  /** Whether claimant is represented by attorney */
+  is_represented: boolean;
+  attorney_name?: string;
+  firm_name?: string;
+  /** Pre-computed valuation run for validation */
+  valuation_run: DemoValuationRun;
+  /** Stale-data state for UI testing */
+  stale_state?: DemoStaleState;
+  /** Whether this seed uses ReviewerIQ as upstream (false = DemandIQ only) */
+  has_revieweriq_data: boolean;
 }
 
 // ─── Base snapshot factory ─────────────────────────────
