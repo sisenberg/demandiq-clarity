@@ -129,6 +129,20 @@ export function validateEvaluatePackage(
     findings.push({ field: "negotiation_handoff", severity: "warning", code: "EMPTY_HANDOFF", message: "Negotiation handoff has no strengths or weaknesses." });
   }
 
+  // ── Representation-aware valuation fields (required for publication) ──
+  if (!pkg.fact_based_value_range || (pkg.fact_based_value_range.low === 0 && pkg.fact_based_value_range.mid === 0 && pkg.fact_based_value_range.high === 0 && pkg.settlement_corridor.range_likely != null)) {
+    findings.push({ field: "fact_based_value_range", severity: "error", code: "MISSING_FACT_BASED_RANGE", message: "fact_based_value_range is required and must be populated." });
+  }
+  if (!pkg.expected_resolution_range || (pkg.expected_resolution_range.low === 0 && pkg.expected_resolution_range.mid === 0 && pkg.expected_resolution_range.high === 0 && pkg.settlement_corridor.range_likely != null)) {
+    findings.push({ field: "expected_resolution_range", severity: "error", code: "MISSING_EXPECTED_RESOLUTION_RANGE", message: "expected_resolution_range is required and must be populated." });
+  }
+  if (!pkg.representation_context) {
+    findings.push({ field: "representation_context", severity: "error", code: "MISSING_REPRESENTATION_CONTEXT", message: "representation_context is required." });
+  }
+  if (!pkg.representation_notes?.value_rule_applied) {
+    findings.push({ field: "representation_notes.value_rule_applied", severity: "error", code: "MISSING_VALUE_RULE", message: "representation_notes.value_rule_applied is required." });
+  }
+
   // ── Explanation ledger ──
   if (!pkg.explanation_ledger) {
     findings.push({ field: "explanation_ledger", severity: "warning", code: "NO_LEDGER", message: "Explanation ledger is null. Package will not be fully traceable." });
