@@ -136,6 +136,9 @@ const EvalHandoffTab = ({ snapshot, publishedPackages }: Props) => {
         </section>
       )}
 
+      {/* Handoff Preview — derived from package or snapshot */}
+      <HandoffSection snapshot={snapshot} payload={payload} />
+
       {/* Downstream Readiness */}
       <section className="rounded-xl border border-border bg-card p-5">
         <div className="flex items-center gap-2 mb-4">
