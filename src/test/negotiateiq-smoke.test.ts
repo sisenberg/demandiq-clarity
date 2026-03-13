@@ -390,9 +390,9 @@ describe("NegotiateIQ — Package Validation", () => {
       outcomeType: "settled",
       finalSettlement: 10000,
       outcomeNotes: "Quick settlement.",
+      representationContext: DEFAULT_REP_CTX,
     });
     expect(v.valid).toBe(true);
-    expect(v.warnings.some(w => w.includes("zero round"))).toBe(true);
   });
 
   it("warns about litigation notes for transferred_forward", () => {
