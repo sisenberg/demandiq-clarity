@@ -320,6 +320,7 @@ describe("NegotiateIQ — Package Validation", () => {
       outcomeType: "settled",
       finalSettlement: null,
       outcomeNotes: "Settled.",
+      representationContext: DEFAULT_REP_CTX,
     });
     expect(v.valid).toBe(false);
     expect(v.errors.some(e => e.includes("Settlement amount"))).toBe(true);
