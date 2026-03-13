@@ -434,6 +434,7 @@ describe("NegotiateIQ — Package Building", () => {
       calibrationSignalsCount: 0,
       calibrationHighConfCount: 0,
       calibrationJurisdictionBand: null,
+      representationContext: DEFAULT_REP_CTX,
     });
 
     expect(pkg.engine_version).toBe("negotiate-v1.0.0");
