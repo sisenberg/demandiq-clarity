@@ -109,8 +109,10 @@ const EvalPublishDialog = ({
     return { eligible: blockers.length === 0, blockers, warnings };
   }, [isAccepted, overrides, moduleStatus, snapshot]);
 
+  if (!isOpen) return null;
+
   const corridorDisplay = activeOverride
-    ? { floor: activeOverride.new_corridor.low, likely: activeOverride.new_corridor.mid, stretch: activeOverride.new_corridor.high, isOverridden: true }
+    ? { floor: activeOverride.override_corridor.low, likely: activeOverride.override_corridor.mid, stretch: activeOverride.override_corridor.high, isOverridden: true }
     : { floor: systemCorridor.low, likely: systemCorridor.mid, stretch: systemCorridor.high, isOverridden: false };
 
   return (

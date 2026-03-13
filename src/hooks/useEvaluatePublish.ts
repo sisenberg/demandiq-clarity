@@ -114,7 +114,7 @@ export function usePublishEvaluate() {
       if (input.overrides.length > 0) {
         const latestOverride = input.overrides[0];
         pkg.evaluation_status = "overridden";
-        pkg.audit.overridden_by = latestOverride.actor_user_id;
+        pkg.audit.overridden_by = latestOverride.actor_id;
         pkg.audit.overridden_at = latestOverride.timestamp;
         pkg.audit.override_reason = latestOverride.reason_code;
       } else {
