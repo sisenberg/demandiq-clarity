@@ -5,7 +5,7 @@
  * Used by the completion hook and package publication flow.
  */
 
-import type { EvaluatePackageV1, EvalClaimProfile, EvalMeritsAssessment, EvalSettlementCorridor, EvalDocumentationSufficiency, EvalFactorSummary, EvalBenchmarkSummary, EvalNegotiationHandoff, EvalHandoffPoint, EvalAdoptedAssumption, EvalOverrideRecord, EvalPostMeritAdjustment } from "@/types/evaluate-package-v1";
+import type { EvaluatePackageV1, EvalClaimProfile, EvalMeritsAssessment, EvalSettlementCorridor, EvalDocumentationSufficiency, EvalFactorSummary, EvalBenchmarkSummary, EvalNegotiationHandoff, EvalHandoffPoint, EvalHandoffGap, EvalHandoffIssue, EvalAdoptedAssumption, EvalOverrideRecord, EvalPostMeritAdjustment, EvalConfidenceLevel } from "@/types/evaluate-package-v1";
 import { EVALUATE_PACKAGE_CONTRACT_VERSION } from "@/types/evaluate-package-v1";
 import type { EvaluateIntakeSnapshot } from "@/types/evaluate-intake";
 import type { ExplanationLedger, LedgerEntry } from "@/types/explanation-ledger";
@@ -158,14 +158,101 @@ export function assembleEvaluatePackageV1(input: PackageAssemblyInput): Evaluate
   }
 
   // ── Handoff ──
+  const isOverridden = input.selectedFloor != null || input.selectedLikely != null || input.selectedStretch != null;
+  const corridorFloor = isOverridden ? input.selectedFloor : input.rangeFloor;
+  const corridorLikely = isOverridden ? input.selectedLikely : input.rangeLikely;
+  const corridorStretch = isOverridden ? input.selectedStretch : input.rangeStretch;
+
+  // Derive authority zones from corridor
+  const openingAnchor = corridorStretch;
+  const openingCeiling = corridorStretch != null && corridorLikely != null
+    ? corridorStretch + (corridorStretch - corridorLikely) * 0.25
+    : corridorStretch;
+  const targetFloor = corridorFloor;
+  const targetValue = corridorLikely;
+  const walkAwayFloor = corridorFloor != null ? corridorFloor * 0.85 : null;
+
+  // Escalation threshold: 120% of stretch or policy limits
+  const escalationAmount = corridorStretch != null
+    ? Math.min(corridorStretch * 1.2, claimProfile.policy_limits ?? Infinity)
+    : claimProfile.policy_limits;
+  const escalationRequired = escalationAmount != null && corridorStretch != null && escalationAmount > corridorStretch;
+
+  // Documentation gaps from completeness warnings
+  const docGaps: EvalHandoffGap[] = snapshot.completeness_warnings
+    .filter(w => w.status === "missing" || w.status === "partial")
+    .map(w => ({
+      field: w.field,
+      label: w.label,
+      severity: w.status === "missing" ? "critical" as const : "moderate" as const,
+      impact_on_valuation: w.status === "missing"
+        ? `Missing ${w.label} may reduce corridor defensibility`
+        : `Partial ${w.label} may limit valuation precision`,
+    }));
+
+  // Unresolved issues from upstream concerns
+  const unresolvedIssues: EvalHandoffIssue[] = snapshot.upstream_concerns
+    .filter(c => c.severity !== "info")
+    .map(c => ({
+      category: (c.category === "causation" || c.category === "credibility" ? c.category : c.category === "gap" || c.category === "documentation" ? "documentation" : c.category === "compliance" ? "liability" : "other") as EvalHandoffIssue["category"],
+      description: c.description,
+      severity: c.severity === "critical" ? "critical" as const : "warning" as const,
+      recommendation: c.severity === "critical"
+        ? "Address before finalizing negotiation position"
+        : "Consider during negotiation strategy",
+    }));
+
+  // Add unresolved liability facts
+  const unsupportedLiability = snapshot.liability_facts.filter(f => !f.supports_liability && f.confidence != null && f.confidence < 0.5);
+  unsupportedLiability.forEach(f => {
+    unresolvedIssues.push({
+      category: "liability",
+      description: f.fact_text,
+      severity: "warning",
+      recommendation: "Liability fact has low confidence — may be challenged in negotiation",
+    });
+  });
+
+  const totalBilledSpecials = snapshot.medical_billing.reduce((s, b) => s + b.billed_amount, 0);
+
   const handoff: EvalNegotiationHandoff = {
-    recommended_opening_anchor: input.rangeStretch,
-    suggested_target: input.selectedLikely ?? input.rangeLikely,
-    walk_away_floor: input.selectedFloor ?? input.rangeFloor,
+    adjusted_corridor: {
+      floor: corridorFloor,
+      likely: corridorLikely,
+      stretch: corridorStretch,
+      is_overridden: isOverridden,
+    },
+    confidence_level: confidenceLevel,
+    confidence_score: input.confidence,
+    recommended_opening_zone: {
+      anchor: openingAnchor,
+      ceiling: openingCeiling,
+      rationale: openingAnchor != null
+        ? `Opening at stretch value (${formatDollars(openingAnchor)}) with ceiling buffer of 25% above midpoint delta`
+        : "Insufficient corridor data to derive opening zone",
+    },
+    target_settlement_zone: {
+      floor: targetFloor,
+      target: targetValue,
+      rationale: targetValue != null
+        ? `Target at likely value (${formatDollars(targetValue)}) with floor at corridor minimum`
+        : "Insufficient corridor data to derive target zone",
+    },
+    walk_away_floor: walkAwayFloor,
+    escalation_threshold: {
+      amount: escalationAmount ?? null,
+      rationale: escalationRequired
+        ? `Offers above ${formatDollars(escalationAmount!)} (120% of stretch) should trigger supervisor review`
+        : "No escalation threshold applicable",
+      review_required: escalationRequired,
+    },
     key_strengths: topDrivers.map(toHandoffPoint),
     key_weaknesses: topSuppressors.map(toHandoffPoint),
     key_uncertainties: topUncertainty.map(toHandoffPoint),
+    documentation_gaps: docGaps,
+    unresolved_issues: unresolvedIssues,
     total_reviewed_specials: totalReviewedSpecials(snapshot),
+    total_billed_specials: totalBilledSpecials,
     policy_limits: claimProfile.policy_limits,
   };
 
@@ -309,4 +396,8 @@ function computeMeritsScore(snapshot: EvaluateIntakeSnapshot, ledger: Explanatio
   }
 
   return Math.max(0, Math.min(100, Math.round(score)));
+}
+
+function formatDollars(val: number): string {
+  return new Intl.NumberFormat("en-US", { style: "currency", currency: "USD", maximumFractionDigits: 0 }).format(val);
 }
