@@ -4,11 +4,20 @@
  * Renders scored factors grouped by layer using definitions from the
  * factor registry. Not hard-coded — all labels, descriptions, and
  * structure come from the registry.
+ *
+ * Shows evidence citations, confirmation state, extraction confidence,
+ * issue flags, and suppression state per factor.
  */
 
 import { useState, useMemo } from "react";
 import type { EvaluateIntakeSnapshot } from "@/types/evaluate-intake";
-import type { FactorLayer, ScoredFactor, LayerSummary, FactorDirection } from "@/types/factor-taxonomy";
+import type {
+  FactorLayer,
+  ScoredFactor,
+  LayerSummary,
+  FactorDirection,
+  FactorIssueFlag,
+} from "@/types/factor-taxonomy";
 import { FACTOR_LAYER_META } from "@/types/factor-taxonomy";
 import { scoreAllFactors } from "@/lib/factorScoringEngine";
 import {
@@ -24,6 +33,10 @@ import {
   Lock,
   Layers,
   Info,
+  FileText,
+  Eye,
+  ShieldAlert,
+  CircleDot,
 } from "lucide-react";
 
 interface Props {
@@ -44,7 +57,7 @@ const EvalFactorTaxonomyPanel = ({ snapshot }: Props) => {
             Factor Taxonomy
           </h2>
           <p className="text-[11px] text-muted-foreground mt-0.5">
-            {result.applicable_count} factors scored across 6 layers. {result.evidenced_count} with evidence links.
+            {result.applicable_count} factors scored · {result.evidenced_count} with evidence · {result.suppressed_count} suppressed · {result.total_issue_count} issue(s)
           </p>
         </div>
 
@@ -112,6 +125,16 @@ function LayerCard({ summary, factors, expanded, onToggle }: {
           </div>
 
           <div className="flex items-center gap-3 shrink-0">
+            {summary.issue_count > 0 && (
+              <span className="flex items-center gap-1 text-[9px] text-destructive">
+                <AlertTriangle className="h-2.5 w-2.5" /> {summary.issue_count}
+              </span>
+            )}
+            {summary.suppressed_count > 0 && (
+              <span className="flex items-center gap-1 text-[9px] text-muted-foreground">
+                <Lock className="h-2.5 w-2.5" /> {summary.suppressed_count}
+              </span>
+            )}
             {isGateLayer && summary.gate_passed !== null && (
               <span className={`text-[9px] font-semibold px-2 py-0.5 rounded-full ${
                 summary.gate_passed
@@ -155,51 +178,180 @@ function FactorRow({ factor }: { factor: ScoredFactor }) {
       <button onClick={() => setShowDetail(!showDetail)} className="w-full px-4 py-3 text-left hover:bg-accent/20 transition-colors">
         <div className="flex items-center justify-between gap-3">
           <div className="flex items-center gap-2.5 min-w-0 flex-1">
-            {!factor.applicable && <Lock className="h-3 w-3 text-muted-foreground shrink-0" />}
+            {factor.suppressed && <Lock className="h-3 w-3 text-muted-foreground shrink-0" />}
+            {!factor.applicable && !factor.suppressed && <Lock className="h-3 w-3 text-muted-foreground shrink-0" />}
             <div className="min-w-0">
               <span className="text-[11px] font-medium text-foreground">{def.name}</span>
-              {!factor.applicable && (
+              {factor.suppressed && (
+                <span className="text-[9px] text-destructive/70 ml-2">(suppressed)</span>
+              )}
+              {!factor.applicable && !factor.suppressed && (
                 <span className="text-[9px] text-muted-foreground ml-2">({factor.inapplicable_reason})</span>
               )}
             </div>
           </div>
 
           <div className="flex items-center gap-2.5 shrink-0">
-            {factor.applicable && def.score_type === "ordinal_0_5" && (
+            {factor.issue_flags.length > 0 && (
+              <span className="flex items-center gap-0.5 text-[9px] text-destructive">
+                <AlertTriangle className="h-2.5 w-2.5" /> {factor.issue_flags.length}
+              </span>
+            )}
+            {factor.applicable && !factor.suppressed && def.score_type === "ordinal_0_5" && (
               <OrdinalBar score={factor.score} max={5} />
             )}
-            {factor.applicable && def.score_type === "binary" && (
+            {factor.applicable && !factor.suppressed && def.score_type === "binary" && (
               <span className={`text-[9px] font-semibold px-1.5 py-0.5 rounded ${factor.score >= 1 ? "bg-[hsl(var(--status-approved))]/10 text-[hsl(var(--status-approved))]" : "bg-destructive/10 text-destructive"}`}>
                 {factor.score >= 1 ? "Pass" : "Fail"}
               </span>
             )}
-            {factor.applicable && def.score_type === "percentage" && (
+            {factor.applicable && !factor.suppressed && def.score_type === "percentage" && (
               <span className="text-[11px] font-semibold text-foreground">{factor.score}%</span>
             )}
-            {factor.applicable && (
+            {factor.applicable && !factor.suppressed && (
               <DirIcon className={`h-3 w-3 ${dirColor}`} />
             )}
+            <ConfirmationBadge state={factor.confirmation.state} />
             <ConfidenceDot confidence={factor.confidence} />
           </div>
         </div>
       </button>
 
       {showDetail && (
-        <div className="px-4 pb-3 space-y-2 bg-muted/20">
+        <div className="px-4 pb-3 space-y-2.5 bg-muted/20">
+          {/* Description */}
           <div className="flex items-start gap-2">
             <Info className="h-3 w-3 text-muted-foreground mt-0.5 shrink-0" />
             <p className="text-[10px] text-muted-foreground leading-relaxed">{def.description}</p>
           </div>
+
+          {/* Narrative */}
           <p className="text-[10px] text-foreground leading-relaxed">{factor.narrative}</p>
-          <div className="flex items-center gap-4 text-[9px] text-muted-foreground">
+
+          {/* Metadata row */}
+          <div className="flex items-center gap-4 text-[9px] text-muted-foreground flex-wrap">
             <span>Input: <code className="bg-accent px-1 py-0.5 rounded">{factor.raw_input}</code></span>
             <span>Evidence: {factor.evidence_ref_ids.length} ref(s)</span>
             <span>v{def.version}</span>
           </div>
+
+          {/* Citations */}
+          {factor.citations.length > 0 && (
+            <div className="space-y-1">
+              <div className="flex items-center gap-1.5">
+                <FileText className="h-3 w-3 text-muted-foreground" />
+                <span className="text-[9px] font-semibold uppercase tracking-wider text-muted-foreground">Citations ({factor.citations.length})</span>
+              </div>
+              {factor.citations.slice(0, 5).map((c, i) => (
+                <div key={i} className="pl-5 text-[9px] text-foreground/70 flex items-start gap-1.5">
+                  <span className={`shrink-0 px-1 py-0.5 rounded text-[8px] font-semibold uppercase ${
+                    c.relevance_type === "direct" ? "bg-primary/10 text-primary" :
+                    c.relevance_type === "corroborating" ? "bg-[hsl(var(--status-attention))]/10 text-[hsl(var(--status-attention))]" :
+                    "bg-muted text-muted-foreground"
+                  }`}>
+                    {c.relevance_type}
+                  </span>
+                  <span className="truncate">{c.quoted_text}</span>
+                </div>
+              ))}
+              {factor.citations.length > 5 && (
+                <p className="pl-5 text-[9px] text-muted-foreground">+{factor.citations.length - 5} more</p>
+              )}
+            </div>
+          )}
+
+          {/* Extraction confidence */}
+          {factor.extraction_confidence && (
+            <div className="flex items-center gap-2 text-[9px] text-muted-foreground">
+              <Eye className="h-3 w-3" />
+              <span>Extraction confidence: <strong className="text-foreground">{factor.extraction_confidence.label}</strong></span>
+              {factor.extraction_confidence.score !== null && (
+                <span>({factor.extraction_confidence.score}%)</span>
+              )}
+              {factor.extraction_confidence.source_field && (
+                <span>from <code className="bg-accent px-1 py-0.5 rounded">{factor.extraction_confidence.source_field}</code></span>
+              )}
+            </div>
+          )}
+
+          {/* Confirmation state */}
+          <div className="flex items-center gap-2 text-[9px] text-muted-foreground">
+            <CircleDot className="h-3 w-3" />
+            <span>Confirmation: <strong className="text-foreground">{confirmationLabel(factor.confirmation.state)}</strong></span>
+            {factor.confirmation.reviewed_by && (
+              <span>by {factor.confirmation.reviewed_by}</span>
+            )}
+            {factor.confirmation.adjustment_notes && (
+              <span className="text-foreground/70">— {factor.confirmation.adjustment_notes}</span>
+            )}
+          </div>
+
+          {/* Issue flags */}
+          {factor.issue_flags.length > 0 && (
+            <div className="space-y-1">
+              <div className="flex items-center gap-1.5">
+                <ShieldAlert className="h-3 w-3 text-destructive" />
+                <span className="text-[9px] font-semibold uppercase tracking-wider text-destructive">Issues ({factor.issue_flags.length})</span>
+              </div>
+              {factor.issue_flags.map((flag) => (
+                <IssueFlagRow key={flag.id} flag={flag} />
+              ))}
+            </div>
+          )}
+
+          {/* Suppression info */}
+          {factor.suppressed && factor.suppression_reason && (
+            <div className="flex items-start gap-2 rounded-md bg-destructive/5 border border-destructive/10 px-3 py-2">
+              <Lock className="h-3 w-3 text-destructive mt-0.5 shrink-0" />
+              <p className="text-[9px] text-destructive">{factor.suppression_reason}</p>
+            </div>
+          )}
         </div>
       )}
     </div>
   );
+}
+
+// ─── Issue Flag Row ─────────────────────────────────────
+
+function IssueFlagRow({ flag }: { flag: FactorIssueFlag }) {
+  const sevColor = flag.severity === "critical" ? "text-destructive" :
+    flag.severity === "high" ? "text-destructive/80" :
+    flag.severity === "medium" ? "text-[hsl(var(--status-attention))]" :
+    "text-muted-foreground";
+
+  return (
+    <div className="pl-5 flex items-start gap-2 text-[9px]">
+      <span className={`shrink-0 font-semibold uppercase ${sevColor}`}>{flag.severity}</span>
+      <span className="text-foreground/70">{flag.description}</span>
+    </div>
+  );
+}
+
+// ─── Confirmation Badge ─────────────────────────────────
+
+function ConfirmationBadge({ state }: { state: string }) {
+  if (state === "ai_scored") return null; // default, don't show
+  const cls = state === "reviewer_accepted"
+    ? "bg-[hsl(var(--status-approved))]/10 text-[hsl(var(--status-approved))]"
+    : state === "reviewer_adjusted"
+      ? "bg-[hsl(var(--status-attention))]/10 text-[hsl(var(--status-attention))]"
+      : "bg-muted text-muted-foreground";
+  return (
+    <span className={`text-[8px] font-semibold px-1.5 py-0.5 rounded ${cls}`}>
+      {confirmationLabel(state)}
+    </span>
+  );
+}
+
+function confirmationLabel(state: string): string {
+  switch (state) {
+    case "ai_scored": return "AI Scored";
+    case "reviewer_accepted": return "Reviewer Accepted";
+    case "reviewer_adjusted": return "Reviewer Adjusted";
+    case "unreviewed": return "Unreviewed";
+    default: return state;
+  }
 }
 
 // ─── Ordinal Bar ────────────────────────────────────────

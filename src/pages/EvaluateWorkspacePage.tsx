@@ -36,6 +36,7 @@ import EvalStaleDataBanner from "@/components/evaluate/EvalStaleDataBanner";
 import EvalClaimProfileCard from "@/components/evaluate/EvalClaimProfileCard";
 import { classifyClaimProfile } from "@/lib/claimProfileClassifier";
 import EvalFactorTaxonomyPanel from "@/components/evaluate/EvalFactorTaxonomyPanel";
+import EvalScoringRankedSummary from "@/components/evaluate/EvalScoringRankedSummary";
 import {
   ArrowLeft,
   Calculator,
