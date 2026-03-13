@@ -229,9 +229,9 @@ function SuffDot({ label }: { label: string }) {
 // ─── Benchmarks Panel ───────────────────────────────────
 
 function BenchmarksPanel({ snapshot }: { snapshot: EvaluateIntakeSnapshot | null }) {
-  if (!snapshot) return <PlaceholderMessage message="No snapshot loaded" />;
+  const result = useMemo(() => snapshot ? computeBenchmarkMatching(snapshot) : null, [snapshot]);
 
-  const result = useMemo(() => computeBenchmarkMatching(snapshot), [snapshot]);
+  if (!snapshot || !result) return <PlaceholderMessage message="No snapshot loaded" />;
 
   return (
     <div className="space-y-3">
