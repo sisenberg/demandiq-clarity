@@ -107,14 +107,64 @@ export function generateResponseRecommendations({
   const postureZone = classifyPostureZone(deltas, strategy, rounds, latestCounteroffer);
   const recs = scoreAndRank(strategy, vm, rounds, deltas, postureZone, lastDefenseOffer, currentCeiling);
 
+  // Apply representation-aware recommendation adjustments
+  const adjustedRecs = applyRepresentationAdjustments(recs, repStatus, repPosture, vm);
+
   return {
     engineVersion: ENGINE_VERSION,
     generatedAt: new Date().toISOString(),
     postureZone: postureZone.zone,
     postureZoneReason: postureZone.reason,
-    recommendations: recs,
+    recommendations: adjustedRecs,
     deltas,
   };
+}
+
+// ─── Representation-Aware Adjustments ───────────────────
+
+function applyRepresentationAdjustments(
+  recs: ResponseRecommendation[],
+  repStatus: string,
+  repPosture: string,
+  vm: NegotiationViewModel,
+): ResponseRecommendation[] {
+  return recs.map(rec => {
+    let rationale = rec.rationale;
+    const warnings = [...rec.warnings];
+
+    // Add retention risk context for unrepresented claimants
+    if (repStatus === "unrepresented" && (vm.representation?.retentionRisk ?? 0) >= 70) {
+      if (rec.action === "hold" || rec.action === "recommend_impasse") {
+        warnings.push({
+          code: "RETENTION_RISK",
+          message: "High attorney-retention risk. Prolonged delay may increase the likelihood of counsel retention, which could change negotiation dynamics.",
+          severity: "caution",
+        });
+      }
+    }
+
+    // Direct-resolution context for unrepresented
+    if (repStatus === "unrepresented") {
+      if (rec.action === "recommend_settlement") {
+        rationale += " Direct-resolution approach supports efficient settlement with clear explanation to the claimant. Value assessment is based on the same fact-based evaluation methodology used for all claims.";
+      }
+      if (rec.action === "standard_move" || rec.action === "small_move") {
+        rationale += " Any communication should use plain language appropriate for a claimant without legal counsel.";
+      }
+    }
+
+    // Post-retention reset context
+    if (repPosture === "post_retention_strategy_reset") {
+      rationale += " Note: Representation changed during this claim. Strategy has been recalibrated for the current representation context. Fact-based case value was not adjusted.";
+    }
+
+    // Counsel retention risk posture
+    if (repPosture === "counsel_retention_risk" && (rec.action === "hold" || rec.action === "recommend_impasse")) {
+      rationale += " Consider that delay may increase attorney-retention risk for this unrepresented claimant. Timely resolution through direct engagement may be more effective than extended hold strategies.";
+    }
+
+    return { ...rec, rationale, warnings };
+  });
 }
 
 // ─── Posture Zone Classification ────────────────────────

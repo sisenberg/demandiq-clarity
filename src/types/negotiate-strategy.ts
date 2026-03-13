@@ -63,6 +63,9 @@ export interface GeneratedStrategy {
 
   tacticalRecommendations: TacticalRecommendation[];
 
+  /** Representation-aware strategy posture */
+  representationPosture: StrategyRecommendation<RepresentationPosture>;
+
   /** Top driver keys that shaped the strategy */
   keyDrivers: string[];
   rationaleSummary: string;
