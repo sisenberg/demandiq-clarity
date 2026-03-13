@@ -30,6 +30,7 @@ import EvalExplanationTab from "@/components/evaluate/EvalExplanationTab";
 import EvalHandoffTab from "@/components/evaluate/EvalHandoffTab";
 import EvalPlaceholderTab from "@/components/evaluate/EvalPlaceholderTab";
 import EvalValuationCards from "@/components/evaluate/EvalValuationCards";
+import EvalIntakeReadinessCard from "@/components/evaluate/EvalIntakeReadinessCard";
 import EvalStickyActions from "@/components/evaluate/EvalStickyActions";
 import EvalStaleDataBanner from "@/components/evaluate/EvalStaleDataBanner";
 import {
