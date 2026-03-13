@@ -115,6 +115,9 @@ export interface NegotiatePackagePayload {
     high_confidence_count: number;
     jurisdiction_band: string | null;
   } | null;
+
+  // Representation context at negotiation
+  representation_context: NegotiateRepresentationContext | null;
 }
 
 // ─── Completion Validation ──────────────────────────────
