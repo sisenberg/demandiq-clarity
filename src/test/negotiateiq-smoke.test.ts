@@ -334,6 +334,7 @@ describe("NegotiateIQ — Package Validation", () => {
       outcomeType: "impasse",
       finalSettlement: null,
       outcomeNotes: "",
+      representationContext: DEFAULT_REP_CTX,
     });
     expect(v.valid).toBe(false);
     expect(v.errors.some(e => e.includes("Outcome notes"))).toBe(true);
