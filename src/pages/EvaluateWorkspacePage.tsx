@@ -39,6 +39,7 @@ import EvalFactorTaxonomyPanel from "@/components/evaluate/EvalFactorTaxonomyPan
 import EvalScoringRankedSummary from "@/components/evaluate/EvalScoringRankedSummary";
 import EvalMeritsScoreCard from "@/components/evaluate/EvalMeritsScoreCard";
 import EvalMeritsCorridorCard from "@/components/evaluate/EvalMeritsCorridorCard";
+import EvalPostMeritAdjustmentCard from "@/components/evaluate/EvalPostMeritAdjustmentCard";
 import {
   ArrowLeft,
   Calculator,
