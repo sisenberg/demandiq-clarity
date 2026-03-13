@@ -6,7 +6,7 @@
 
 import { useState, useMemo, useCallback } from "react";
 import type { NegotiationViewModel } from "@/lib/negotiateViewModel";
-import type { NegotiationSessionRow, NegotiationRoundRow, NegotiationNoteRow } from "@/types/negotiate-persistence";
+import type { NegotiationSessionRow, NegotiationRoundRow, NegotiationNoteRow, NegotiateRepresentationContext } from "@/types/negotiate-persistence";
 import type { GeneratedStrategy, StrategyOverride } from "@/types/negotiate-strategy";
 import {
   validateNegotiateCompletion,
