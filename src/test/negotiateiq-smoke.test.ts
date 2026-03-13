@@ -229,7 +229,7 @@ describe("NegotiateIQ — Draft Generation", () => {
         rounds: SCENARIO_REASONABLE.rounds,
       });
       expect(draft.draftType).toBe(draftType);
-      expect(draft.engineVersion).toBe("1.0.0");
+      expect(draft.engineVersion).toBe("1.1.0");
       expect(draft.title.length).toBeGreaterThan(0);
       // Either externalContent or internalNotes should be non-empty
       expect(draft.externalContent.length + draft.internalNotes.length).toBeGreaterThan(0);
