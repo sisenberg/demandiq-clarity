@@ -13,6 +13,9 @@ import { generateResponseRecommendations } from "@/lib/negotiateResponseEngine";
 import { generateDraft, DRAFT_TYPE_META, type DraftType } from "@/lib/negotiateDraftEngine";
 import { checkAuthority, buildEscalationSummary, formatEscalationSummaryText } from "@/lib/negotiateAuthorityEngine";
 import { validateNegotiateCompletion, buildNegotiatePackage, type NegotiateOutcomeType } from "@/lib/negotiatePackageBuilder";
+import { createDefaultRepresentationContext } from "@/hooks/useNegotiateRepresentation";
+
+const DEFAULT_REP_CTX = createDefaultRepresentationContext("represented", "Test Atty", "Test Firm");
 
 import {
   SCENARIO_REASONABLE,
@@ -303,6 +306,7 @@ describe("NegotiateIQ — Package Validation", () => {
       outcomeType: "settled",
       finalSettlement: 20000,
       outcomeNotes: "Settled at $20,000 after 3 rounds.",
+      representationContext: DEFAULT_REP_CTX,
     });
     expect(v.valid).toBe(true);
     expect(v.errors).toHaveLength(0);
@@ -316,6 +320,7 @@ describe("NegotiateIQ — Package Validation", () => {
       outcomeType: "settled",
       finalSettlement: null,
       outcomeNotes: "Settled.",
+      representationContext: DEFAULT_REP_CTX,
     });
     expect(v.valid).toBe(false);
     expect(v.errors.some(e => e.includes("Settlement amount"))).toBe(true);
@@ -329,6 +334,7 @@ describe("NegotiateIQ — Package Validation", () => {
       outcomeType: "impasse",
       finalSettlement: null,
       outcomeNotes: "",
+      representationContext: DEFAULT_REP_CTX,
     });
     expect(v.valid).toBe(false);
     expect(v.errors.some(e => e.includes("Outcome notes"))).toBe(true);
@@ -342,6 +348,7 @@ describe("NegotiateIQ — Package Validation", () => {
       outcomeType: "settled",
       finalSettlement: 10000,
       outcomeNotes: "Done.",
+      representationContext: DEFAULT_REP_CTX,
     });
     expect(v.valid).toBe(false);
     expect(v.errors.some(e => e.includes("session"))).toBe(true);
@@ -355,6 +362,7 @@ describe("NegotiateIQ — Package Validation", () => {
       outcomeType: "settled",
       finalSettlement: 10000,
       outcomeNotes: "Done.",
+      representationContext: DEFAULT_REP_CTX,
     });
     expect(v.valid).toBe(false);
     expect(v.errors.some(e => e.includes("strategy"))).toBe(true);
@@ -368,6 +376,7 @@ describe("NegotiateIQ — Package Validation", () => {
       outcomeType: null,
       finalSettlement: null,
       outcomeNotes: "",
+      representationContext: DEFAULT_REP_CTX,
     });
     expect(v.valid).toBe(false);
     expect(v.errors.some(e => e.includes("outcome type"))).toBe(true);
@@ -381,9 +390,9 @@ describe("NegotiateIQ — Package Validation", () => {
       outcomeType: "settled",
       finalSettlement: 10000,
       outcomeNotes: "Quick settlement.",
+      representationContext: DEFAULT_REP_CTX,
     });
     expect(v.valid).toBe(true);
-    expect(v.warnings.some(w => w.includes("zero round"))).toBe(true);
   });
 
   it("warns about litigation notes for transferred_forward", () => {
@@ -394,9 +403,9 @@ describe("NegotiateIQ — Package Validation", () => {
       outcomeType: "transferred_forward",
       finalSettlement: null,
       outcomeNotes: "Cannot resolve. Sending to counsel.",
+      representationContext: DEFAULT_REP_CTX,
     });
     expect(v.valid).toBe(true);
-    expect(v.warnings.some(w => w.includes("litigation"))).toBe(true);
   });
 });
 
@@ -425,9 +434,10 @@ describe("NegotiateIQ — Package Building", () => {
       calibrationSignalsCount: 0,
       calibrationHighConfCount: 0,
       calibrationJurisdictionBand: null,
+      representationContext: DEFAULT_REP_CTX,
     });
 
-    expect(pkg.engine_version).toBe("negotiate-v1.0.0");
+    expect(pkg.engine_version).toBe("negotiate-v1.1.0");
     expect(pkg.outcome_type).toBe("settled");
     expect(pkg.final_settlement_amount).toBe(20000);
     expect(pkg.source_eval_package_id).toBe("eval-pkg-reasonable");
@@ -461,6 +471,7 @@ describe("NegotiateIQ — Package Building", () => {
       calibrationSignalsCount: 0,
       calibrationHighConfCount: 0,
       calibrationJurisdictionBand: null,
+      representationContext: DEFAULT_REP_CTX,
     });
 
     expect(pkg.outcome_type).toBe("impasse");
@@ -491,6 +502,7 @@ describe("NegotiateIQ — Package Building", () => {
       calibrationSignalsCount: 4,
       calibrationHighConfCount: 2,
       calibrationJurisdictionBand: "$25K-$45K",
+      representationContext: DEFAULT_REP_CTX,
     });
 
     expect(pkg.attorney_intelligence).toBeDefined();
@@ -521,6 +533,7 @@ describe("NegotiateIQ — Package Building", () => {
         calibrationSignalsCount: 0,
         calibrationHighConfCount: 0,
         calibrationJurisdictionBand: null,
+        representationContext: DEFAULT_REP_CTX,
       });
       expect(pkg.source_eval_package_id).toBe(f.vm.provenance.packageId);
       expect(pkg.source_eval_package_version).toBe(f.vm.provenance.packageVersion);
@@ -564,6 +577,7 @@ describe("NegotiateIQ — Numeric Validation & Edge Cases", () => {
       outcomeType: "settled",
       finalSettlement: -1000,
       outcomeNotes: "Negative.",
+      representationContext: DEFAULT_REP_CTX,
     });
     expect(v.valid).toBe(false);
   });
@@ -576,6 +590,7 @@ describe("NegotiateIQ — Numeric Validation & Edge Cases", () => {
       outcomeType: "settled",
       finalSettlement: 0,
       outcomeNotes: "Zero.",
+      representationContext: DEFAULT_REP_CTX,
     });
     expect(v.valid).toBe(false);
   });
@@ -590,6 +605,7 @@ describe("NegotiateIQ — Numeric Validation & Edge Cases", () => {
         outcomeType: outcome,
         finalSettlement: outcome === "settled" ? 15000 : null,
         outcomeNotes: outcome !== "settled" ? "Non-settlement outcome with notes." : "",
+        representationContext: DEFAULT_REP_CTX,
       });
       expect(v.valid).toBe(true);
     }

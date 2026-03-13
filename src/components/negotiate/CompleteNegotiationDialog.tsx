@@ -6,7 +6,7 @@
 
 import { useState, useMemo, useCallback } from "react";
 import type { NegotiationViewModel } from "@/lib/negotiateViewModel";
-import type { NegotiationSessionRow, NegotiationRoundRow, NegotiationNoteRow } from "@/types/negotiate-persistence";
+import type { NegotiationSessionRow, NegotiationRoundRow, NegotiationNoteRow, NegotiateRepresentationContext } from "@/types/negotiate-persistence";
 import type { GeneratedStrategy, StrategyOverride } from "@/types/negotiate-strategy";
 import {
   validateNegotiateCompletion,
@@ -42,6 +42,7 @@ interface CompleteNegotiationDialogProps {
   calibrationSignalsCount: number;
   calibrationHighConfCount: number;
   calibrationJurisdictionBand: string | null;
+  representationContext?: NegotiateRepresentationContext | null;
 }
 
 const OUTCOME_ICONS: Record<NegotiateOutcomeType, React.ElementType> = {
@@ -66,6 +67,7 @@ const CompleteNegotiationDialog = ({
   calibrationSignalsCount,
   calibrationHighConfCount,
   calibrationJurisdictionBand,
+  representationContext,
 }: CompleteNegotiationDialogProps) => {
   const [outcomeType, setOutcomeType] = useState<NegotiateOutcomeType | null>(null);
   const [finalSettlement, setFinalSettlement] = useState("");
@@ -85,8 +87,9 @@ const CompleteNegotiationDialog = ({
       outcomeType,
       finalSettlement: parsed,
       outcomeNotes,
+      representationContext,
     });
-  }, [session, strategy, rounds, outcomeType, finalSettlement, outcomeNotes]);
+  }, [session, strategy, rounds, outcomeType, finalSettlement, outcomeNotes, representationContext]);
 
   const handlePublish = useCallback(() => {
     if (!outcomeType || !validation.valid) return;
@@ -113,6 +116,7 @@ const CompleteNegotiationDialog = ({
       calibrationSignalsCount,
       calibrationHighConfCount,
       calibrationJurisdictionBand,
+      representationContext,
     });
 
     publish.mutate(
@@ -125,7 +129,7 @@ const CompleteNegotiationDialog = ({
       },
       { onSuccess: () => onClose() }
     );
-  }, [outcomeType, validation, finalSettlement, unresolvedIssues, nextSteps, litigationLikely, vm, session, strategy, rounds, notes, outcomeNotes, caseId, publish, onClose, attorneyName, firmName, observationsCount, calibrationSignalsCount, calibrationHighConfCount, calibrationJurisdictionBand]);
+  }, [outcomeType, validation, finalSettlement, unresolvedIssues, nextSteps, litigationLikely, vm, session, strategy, rounds, notes, outcomeNotes, caseId, publish, onClose, attorneyName, firmName, observationsCount, calibrationSignalsCount, calibrationHighConfCount, calibrationJurisdictionBand, representationContext]);
 
   if (!open) return null;
 

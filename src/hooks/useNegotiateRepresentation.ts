@@ -23,12 +23,19 @@ export function createDefaultRepresentationContext(
   return {
     representation_status_current: currentStatus,
     representation_status_at_first_negotiation_event: null,
+    representation_status_at_publication: currentStatus,
     representation_status_at_outcome: null,
     representation_transition_flag: false,
     attorney_retained_during_negotiation_flag: currentStatus === "represented",
     attorney_retained_after_initial_offer_flag: false,
+    unrepresented_resolved_flag: false,
     current_attorney_name: attorneyName ?? null,
     current_firm_name: firmName ?? null,
+    representation_history_summary: currentStatus === "unknown"
+      ? "Representation status not yet determined."
+      : currentStatus === "represented"
+        ? `Represented by ${attorneyName ?? "counsel"}${firmName ? ` (${firmName})` : ""}.`
+        : "Claimant is unrepresented.",
     representation_changes: [],
   };
 }
@@ -49,10 +56,14 @@ export function captureFirstEventStatus(
 
 export function captureOutcomeStatus(
   ctx: NegotiateRepresentationContext,
+  outcomeType?: string,
 ): NegotiateRepresentationContext {
+  const isResolved = outcomeType === "settled" || outcomeType === "closed_without_settlement";
   return {
     ...ctx,
     representation_status_at_outcome: ctx.representation_status_current,
+    unrepresented_resolved_flag:
+      ctx.unrepresented_resolved_flag || (isResolved && ctx.representation_status_current === "unrepresented"),
   };
 }
 

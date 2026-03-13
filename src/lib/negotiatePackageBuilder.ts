@@ -14,6 +14,8 @@ import type {
   NegotiationNoteRow,
   NegotiationSessionStatus,
   NegotiateRepresentationContext,
+  SettlementRepresentationFields,
+  TransferRepresentationFields,
 } from "@/types/negotiate-persistence";
 
 // ─── Outcome Types ──────────────────────────────────────
@@ -116,8 +118,12 @@ export interface NegotiatePackagePayload {
     jurisdiction_band: string | null;
   } | null;
 
-  // Representation context at negotiation
-  representation_context: NegotiateRepresentationContext | null;
+  // ─── Required: Representation Context ─────────────────
+  representation_context: NegotiateRepresentationContext;
+
+  // ─── Outcome-Specific Representation Fields ───────────
+  settlement_representation: SettlementRepresentationFields | null;
+  transfer_representation: TransferRepresentationFields | null;
 }
 
 // ─── Completion Validation ──────────────────────────────
@@ -135,8 +141,9 @@ export function validateNegotiateCompletion(opts: {
   outcomeType: NegotiateOutcomeType | null;
   finalSettlement: number | null;
   outcomeNotes: string;
+  representationContext?: NegotiateRepresentationContext | null;
 }): CompletionValidation {
-  const { session, strategy, rounds, outcomeType, finalSettlement, outcomeNotes } = opts;
+  const { session, strategy, rounds, outcomeType, finalSettlement, outcomeNotes, representationContext } = opts;
   const errors: string[] = [];
   const warnings: string[] = [];
 
@@ -156,8 +163,25 @@ export function validateNegotiateCompletion(opts: {
     errors.push("Settlement amount is required for a settled outcome.");
   }
 
-  if (outcomeType !== "settled" && !outcomeNotes.trim()) {
+  if (outcomeType !== "settled" && outcomeNotes != null && !outcomeNotes.trim()) {
     errors.push("Outcome notes are required for non-settlement outcomes.");
+  }
+
+  // ─── Representation validation ────────────────────────
+  if (!representationContext) {
+    errors.push("Representation context is required for package publication.");
+  }
+
+  if (outcomeType === "settled" && representationContext) {
+    if (!representationContext.representation_status_at_outcome && !representationContext.representation_status_current) {
+      errors.push("Representation status at settlement is required for settled outcomes.");
+    }
+  }
+
+  if (outcomeType === "transferred_forward" && representationContext) {
+    if (!representationContext.representation_status_at_outcome && !representationContext.representation_status_current) {
+      errors.push("Representation status at transfer is required for transferred outcomes.");
+    }
   }
 
   if (rounds.length === 0) {
@@ -166,6 +190,11 @@ export function validateNegotiateCompletion(opts: {
 
   if (outcomeType === "transferred_forward" && !outcomeNotes.toLowerCase().includes("lit")) {
     warnings.push("Consider noting litigation readiness details for LitIQ consumption.");
+  }
+
+  // Representation transition warning for downstream
+  if (representationContext?.representation_transition_flag) {
+    warnings.push("Representation changed during this claim. Package preserves transition history for downstream modules.");
   }
 
   return { valid: errors.length === 0, errors, warnings };
@@ -204,9 +233,42 @@ export function buildNegotiatePackage(opts: {
 
   const gen = strategy?.generated_strategy;
 
+  // Build outcome-specific representation sections
+  const repCtx = representationContext ?? null;
+  if (!repCtx) {
+    throw new Error("representation_context is required to build NegotiatePackage");
+  }
+
+  // Finalize representation_status_at_publication
+  const finalizedRepCtx: NegotiateRepresentationContext = {
+    ...repCtx,
+    representation_status_at_publication: repCtx.representation_status_current,
+    representation_status_at_outcome: repCtx.representation_status_at_outcome ?? repCtx.representation_status_current,
+  };
+
+  // Build settlement representation fields
+  const settlementRep: SettlementRepresentationFields | null = outcomeType === "settled" ? {
+    representation_status_at_settlement: finalizedRepCtx.representation_status_current,
+    representation_transition_flag: finalizedRepCtx.representation_transition_flag,
+    attorney_retained_during_claim_flag: finalizedRepCtx.attorney_retained_during_negotiation_flag,
+    attorney_retained_after_initial_offer_flag: finalizedRepCtx.attorney_retained_after_initial_offer_flag,
+    unrepresented_resolved_flag: finalizedRepCtx.representation_status_current === "unrepresented",
+  } : null;
+
+  // Build transfer representation fields
+  const transferRep: TransferRepresentationFields | null = outcomeType === "transferred_forward" ? {
+    representation_status_at_transfer: finalizedRepCtx.representation_status_current,
+    representation_transition_flag: finalizedRepCtx.representation_transition_flag,
+  } : null;
+
+  // Build representation_history_summary if not already set
+  if (!finalizedRepCtx.representation_history_summary) {
+    finalizedRepCtx.representation_history_summary = buildRepresentationHistorySummary(finalizedRepCtx, outcomeType);
+  }
+
   return {
     package_version: 1, // Will be overridden by DB version
-    engine_version: "negotiate-v1.0.0",
+    engine_version: "negotiate-v1.1.0",
     generated_at: new Date().toISOString(),
 
     source_eval_package_id: vm.provenance.packageId,
@@ -277,6 +339,38 @@ export function buildNegotiatePackage(opts: {
       jurisdiction_band: calibrationJurisdictionBand,
     } : null,
 
-    representation_context: representationContext ?? null,
+    representation_context: finalizedRepCtx,
+    settlement_representation: settlementRep,
+    transfer_representation: transferRep,
   };
+}
+
+// ─── Representation History Summary Builder ─────────────
+
+function buildRepresentationHistorySummary(
+  ctx: NegotiateRepresentationContext,
+  outcomeType: NegotiateOutcomeType,
+): string {
+  const parts: string[] = [];
+  parts.push(`Current: ${ctx.representation_status_current}.`);
+
+  if (ctx.representation_transition_flag) {
+    parts.push(`Representation changed during claim (${ctx.representation_changes.length} transition(s)).`);
+  }
+
+  if (ctx.attorney_retained_during_negotiation_flag) {
+    parts.push("Attorney retained during negotiation.");
+  }
+
+  if (ctx.unrepresented_resolved_flag) {
+    parts.push("Claim resolved while claimant was unrepresented.");
+  }
+
+  if (outcomeType === "settled") {
+    parts.push(`Status at settlement: ${ctx.representation_status_current}.`);
+  } else if (outcomeType === "transferred_forward") {
+    parts.push(`Status at transfer: ${ctx.representation_status_current}.`);
+  }
+
+  return parts.join(" ");
 }
