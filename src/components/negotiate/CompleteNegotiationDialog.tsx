@@ -67,6 +67,7 @@ const CompleteNegotiationDialog = ({
   calibrationSignalsCount,
   calibrationHighConfCount,
   calibrationJurisdictionBand,
+  representationContext,
 }: CompleteNegotiationDialogProps) => {
   const [outcomeType, setOutcomeType] = useState<NegotiateOutcomeType | null>(null);
   const [finalSettlement, setFinalSettlement] = useState("");
