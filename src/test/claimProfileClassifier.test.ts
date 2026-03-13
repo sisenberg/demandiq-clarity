@@ -82,7 +82,7 @@ function makeSnapshot(overrides: Partial<{
       has_surgery: overrides.clinical_flags?.has_surgery ?? false,
       has_injections: overrides.clinical_flags?.has_injections ?? false,
       has_advanced_imaging: overrides.clinical_flags?.has_advanced_imaging ?? false,
-      has_permanency_indicators: overrides.clinical_flags?.has_permanency ?? false,
+      has_permanency_indicators: overrides.clinical_flags?.has_permanency_indicators ?? false,
       has_impairment_rating: overrides.clinical_flags?.has_impairment_rating ?? false,
       has_scarring_disfigurement: false,
       provenance: prov(),
