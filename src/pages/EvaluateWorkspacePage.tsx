@@ -203,6 +203,14 @@ const EvaluateWorkspacePage = () => {
             {/* Active workspace */}
             {isWorkspaceActive && snapshot && (
               <div className="space-y-5">
+                <EvalIntakeReadinessCard
+                  validation={null}
+                  packageVersion={eligibility.sourceVersion}
+                  sourceModule={eligibility.inputSource ?? "demandiq"}
+                  publishedAt={null}
+                  isProvisional={false}
+                />
+
                 <EvalStaleDataBanner
                   isStale={isStale}
                   staleReason=""
