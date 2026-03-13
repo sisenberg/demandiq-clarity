@@ -22,6 +22,9 @@ import {
   AlertTriangle,
   CheckCircle2,
   Package,
+  User,
+  Briefcase,
+  RefreshCw,
 } from "lucide-react";
 
 const STATUS_BADGE: Record<string, { label: string; className: string }> = {
@@ -154,6 +157,17 @@ const EvaluateCaseListPage = () => {
                             Profile {seed.expected_profile}: {profileMeta?.label}
                           </span>
 
+                          {/* Representation */}
+                          <span className={`flex items-center gap-1 text-[9px] font-semibold px-1.5 py-0.5 rounded ${seed.is_represented ? "bg-primary/10 text-primary" : "bg-muted text-muted-foreground"}`}>
+                            {seed.is_represented ? <Briefcase className="h-2.5 w-2.5" /> : <User className="h-2.5 w-2.5" />}
+                            {seed.is_represented ? `Rep: ${seed.attorney_name?.split(",")[0] ?? "Attorney"}` : "Unrepresented"}
+                          </span>
+
+                          {/* Upstream source */}
+                          <span className={`text-[9px] px-1.5 py-0.5 rounded ${seed.has_revieweriq_data ? "bg-accent text-foreground" : "bg-muted text-muted-foreground"}`}>
+                            {seed.has_revieweriq_data ? "ReviewerIQ" : "DemandIQ Only"}
+                          </span>
+
                           {/* Corridor */}
                           {seed.corridor.mid > 0 && (
                             <span className="text-[9px] text-muted-foreground">
@@ -172,6 +186,19 @@ const EvaluateCaseListPage = () => {
                             <Shield className="h-2.5 w-2.5" />
                             Bench: {seed.benchmark_support.tier}
                           </span>
+
+                          {/* Valuation run */}
+                          <span className="text-[9px] text-muted-foreground font-mono">
+                            Run v{seed.valuation_run.run_version} · {seed.valuation_run.confidence_label}
+                          </span>
+
+                          {/* Stale indicator */}
+                          {seed.stale_state?.is_stale && (
+                            <span className="flex items-center gap-1 text-[9px] font-semibold px-1.5 py-0.5 rounded bg-[hsl(var(--status-attention-bg))] text-[hsl(var(--status-attention-foreground))]">
+                              <RefreshCw className="h-2.5 w-2.5" />
+                              Stale (v{seed.stale_state.upstream_version})
+                            </span>
+                          )}
 
                           {/* Override indicator */}
                           {seed.override && (
