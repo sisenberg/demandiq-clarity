@@ -10,7 +10,7 @@ import { computeRepresentationAwareValuation } from '@/lib/representationValuati
 import { computeSettlementRange } from '@/lib/settlementRangeEngine';
 import { extractValuationDrivers } from '@/lib/valuationDriverEngine';
 import type { ClaimantRepresentationSummary } from '@/types/representation';
-import { SCENARIOS } from '@/test/fixtures/evaluateFixtures';
+import { ALL_EVALUATE_FIXTURES as SCENARIOS } from '@/test/fixtures/evaluateFixtures';
 
 const representedSummary: ClaimantRepresentationSummary = {
   representation_status_current: 'represented',
