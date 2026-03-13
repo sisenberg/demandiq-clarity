@@ -191,6 +191,7 @@ export function buildNegotiatePackage(opts: {
   calibrationSignalsCount: number;
   calibrationHighConfCount: number;
   calibrationJurisdictionBand: string | null;
+  representationContext?: NegotiateRepresentationContext | null;
 }): NegotiatePackagePayload {
   const {
     vm, session, strategy, rounds, notes,
@@ -198,6 +199,7 @@ export function buildNegotiatePackage(opts: {
     unresolvedIssues, nextStepRecommendations, litigationLikely,
     attorneyName, firmName, observationsCount,
     calibrationSignalsCount, calibrationHighConfCount, calibrationJurisdictionBand,
+    representationContext,
   } = opts;
 
   const gen = strategy?.generated_strategy;
