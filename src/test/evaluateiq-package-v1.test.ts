@@ -323,17 +323,21 @@ describe("Publication State Transitions", () => {
 // ─── Serialization ──────────────────────────────────────
 
 describe("EvaluatePackage Serialization", () => {
-  it("serializes all fields for registry", () => {
+  it("serializes all fields for registry including representation", () => {
     const pkg = makeMinimalPackage();
     const serialized = serializeForRegistry(pkg);
     expect(serialized.contract_version).toBe(EVALUATE_PACKAGE_CONTRACT_VERSION);
     expect(serialized.case_id).toBe("case-001");
     expect(serialized.claim_profile).toBeDefined();
-    expect(serialized.merits).toBeDefined();
-    expect(serialized.settlement_corridor).toBeDefined();
     expect(serialized.negotiation_handoff).toBeDefined();
-    expect(serialized.audit).toBeDefined();
-    expect(serialized.generated_at).toBeDefined();
+    expect(serialized.fact_based_value_range).toBeDefined();
+    expect(serialized.expected_resolution_range).toBeDefined();
+    expect(serialized.representation_context).toBeDefined();
+    expect(serialized.representation_notes).toBeDefined();
+    expect(serialized.valuation_outputs).toBeDefined();
+    expect(serialized.confidence_and_uncertainty).toBeDefined();
+    expect(serialized.handoff_notes).toBeDefined();
+    expect(serialized.scenario_outputs).toBeDefined();
   });
 
   it("preserves all top-level keys", () => {
