@@ -361,6 +361,18 @@ export interface EvaluatePackageV1 {
   // ── Negotiation handoff ──
   negotiation_handoff: EvalNegotiationHandoff;
 
+  // ── Representation-aware valuation (v1.1) ──
+  /** Fact-based value range — grounded purely in claim facts, unaffected by representation */
+  fact_based_value_range: FactBasedValueRange;
+  /** Expected resolution range — considers representation context for practical settlement */
+  expected_resolution_range: ExpectedResolutionRange;
+  /** Representation context captured at evaluation time */
+  representation_context: EvalRepresentationContext;
+  /** Scenario modeling for different representation postures */
+  representation_scenarios: RepresentationScenarioSet;
+  /** Explicit notes about representation/value independence */
+  representation_notes: RepresentationNotes;
+
   // ── Audit metadata ──
   audit: EvalPackageAuditMetadata;
 
