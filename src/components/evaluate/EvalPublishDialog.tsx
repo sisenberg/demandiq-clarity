@@ -75,10 +75,8 @@ const EvalPublishDialog = ({
     }
 
     if (moduleStatus === "completed") {
-      blockers.push({
-        code: "ALREADY_COMPLETED",
-        message: "Module already completed. Reopen to publish a new version.",
-      });
+      // Allow publishing from completed state — this is the normal flow
+      // Only block if already "published" (handled via package count)
     }
 
     const pendingReviews = overrides.filter(o => o.supervisor_review_status === "pending");
