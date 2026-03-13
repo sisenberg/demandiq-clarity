@@ -75,6 +75,47 @@ export interface FactorDefinition {
   admin_notes: string;
 }
 
+// ─── Evidence Citation (factor-level) ───────────────────
+
+export interface FactorCitation {
+  source_document_id: string | null;
+  source_page: number | null;
+  quoted_text: string;
+  relevance_type: "direct" | "corroborating" | "contextual";
+}
+
+// ─── Reviewer Confirmation (factor-level) ───────────────
+
+export type FactorConfirmationState =
+  | "ai_scored"
+  | "reviewer_accepted"
+  | "reviewer_adjusted"
+  | "unreviewed";
+
+export interface FactorConfirmation {
+  state: FactorConfirmationState;
+  reviewed_by: string | null;
+  reviewed_at: string | null;
+  adjustment_notes: string | null;
+}
+
+// ─── Extraction Confidence (factor-level) ───────────────
+
+export interface FactorExtractionConfidence {
+  score: number | null;
+  label: "high" | "medium" | "low" | "unknown";
+  source_field: string | null;
+}
+
+// ─── Unresolved Issue Flag ──────────────────────────────
+
+export interface FactorIssueFlag {
+  id: string;
+  issue_type: "data_gap" | "conflict" | "insufficient_evidence" | "suppressed_prerequisite" | "stale_data";
+  description: string;
+  severity: "critical" | "high" | "medium" | "low" | "info";
+}
+
 // ─── Scored Factor ──────────────────────────────────────
 
 export interface ScoredFactor {
@@ -91,12 +132,37 @@ export interface ScoredFactor {
   narrative: string;
   /** Evidence reference IDs */
   evidence_ref_ids: string[];
+  /** Structured evidence citations */
+  citations: FactorCitation[];
   /** Whether this factor was actually applicable */
   applicable: boolean;
   /** If not applicable, why */
   inapplicable_reason: string | null;
   /** Confidence in the score */
   confidence: "high" | "moderate" | "low";
+  /** Reviewer confirmation state */
+  confirmation: FactorConfirmation;
+  /** Extraction confidence for underlying data */
+  extraction_confidence: FactorExtractionConfidence | null;
+  /** Unresolved issue flags */
+  issue_flags: FactorIssueFlag[];
+  /** Whether the factor was suppressed due to missing prerequisites */
+  suppressed: boolean;
+  /** Suppression reason */
+  suppression_reason: string | null;
+}
+
+// ─── Ranked Factor Summary ──────────────────────────────
+
+export interface RankedFactorSummary {
+  factor_id: string;
+  factor_name: string;
+  layer: FactorLayer;
+  score: number;
+  direction: FactorDirection;
+  narrative: string;
+  confidence: "high" | "moderate" | "low";
+  issue_count: number;
 }
 
 // ─── Layer Summary ──────────────────────────────────────
@@ -106,9 +172,11 @@ export interface LayerSummary {
   label: string;
   factor_count: number;
   scored_count: number;
+  suppressed_count: number;
   gate_passed: boolean | null; // only for layer 0
   avg_score: number | null;
   net_direction: FactorDirection;
+  issue_count: number;
 }
 
 // ─── Registry Result ────────────────────────────────────
@@ -123,4 +191,12 @@ export interface FactorScoringResult {
   applicable_count: number;
   /** Total number of factors with evidence */
   evidenced_count: number;
+  /** Total suppressed factors */
+  suppressed_count: number;
+  /** Total unresolved issue flags across all factors */
+  total_issue_count: number;
+  /** Ranked summaries */
+  top_drivers: RankedFactorSummary[];
+  top_suppressors: RankedFactorSummary[];
+  top_uncertainty_contributors: RankedFactorSummary[];
 }
