@@ -116,6 +116,22 @@ const NegotiateStrategyCard = ({
         />
       </div>
 
+      {/* Representation Posture */}
+      {strategy.representationPosture && (
+        <div className="rounded-xl border border-border bg-card p-4">
+          <div className="flex items-center gap-2 mb-2">
+            <Shield className="h-3.5 w-3.5 text-muted-foreground" />
+            <span className="text-[11px] font-semibold text-foreground">Representation Posture</span>
+          </div>
+          <div className="flex items-center gap-3">
+            <span className="text-[12px] font-bold text-foreground">
+              {REP_POSTURE_LABELS[strategy.representationPosture.generated] ?? strategy.representationPosture.generated}
+            </span>
+          </div>
+          <p className="text-[10px] text-muted-foreground leading-relaxed mt-1">{strategy.representationPosture.reason}</p>
+        </div>
+      )}
+
       {/* Position Grid */}
       <div className="grid grid-cols-2 gap-3">
         <PositionCard
