@@ -49,7 +49,8 @@ const AppSidebar = () => {
 
   const isActive = (path: string) => {
     if (path === "/cases/new") return location.pathname === "/cases/new";
-    if (path === "/cases") return location.pathname === "/cases" || (location.pathname.startsWith("/cases/") && location.pathname !== "/cases/new");
+    if (path === "/cases") return location.pathname === "/cases" || (location.pathname.startsWith("/cases/") && location.pathname !== "/cases/new" && !location.pathname.includes("/evaluate") && !location.pathname.includes("/negotiate"));
+    if (path === "/evaluate") return location.pathname === "/evaluate" || location.pathname.includes("/evaluate");
     return location.pathname.startsWith(path);
   };
 
