@@ -218,6 +218,53 @@ const EvalHandoffTab = ({ snapshot, publishedPackages }: Props) => {
 
 // ─── Sub-components ──────────────────────────────────
 
+function HandoffSection({ snapshot, payload }: { snapshot: EvaluateIntakeSnapshot; payload: Record<string, unknown> | undefined }) {
+  // Try to use handoff from published package, otherwise derive from snapshot
+  const handoff = useMemo<EvalNegotiationHandoff | null>(() => {
+    if (payload?.negotiation_handoff) {
+      return payload.negotiation_handoff as unknown as EvalNegotiationHandoff;
+    }
+    // Derive a preview handoff from snapshot
+    try {
+      const pkg = assembleEvaluatePackageV1({
+        evaluationId: snapshot.case_id,
+        caseId: snapshot.case_id,
+        claimId: snapshot.case_id,
+        tenantId: snapshot.tenant_id,
+        snapshot,
+        sourceModule: snapshot.source_module,
+        sourceVersion: snapshot.source_package_version,
+        snapshotId: null,
+        valuationRunId: null,
+        selectionId: null,
+        explanationLedger: null,
+        rangeFloor: null,
+        rangeLikely: null,
+        rangeStretch: null,
+        confidence: null,
+        selectedFloor: null,
+        selectedLikely: null,
+        selectedStretch: null,
+        authorityRecommendation: null,
+        rationaleNotes: "",
+        packageVersion: 1,
+        engineVersion: "1.0.0",
+        scoringLogicVersion: "1.0.0",
+        benchmarkLogicVersion: "1.0.0",
+        userId: snapshot.created_by ?? "",
+      });
+      return pkg.negotiation_handoff;
+    } catch {
+      return null;
+    }
+  }, [snapshot, payload]);
+
+  if (!handoff) return null;
+
+  return <EvalHandoffPreview handoff={handoff} />;
+}
+
+
 function PackageRow({ label, value }: { label: string; value: string }) {
   return (
     <div className="flex items-center justify-between py-1.5 border-b border-border last:border-0">
