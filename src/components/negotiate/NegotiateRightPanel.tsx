@@ -146,6 +146,13 @@ const NegotiateRightPanel = ({ caseId, attorneyName, firmName }: NegotiateRightP
 function TimelineEvent({ event }: { event: NegotiationEventRow }) {
   const Icon = EVENT_ICONS[event.event_type] ?? MessageSquare;
   const isOffer = event.event_type === "offer_made" || event.event_type === "counteroffer_received";
+  const isRepresentation = [
+    "representation_status_recorded",
+    "representation_confirmed_unrepresented",
+    "attorney_retained",
+    "attorney_substituted",
+    "attorney_withdrew",
+  ].includes(event.event_type);
 
   return (
     <div className="flex gap-2 py-1.5 px-2 rounded-lg hover:bg-accent/30 transition-colors">
