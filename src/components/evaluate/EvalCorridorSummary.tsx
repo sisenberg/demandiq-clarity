@@ -199,15 +199,21 @@ function CorridorPill({ low, mid, high, highlight }: { low: number; mid: number;
 }
 
 function MiniBar({ low, mid, high, color }: { low: number; mid: number; high: number; color: string }) {
+  // Normalize values to 0-100% range for visual display
+  const maxVal = high > 0 ? high * 1.2 : 100; // 20% headroom past high
+  const pctLow = Math.min((low / maxVal) * 100, 100);
+  const pctMid = Math.min((mid / maxVal) * 100, 100);
+  const pctHigh = Math.min((high / maxVal) * 100, 100);
+
   return (
     <div className="relative h-1.5 rounded-full bg-accent overflow-hidden">
       <div
         className={`absolute top-0 bottom-0 ${color} opacity-30 rounded-full`}
-        style={{ left: `${low}%`, width: `${Math.max(1, high - low)}%` }}
+        style={{ left: `${pctLow}%`, width: `${Math.max(1, pctHigh - pctLow)}%` }}
       />
       <div
         className={`absolute top-0 bottom-0 w-0.5 ${color}`}
-        style={{ left: `${mid}%` }}
+        style={{ left: `${pctMid}%` }}
       />
     </div>
   );
