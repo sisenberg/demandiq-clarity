@@ -184,27 +184,63 @@ export interface EvalAdoptedAssumption {
 
 // ─── Negotiation Handoff ────────────────────────────────
 /**
- * The handoff object provides NegotiateIQ with anchoring data
- * and a summary of strengths/weaknesses. It does NOT contain
- * negotiation strategy, settlement automation, or attorney scoring.
+ * The handoff object provides NegotiateIQ with anchoring data,
+ * corridor context, and a summary of strengths/weaknesses/risks.
+ * It does NOT contain negotiation strategy, counteroffer logic,
+ * settlement automation, or attorney behavioral scoring.
  */
 
 export interface EvalNegotiationHandoff {
-  /** Recommended opening anchor for negotiation */
-  recommended_opening_anchor: number | null;
-  /** Suggested target settlement */
-  suggested_target: number | null;
+  // ── Adjusted Corridor ──
+  /** Final adjusted corridor passed downstream */
+  adjusted_corridor: {
+    floor: number | null;
+    likely: number | null;
+    stretch: number | null;
+    is_overridden: boolean;
+  };
+  /** Confidence in the corridor */
+  confidence_level: EvalConfidenceLevel;
+  confidence_score: number | null;
+
+  // ── Authority Zones ──
+  /** Recommended opening authority zone */
+  recommended_opening_zone: {
+    anchor: number | null;
+    ceiling: number | null;
+    rationale: string;
+  };
+  /** Target settlement zone */
+  target_settlement_zone: {
+    floor: number | null;
+    target: number | null;
+    rationale: string;
+  };
   /** Walk-away floor */
   walk_away_floor: number | null;
-  /** Key strengths to leverage (evidence-linked) */
+
+  // ── Escalation ──
+  /** Threshold above which supervisor escalation is recommended */
+  escalation_threshold: {
+    amount: number | null;
+    rationale: string;
+    review_required: boolean;
+  };
+
+  // ── Strengths, Weaknesses, Uncertainties ──
   key_strengths: EvalHandoffPoint[];
-  /** Key weaknesses / vulnerabilities */
   key_weaknesses: EvalHandoffPoint[];
-  /** Significant uncertainty factors */
   key_uncertainties: EvalHandoffPoint[];
-  /** Total reviewed specials for reference */
+
+  // ── Documentation Gaps ──
+  documentation_gaps: EvalHandoffGap[];
+
+  // ── Unresolved Issues ──
+  unresolved_issues: EvalHandoffIssue[];
+
+  // ── Reference Data ──
   total_reviewed_specials: number;
-  /** Policy limits constraint */
+  total_billed_specials: number;
   policy_limits: number | null;
 }
 
@@ -213,6 +249,20 @@ export interface EvalHandoffPoint {
   description: string;
   impact: "high" | "medium" | "low";
   evidence_ref_ids: string[];
+}
+
+export interface EvalHandoffGap {
+  field: string;
+  label: string;
+  severity: "critical" | "moderate" | "minor";
+  impact_on_valuation: string;
+}
+
+export interface EvalHandoffIssue {
+  category: "causation" | "liability" | "credibility" | "documentation" | "other";
+  description: string;
+  severity: "critical" | "warning" | "info";
+  recommendation: string;
 }
 
 // ─── Audit Metadata ─────────────────────────────────────
