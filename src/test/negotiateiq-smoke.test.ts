@@ -533,6 +533,7 @@ describe("NegotiateIQ — Package Building", () => {
         calibrationSignalsCount: 0,
         calibrationHighConfCount: 0,
         calibrationJurisdictionBand: null,
+        representationContext: DEFAULT_REP_CTX,
       });
       expect(pkg.source_eval_package_id).toBe(f.vm.provenance.packageId);
       expect(pkg.source_eval_package_version).toBe(f.vm.provenance.packageVersion);
