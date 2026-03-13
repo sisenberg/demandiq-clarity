@@ -363,7 +363,6 @@ describe("EvaluatePackage Serialization", () => {
     for (const key of expectedKeys) {
       expect(serialized).toHaveProperty(key);
     }
-    }
   });
 });
 
