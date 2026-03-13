@@ -38,6 +38,7 @@ import { classifyClaimProfile } from "@/lib/claimProfileClassifier";
 import EvalFactorTaxonomyPanel from "@/components/evaluate/EvalFactorTaxonomyPanel";
 import EvalScoringRankedSummary from "@/components/evaluate/EvalScoringRankedSummary";
 import EvalMeritsScoreCard from "@/components/evaluate/EvalMeritsScoreCard";
+import EvalMeritsCorridorCard from "@/components/evaluate/EvalMeritsCorridorCard";
 import {
   ArrowLeft,
   Calculator,
