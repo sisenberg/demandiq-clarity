@@ -10,7 +10,7 @@ import { MARTINEZ_CASE_PACKAGE } from "@/data/mock/casePackage";
 
 function makeSnapshot(): EvaluateIntakeSnapshot {
   return buildEvaluateIntakeSnapshot({
-    casePackage: MOCK_CASE_PACKAGE,
+    casePackage: MARTINEZ_CASE_PACKAGE,
     reviewerPackage: null,
     sourceModule: "demandiq",
     sourceVersion: 1,
