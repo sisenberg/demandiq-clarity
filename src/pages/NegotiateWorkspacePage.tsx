@@ -25,6 +25,7 @@ import NegotiateRightPanel from "@/components/negotiate/NegotiateRightPanel";
 import NegotiateStaleBanner from "@/components/negotiate/NegotiateStaleBanner";
 import NegotiateDraftingWorkspace from "@/components/negotiate/NegotiateDraftingWorkspace";
 import CompleteNegotiationDialog from "@/components/negotiate/CompleteNegotiationDialog";
+import NegotiateRepresentationPanel from "@/components/negotiate/NegotiateRepresentationPanel";
 import { PageLoading } from "@/components/ui/LoadingSkeleton";
 import EmptyState from "@/components/ui/EmptyState";
 import {
