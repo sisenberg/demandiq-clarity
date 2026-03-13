@@ -273,6 +273,33 @@ export interface EvalHandoffIssue {
   recommendation: string;
 }
 
+// ─── Confidence and Uncertainty ─────────────────────────
+
+export interface EvalConfidenceAndUncertainty {
+  /** Overall corridor confidence: 0–100 */
+  confidence_score: number | null;
+  confidence_level: EvalConfidenceLevel;
+  /** Top uncertainty drivers affecting range width */
+  uncertainty_drivers: string[];
+  /** Documentation quality impact on confidence */
+  documentation_quality_impact: string | null;
+  /** Data completeness score: 0–100 */
+  data_completeness_score: number;
+}
+
+// ─── Handoff Notes for NegotiateIQ ──────────────────────
+
+export interface EvalHandoffNotes {
+  /** Summary of the evaluation for NegotiateIQ consumption */
+  evaluation_summary: string;
+  /** Key considerations for negotiation strategy */
+  negotiation_considerations: string[];
+  /** Representation-aware notes for the negotiator */
+  representation_posture_note: string | null;
+  /** Policy or collectibility constraints to flag */
+  constraint_notes: string[];
+}
+
 // ─── Audit Metadata ─────────────────────────────────────
 
 export interface EvalPackageAuditMetadata {
