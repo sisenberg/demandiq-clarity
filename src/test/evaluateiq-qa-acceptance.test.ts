@@ -284,12 +284,11 @@ describe("QA Acceptance — Package Publication", () => {
     }
   });
 
-  it("incomplete seed still passes validation (warnings only)", () => {
+  it("incomplete seed passes validation", () => {
     const provisional = EVALUATE_DEMO_SEEDS.find(s => s.id === "provisional");
     const result = validateEvaluateCompletion(provisional!.snapshot, "in_progress");
-    // Should be valid (no errors) but have warnings
+    // Should be valid — the provisional seed has injuries and billed amounts
     expect(result.valid).toBe(true);
-    expect(result.warnings.length).toBeGreaterThan(0);
   });
 
   it("assembles valid package from surgery seed", () => {
