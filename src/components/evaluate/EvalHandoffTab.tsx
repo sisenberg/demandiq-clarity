@@ -72,7 +72,7 @@ const EvalHandoffTab = ({ snapshot, publishedPackages }: Props) => {
                   <User className="h-3 w-3" />
                   {(payload?.audit as any)?.published_by
                     ? String((payload?.audit as any).published_by).slice(0, 8) + "…"
-                    : latestPkg.completed_by?.slice(0, 8) + "…" ?? "—"}
+                    : (latestPkg.completed_by ? latestPkg.completed_by.slice(0, 8) + "…" : "—")}
                 </p>
               </div>
               <div>
