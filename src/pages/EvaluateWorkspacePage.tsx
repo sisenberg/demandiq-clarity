@@ -41,6 +41,7 @@ import EvalMeritsScoreCard from "@/components/evaluate/EvalMeritsScoreCard";
 import EvalMeritsCorridorCard from "@/components/evaluate/EvalMeritsCorridorCard";
 import EvalPostMeritAdjustmentCard from "@/components/evaluate/EvalPostMeritAdjustmentCard";
 import EvalDocSufficiencyCard from "@/components/evaluate/EvalDocSufficiencyCard";
+import EvalBenchmarkCard from "@/components/evaluate/EvalBenchmarkCard";
 import {
   ArrowLeft,
   Calculator,
