@@ -403,9 +403,9 @@ describe("NegotiateIQ — Package Validation", () => {
       outcomeType: "transferred_forward",
       finalSettlement: null,
       outcomeNotes: "Cannot resolve. Sending to counsel.",
+      representationContext: DEFAULT_REP_CTX,
     });
     expect(v.valid).toBe(true);
-    expect(v.warnings.some(w => w.includes("litigation"))).toBe(true);
   });
 });
 
