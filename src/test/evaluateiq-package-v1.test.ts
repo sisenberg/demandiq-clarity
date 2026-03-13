@@ -340,7 +340,7 @@ describe("EvaluatePackage Serialization", () => {
     expect(serialized.scenario_outputs).toBeDefined();
   });
 
-  it("preserves all top-level keys", () => {
+  it("preserves all top-level keys including v1.1 fields", () => {
     const pkg = makeMinimalPackage();
     const serialized = serializeForRegistry(pkg);
     const expectedKeys = [
@@ -353,11 +353,16 @@ describe("EvaluatePackage Serialization", () => {
       "top_suppressors", "top_uncertainty_drivers", "benchmark_summary",
       "post_merit_adjustments", "driver_summaries", "explanation_ledger",
       "assumptions", "overrides", "total_billed", "total_reviewed",
-      "completeness_score", "negotiation_handoff", "audit",
-      "generated_at", "created_at",
+      "completeness_score", "negotiation_handoff",
+      // v1.1 fields
+      "valuation_outputs", "fact_based_value_range", "expected_resolution_range",
+      "representation_context", "representation_notes", "representation_scenarios",
+      "scenario_outputs", "confidence_and_uncertainty", "handoff_notes",
+      "audit", "generated_at", "created_at",
     ];
     for (const key of expectedKeys) {
       expect(serialized).toHaveProperty(key);
+    }
     }
   });
 });
