@@ -42,7 +42,7 @@ const EvalCorridorSummary = ({ snapshot, isProvisional }: Props) => {
 
   const { corridor, adjusted, docSuff, merits } = data;
 
-  const confLevel = merits.confidence_level;
+  const confLevel = merits.confidence;
   const confColor = confLevel === "high"
     ? "text-[hsl(var(--status-approved))]"
     : confLevel === "moderate"
