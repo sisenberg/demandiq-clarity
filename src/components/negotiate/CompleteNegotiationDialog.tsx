@@ -116,6 +116,7 @@ const CompleteNegotiationDialog = ({
       calibrationSignalsCount,
       calibrationHighConfCount,
       calibrationJurisdictionBand,
+      representationContext,
     });
 
     publish.mutate(
