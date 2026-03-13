@@ -84,15 +84,15 @@ const EvalCorridorSummary = ({ snapshot, isProvisional }: Props) => {
               <span className="text-[9px] font-semibold text-muted-foreground uppercase tracking-wider">Merits Score</span>
             </div>
             <div className="flex items-baseline gap-1.5">
-              <span className="text-2xl font-bold text-foreground tracking-tight">{merits.score}</span>
+              <span className="text-2xl font-bold text-foreground tracking-tight">{merits.merits_score}</span>
               <span className="text-[10px] text-muted-foreground">/100</span>
             </div>
             <span className={`inline-block text-[9px] font-semibold uppercase tracking-wider px-1.5 py-0.5 rounded ${
-              merits.score >= 70 ? "bg-[hsl(var(--status-approved))]/10 text-[hsl(var(--status-approved))]"
-              : merits.score >= 40 ? "bg-[hsl(var(--status-attention))]/10 text-[hsl(var(--status-attention))]"
+              merits.merits_score >= 70 ? "bg-[hsl(var(--status-approved))]/10 text-[hsl(var(--status-approved))]"
+              : merits.merits_score >= 40 ? "bg-[hsl(var(--status-attention))]/10 text-[hsl(var(--status-attention))]"
               : "bg-destructive/10 text-destructive"
             }`}>
-              {merits.label}
+              {merits.merits_score >= 70 ? "strong" : merits.merits_score >= 50 ? "moderate" : merits.merits_score >= 30 ? "below avg" : "weak"}
             </span>
           </div>
 

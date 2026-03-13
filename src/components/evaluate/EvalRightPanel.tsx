@@ -197,6 +197,7 @@ function FactorsPanel({ snapshot }: { snapshot: EvaluateIntakeSnapshot | null })
       ))}
 
       {/* Doc sufficiency mini */}
+      {docSuff && (
       <div className="rounded-lg border border-border p-2.5">
         <div className="flex items-center gap-1.5 mb-1.5">
           <FileSearch className="h-3 w-3 text-muted-foreground" />
