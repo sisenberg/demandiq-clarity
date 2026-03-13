@@ -398,3 +398,65 @@ describe("Package Shape Detection", () => {
     expect(isEvaluatePackageV1Shape(42)).toBe(false);
   });
 });
+
+// ─── Representation Validation ──────────────────────────
+
+describe("Representation-Aware Validation", () => {
+  it("rejects package missing value_rule_applied", () => {
+    const pkg = makeMinimalPackage({
+      representation_notes: {
+        value_rule_applied: '',
+        fact_value_independence_statement: 'test',
+        resolution_context_explanation: 'test',
+        negotiation_context_summary: null,
+        compliance_notes: [],
+      },
+    });
+    const result = validateEvaluatePackage(pkg);
+    expect(result.findings.some(f => f.code === "MISSING_VALUE_RULE")).toBe(true);
+    expect(result.valid).toBe(false);
+  });
+
+  it("rejects package missing representation_context", () => {
+    const pkg = makeMinimalPackage();
+    (pkg as any).representation_context = undefined;
+    const result = validateEvaluatePackage(pkg);
+    expect(result.findings.some(f => f.code === "MISSING_REPRESENTATION_CONTEXT")).toBe(true);
+  });
+
+  it("validates complete package with all representation fields", () => {
+    const pkg = makeMinimalPackage();
+    const result = validateEvaluatePackage(pkg);
+    expect(result.findings.some(f => f.code === "MISSING_FACT_BASED_RANGE")).toBe(false);
+    expect(result.findings.some(f => f.code === "MISSING_EXPECTED_RESOLUTION_RANGE")).toBe(false);
+    expect(result.findings.some(f => f.code === "MISSING_REPRESENTATION_CONTEXT")).toBe(false);
+    expect(result.findings.some(f => f.code === "MISSING_VALUE_RULE")).toBe(false);
+  });
+
+  it("serializes representation fields for registry", () => {
+    const pkg = makeMinimalPackage();
+    const serialized = serializeForRegistry(pkg);
+    expect(serialized.valuation_outputs).toBeDefined();
+    expect(serialized.representation_context).toBeDefined();
+    expect(serialized.representation_notes).toBeDefined();
+    expect(serialized.confidence_and_uncertainty).toBeDefined();
+    expect(serialized.handoff_notes).toBeDefined();
+  });
+
+  it("shape detection requires representation fields", () => {
+    const legacy = {
+      contract_version: "1.0.0",
+      case_id: "c1",
+      evaluation_id: "e1",
+      package_version: 1,
+      evaluation_status: "draft",
+      claim_profile: {},
+      merits: {},
+      settlement_corridor: {},
+      negotiation_handoff: {},
+      generated_at: "2026-01-01",
+      // Missing representation fields
+    };
+    expect(isEvaluatePackageV1Shape(legacy)).toBe(false);
+  });
+});
