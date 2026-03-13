@@ -5,6 +5,8 @@
 
 import type { EvaluateIntakeSnapshot } from "@/types/evaluate-intake";
 import { EvaluateModuleState, EVALUATE_STATE_LABEL, EVALUATE_STATE_BADGE_CLASS } from "@/types/evaluateiq";
+import type { ClaimProfileResult } from "@/lib/claimProfileClassifier";
+import { PROFILE_META } from "@/lib/claimProfileClassifier";
 import {
   User,
   Calendar,
@@ -19,6 +21,7 @@ import {
   DollarSign,
   FileText,
   Stethoscope,
+  Fingerprint,
 } from "lucide-react";
 
 interface Props {
@@ -29,6 +32,7 @@ interface Props {
   inputSource: string | null;
   sourceVersion: number | null;
   isStale: boolean;
+  claimProfile: ClaimProfileResult | null;
 }
 
 const fmt = (n: number) => `$${n.toLocaleString()}`;
@@ -41,6 +45,7 @@ const EvalLeftPanel = ({
   inputSource,
   sourceVersion,
   isStale,
+  claimProfile,
 }: Props) => {
   return (
     <div className="w-[280px] shrink-0 border-r border-border bg-card overflow-y-auto h-full">
@@ -76,6 +81,32 @@ const EvalLeftPanel = ({
             </div>
           )}
         </section>
+
+        {/* ── Claim Profile ──────────────────────── */}
+        {claimProfile && (
+          <section className="rounded-lg border border-border p-3 space-y-2">
+            <div className="flex items-center gap-2">
+              <Fingerprint className="h-3.5 w-3.5 text-primary" />
+              <span className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">Claim Profile</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <span className="text-lg font-bold text-primary">{claimProfile.primary}</span>
+              <div className="min-w-0">
+                <p className="text-[11px] font-semibold text-foreground">{claimProfile.label}</p>
+                <p className="text-[9px] text-muted-foreground truncate">{claimProfile.short_description}</p>
+              </div>
+            </div>
+            {claimProfile.secondary_flags.length > 0 && (
+              <div className="flex flex-wrap gap-1">
+                {claimProfile.secondary_flags.map(code => (
+                  <span key={code} className="text-[8px] font-semibold px-1.5 py-0.5 rounded bg-accent border border-border text-muted-foreground">
+                    +{code}
+                  </span>
+                ))}
+              </div>
+            )}
+          </section>
+        )}
 
         {/* ── Claimant Profile ───────────────────── */}
         {snapshot && (

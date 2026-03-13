@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { useParams, Link } from "react-router-dom";
 import { toast } from "sonner";
 import { useCase } from "@/hooks/useCases";
@@ -33,6 +33,8 @@ import EvalValuationCards from "@/components/evaluate/EvalValuationCards";
 import EvalIntakeReadinessCard from "@/components/evaluate/EvalIntakeReadinessCard";
 import EvalStickyActions from "@/components/evaluate/EvalStickyActions";
 import EvalStaleDataBanner from "@/components/evaluate/EvalStaleDataBanner";
+import EvalClaimProfileCard from "@/components/evaluate/EvalClaimProfileCard";
+import { classifyClaimProfile } from "@/lib/claimProfileClassifier";
 import {
   ArrowLeft,
   Calculator,
@@ -57,6 +59,8 @@ const EvaluateWorkspacePage = () => {
   const moduleState = deriveEvaluateState(evalCompletion?.status);
   const cta = getEvaluateCTA(moduleState);
   const isWorkspaceActive = eligibility.eligible && moduleState !== EvaluateModuleState.NotStarted;
+
+  const claimProfile = useMemo(() => snapshot ? classifyClaimProfile(snapshot) : null, [snapshot]);
 
   // Upstream freshness
   const upstreamModuleId = eligibility.inputSource === "revieweriq" ? "revieweriq" : "demandiq";
@@ -164,6 +168,7 @@ const EvaluateWorkspacePage = () => {
             inputSource={eligibility.inputSource}
             sourceVersion={eligibility.sourceVersion}
             isStale={isStale}
+            claimProfile={claimProfile}
           />
         )}
 
@@ -222,6 +227,7 @@ const EvaluateWorkspacePage = () => {
                   }}
                 />
 
+                {activeTab === "overview" && claimProfile && <EvalClaimProfileCard profile={claimProfile} />}
                 {activeTab === "overview" && <EvalOverviewTab snapshot={snapshot} />}
                 {activeTab === "drivers" && <EvalDriversTab snapshot={snapshot} />}
                 {activeTab === "range" && <EvalRangeTab snapshot={snapshot} />}
