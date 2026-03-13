@@ -20,7 +20,8 @@ import {
 import { PageLoading } from "@/components/ui/LoadingSkeleton";
 import EmptyState from "@/components/ui/EmptyState";
 import EvaluateWorkspaceTabs, { type EvalTab } from "@/components/evaluate/EvaluateWorkspaceTabs";
-import EvalSummaryHeader from "@/components/evaluate/EvalSummaryHeader";
+import EvalLeftPanel from "@/components/evaluate/EvalLeftPanel";
+import EvalRightPanel from "@/components/evaluate/EvalRightPanel";
 import EvalOverviewTab from "@/components/evaluate/EvalOverviewTab";
 import EvalDriversTab from "@/components/evaluate/EvalDriversTab";
 import EvalRangeTab from "@/components/evaluate/EvalRangeTab";
@@ -28,6 +29,7 @@ import EvalEvidenceTab from "@/components/evaluate/EvalEvidenceTab";
 import EvalExplanationTab from "@/components/evaluate/EvalExplanationTab";
 import EvalHandoffTab from "@/components/evaluate/EvalHandoffTab";
 import EvalPlaceholderTab from "@/components/evaluate/EvalPlaceholderTab";
+import EvalValuationCards from "@/components/evaluate/EvalValuationCards";
 import EvalStickyActions from "@/components/evaluate/EvalStickyActions";
 import EvalStaleDataBanner from "@/components/evaluate/EvalStaleDataBanner";
 import {
@@ -55,7 +57,7 @@ const EvaluateWorkspacePage = () => {
   const cta = getEvaluateCTA(moduleState);
   const isWorkspaceActive = eligibility.eligible && moduleState !== EvaluateModuleState.NotStarted;
 
-  // Upstream freshness — detect stale valuations
+  // Upstream freshness
   const upstreamModuleId = eligibility.inputSource === "revieweriq" ? "revieweriq" : "demandiq";
   const { data: upstreamFreshness } = useIsUpstreamCurrent(caseId, "evaluateiq", upstreamModuleId);
   const isStale = isWorkspaceActive && upstreamFreshness ? !upstreamFreshness.isCurrent : false;
@@ -108,7 +110,6 @@ const EvaluateWorkspacePage = () => {
   };
 
   const isPending = startEvaluate.isPending || completeEvaluate.isPending;
-
   const claimVsInsured = caseData.title || `${caseData.claimant} v. ${caseData.insured}`;
 
   return (
@@ -131,7 +132,6 @@ const EvaluateWorkspacePage = () => {
             </div>
           </div>
 
-          {/* Source + Status */}
           <div className="flex items-center gap-2">
             {eligibility.inputSource && (
               <span className="text-[10px] font-medium text-muted-foreground bg-accent px-2 py-1 rounded-md">
@@ -144,7 +144,6 @@ const EvaluateWorkspacePage = () => {
           </div>
         </div>
 
-        {/* Tabs — only show when workspace is active */}
         {isWorkspaceActive && (
           <div className="mt-2 -mb-3 border-t border-border pt-2">
             <EvaluateWorkspaceTabs active={activeTab} onChange={setActiveTab} />
@@ -152,68 +151,84 @@ const EvaluateWorkspacePage = () => {
         )}
       </div>
 
-      {/* ── Body ──────────────────────────────────── */}
-      <div className="flex-1 overflow-y-auto">
-        <div className="p-6 max-w-5xl mx-auto">
-          {/* Blocked */}
-          {!eligibility.eligible && (
-            <div className="mt-12">
-              <EmptyState
-                icon={AlertTriangle}
-                title="Upstream Package Required"
-                description={eligibility.blockerReason || "An upstream module must be completed before evaluation can begin."}
-              />
-            </div>
-          )}
+      {/* ── Body: Three-Panel Layout ──────────────── */}
+      <div className="flex-1 flex overflow-hidden">
+        {/* Left panel — only when workspace is active */}
+        {isWorkspaceActive && (
+          <EvalLeftPanel
+            snapshot={snapshot}
+            moduleState={moduleState}
+            caseNumber={caseData.case_number}
+            claimVsInsured={claimVsInsured}
+            inputSource={eligibility.inputSource}
+            sourceVersion={eligibility.sourceVersion}
+            isStale={isStale}
+          />
+        )}
 
-          {/* Not started */}
-          {eligibility.eligible && moduleState === EvaluateModuleState.NotStarted && (
-            <div className="mt-12">
-              <EmptyState
-                icon={Calculator}
-                title="Ready to Evaluate"
-                description={`This case has a completed ${eligibility.inputSource === "revieweriq" ? "ReviewerIQ" : "DemandIQ"} package (v${eligibility.sourceVersion}). Click "Start Evaluate" to begin the valuation workflow.`}
-                action={
-                  <button onClick={handleCTA} disabled={startEvaluate.isPending} className="btn-primary">
-                    <Play className="h-3.5 w-3.5" /> Start Evaluate
-                  </button>
-                }
-              />
-            </div>
-          )}
+        {/* Center panel */}
+        <div className="flex-1 overflow-y-auto">
+          <div className="p-6 max-w-5xl mx-auto">
+            {/* Blocked */}
+            {!eligibility.eligible && (
+              <div className="mt-12">
+                <EmptyState
+                  icon={AlertTriangle}
+                  title="Upstream Package Required"
+                  description={eligibility.blockerReason || "An upstream module must be completed before evaluation can begin."}
+                />
+              </div>
+            )}
 
-          {/* Active workspace */}
-          {isWorkspaceActive && snapshot && (
-            <div className="space-y-5">
-              {/* Stale data warning */}
-              <EvalStaleDataBanner
-                isStale={isStale}
-                staleReason=""
-                upstreamModule={upstreamModuleId}
-                upstreamVersion={eligibility.sourceVersion}
-                onRefresh={() => {
-                  // Re-fetch snapshot — in production this would rebuild from updated upstream
-                  toast.info("Refreshing inputs from upstream package…");
-                }}
-              />
+            {/* Not started */}
+            {eligibility.eligible && moduleState === EvaluateModuleState.NotStarted && (
+              <div className="space-y-8">
+                <div className="mt-8">
+                  <EmptyState
+                    icon={Calculator}
+                    title="Ready to Evaluate"
+                    description={`This case has a completed ${eligibility.inputSource === "revieweriq" ? "ReviewerIQ" : "DemandIQ"} package (v${eligibility.sourceVersion}). Click "Start Evaluate" to begin the valuation workflow.`}
+                    action={
+                      <button onClick={handleCTA} disabled={startEvaluate.isPending} className="btn-primary">
+                        <Play className="h-3.5 w-3.5" /> Start Evaluate
+                      </button>
+                    }
+                  />
+                </div>
+                {/* Show placeholder valuation cards before starting */}
+                <EvalValuationCards />
+              </div>
+            )}
 
-              <EvalSummaryHeader
-                snapshot={snapshot}
-                moduleState={moduleState}
-                caseNumber={caseData.case_number}
-                claimVsInsured={claimVsInsured}
-              />
+            {/* Active workspace */}
+            {isWorkspaceActive && snapshot && (
+              <div className="space-y-5">
+                <EvalStaleDataBanner
+                  isStale={isStale}
+                  staleReason=""
+                  upstreamModule={upstreamModuleId}
+                  upstreamVersion={eligibility.sourceVersion}
+                  onRefresh={() => {
+                    toast.info("Refreshing inputs from upstream package…");
+                  }}
+                />
 
-              {activeTab === "overview" && <EvalOverviewTab snapshot={snapshot} />}
-              {activeTab === "drivers" && <EvalDriversTab snapshot={snapshot} />}
-              {activeTab === "range" && <EvalRangeTab snapshot={snapshot} />}
-              {activeTab === "explanation" && <EvalExplanationTab snapshot={snapshot} />}
-              {activeTab === "evidence" && <EvalEvidenceTab snapshot={snapshot} />}
-              {activeTab === "calibration" && <EvalPlaceholderTab tab="calibration" />}
-              {activeTab === "handoff" && <EvalHandoffTab snapshot={snapshot} />}
-            </div>
-          )}
+                {activeTab === "overview" && <EvalOverviewTab snapshot={snapshot} />}
+                {activeTab === "drivers" && <EvalDriversTab snapshot={snapshot} />}
+                {activeTab === "range" && <EvalRangeTab snapshot={snapshot} />}
+                {activeTab === "explanation" && <EvalExplanationTab snapshot={snapshot} />}
+                {activeTab === "evidence" && <EvalEvidenceTab snapshot={snapshot} />}
+                {activeTab === "calibration" && <EvalPlaceholderTab tab="calibration" />}
+                {activeTab === "handoff" && <EvalHandoffTab snapshot={snapshot} />}
+              </div>
+            )}
+          </div>
         </div>
+
+        {/* Right panel — only when workspace is active */}
+        {isWorkspaceActive && (
+          <EvalRightPanel snapshot={snapshot} caseId={caseId} />
+        )}
       </div>
 
       {/* ── Sticky Actions ────────────────────────── */}

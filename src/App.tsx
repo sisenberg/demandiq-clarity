@@ -17,6 +17,9 @@ import ExportsPage from "@/pages/ExportsPage";
 import AdminPage from "@/pages/AdminPage";
 import AuditLogPage from "@/pages/AuditLogPage";
 import EvaluateWorkspacePage from "@/pages/EvaluateWorkspacePage";
+import EvaluateCaseListPage from "@/pages/EvaluateCaseListPage";
+import EvaluatePackageViewPage from "@/pages/EvaluatePackageViewPage";
+import EvaluateConfigPage from "@/pages/EvaluateConfigPage";
 import ModuleGuard from "@/components/auth/ModuleGuard";
 import CalibrationPage from "@/pages/CalibrationPage";
 import NegotiateWorkspacePage from "@/pages/NegotiateWorkspacePage";
@@ -43,6 +46,16 @@ const App = () => (
               <Route path="/cases" element={<CasesPage />} />
               <Route path="/cases/new" element={<NewCasePage />} />
               <Route path="/cases/:caseId" element={<CaseDetailPage />} />
+
+              {/* EvaluateIQ routes */}
+              <Route
+                path="/evaluate"
+                element={
+                  <ModuleGuard moduleId="evaluateiq">
+                    <EvaluateCaseListPage />
+                  </ModuleGuard>
+                }
+              />
               <Route
                 path="/cases/:caseId/evaluate"
                 element={
@@ -52,6 +65,24 @@ const App = () => (
                 }
               />
               <Route
+                path="/cases/:caseId/evaluate/package"
+                element={
+                  <ModuleGuard moduleId="evaluateiq">
+                    <EvaluatePackageViewPage />
+                  </ModuleGuard>
+                }
+              />
+              <Route
+                path="/evaluate/config"
+                element={
+                  <ModuleGuard moduleId="evaluateiq">
+                    <EvaluateConfigPage />
+                  </ModuleGuard>
+                }
+              />
+
+              {/* NegotiateIQ routes */}
+              <Route
                 path="/cases/:caseId/negotiate"
                 element={
                   <ModuleGuard moduleId="negotiateiq">
@@ -59,6 +90,7 @@ const App = () => (
                   </ModuleGuard>
                 }
               />
+
               <Route path="/documents" element={<DocumentsPage />} />
               <Route path="/documents/:docId" element={<DocumentDetailPage />} />
               <Route
