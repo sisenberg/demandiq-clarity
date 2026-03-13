@@ -141,8 +141,9 @@ export function validateNegotiateCompletion(opts: {
   outcomeType: NegotiateOutcomeType | null;
   finalSettlement: number | null;
   outcomeNotes: string;
+  representationContext?: NegotiateRepresentationContext | null;
 }): CompletionValidation {
-  const { session, strategy, rounds, outcomeType, finalSettlement, outcomeNotes } = opts;
+  const { session, strategy, rounds, outcomeType, finalSettlement, outcomeNotes, representationContext } = opts;
   const errors: string[] = [];
   const warnings: string[] = [];
 
@@ -162,8 +163,25 @@ export function validateNegotiateCompletion(opts: {
     errors.push("Settlement amount is required for a settled outcome.");
   }
 
-  if (outcomeType !== "settled" && !outcomeNotes.trim()) {
+  if (outcomeType !== "settled" && outcomeNotes != null && !outcomeNotes.trim()) {
     errors.push("Outcome notes are required for non-settlement outcomes.");
+  }
+
+  // ─── Representation validation ────────────────────────
+  if (!representationContext) {
+    errors.push("Representation context is required for package publication.");
+  }
+
+  if (outcomeType === "settled" && representationContext) {
+    if (!representationContext.representation_status_at_outcome && !representationContext.representation_status_current) {
+      errors.push("Representation status at settlement is required for settled outcomes.");
+    }
+  }
+
+  if (outcomeType === "transferred_forward" && representationContext) {
+    if (!representationContext.representation_status_at_outcome && !representationContext.representation_status_current) {
+      errors.push("Representation status at transfer is required for transferred outcomes.");
+    }
   }
 
   if (rounds.length === 0) {
@@ -172,6 +190,11 @@ export function validateNegotiateCompletion(opts: {
 
   if (outcomeType === "transferred_forward" && !outcomeNotes.toLowerCase().includes("lit")) {
     warnings.push("Consider noting litigation readiness details for LitIQ consumption.");
+  }
+
+  // Representation transition warning for downstream
+  if (representationContext?.representation_transition_flag) {
+    warnings.push("Representation changed during this claim. Package preserves transition history for downstream modules.");
   }
 
   return { valid: errors.length === 0, errors, warnings };
