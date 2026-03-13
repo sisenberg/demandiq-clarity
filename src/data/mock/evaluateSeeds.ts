@@ -541,13 +541,67 @@ const SEED_7_SNAPSHOT = base("provisional", {
 });
 
 // ═══════════════════════════════════════════════════════
+// SEED 8: Prior Injury / Treatment Gap
+// ═══════════════════════════════════════════════════════
+
+const SEED_8_SNAPSHOT = base("prior-injury", {
+  source_module: "demandiq",
+  claimant: {
+    claimant_name: f("Derek Washington"),
+    date_of_birth: f("1972-08-11"),
+    occupation: f("Truck Driver"),
+    employer: f("Southeast Freight Corp."),
+  },
+  accident: {
+    date_of_loss: f("2025-07-20"),
+    mechanism_of_loss: f("Rear-end collision on highway shoulder"),
+    description: f("Claimant was rear-ended while stopped on highway shoulder. Moderate damage. Claimant reports prior lumbar surgery 3 years ago."),
+  },
+  venue_jurisdiction: {
+    jurisdiction_state: f("GA"),
+    venue_county: f("DeKalb"),
+  },
+  injuries: [
+    { id: "inj-8a", body_part: "Lumbar Spine", body_region: "Lower Back", diagnosis_description: "Lumbar disc re-herniation at L4-L5 (prior surgical site)", diagnosis_code: "M51.16", severity: "severe", is_pre_existing: true, date_of_onset: "2025-07-20", provenance: prov("demandiq") },
+    { id: "inj-8b", body_part: "Cervical Spine", body_region: "Neck", diagnosis_description: "Cervical strain — new injury", diagnosis_code: "S13.4XXA", severity: "moderate", is_pre_existing: false, date_of_onset: "2025-07-20", provenance: prov("demandiq") },
+  ],
+  treatment_timeline: [
+    { id: "tx-8a", treatment_type: "emergency", treatment_date: "2025-07-20", treatment_end_date: null, description: "ER visit with MRI lumbar.", procedure_codes: ["99284", "72148"], provider_name: "Emory ER", facility_name: "Emory University Hospital", provenance: prov("demandiq") },
+    { id: "tx-8b", treatment_type: "specialist", treatment_date: "2025-08-05", treatment_end_date: "2025-11-01", description: "Neurosurgical consult. Conservative management recommended initially.", procedure_codes: ["99244"], provider_name: "Dr. Paul Hensley, MD", facility_name: "Georgia Spine", provenance: prov("demandiq") },
+    // 60-day treatment gap
+    { id: "tx-8c", treatment_type: "physical_therapy", treatment_date: "2026-01-10", treatment_end_date: null, description: "PT resumed after 60-day gap. Patient reports financial barriers.", procedure_codes: ["97110"], provider_name: "Atlanta PT", facility_name: "Atlanta Physical Therapy", provenance: prov("demandiq", "partial") },
+  ],
+  providers: [
+    { id: "pv-8a", full_name: "Emory ER", specialty: "Emergency", facility_name: "Emory University Hospital", role_description: "ER evaluation", total_visits: 1, first_visit_date: "2025-07-20", last_visit_date: "2025-07-20", total_billed: 7200, total_paid: 0, provenance: prov("demandiq") },
+    { id: "pv-8b", full_name: "Dr. Paul Hensley, MD", specialty: "Neurosurgery", facility_name: "Georgia Spine", role_description: "Spine consult", total_visits: 3, first_visit_date: "2025-08-05", last_visit_date: "2025-11-01", total_billed: 4500, total_paid: 0, provenance: prov("demandiq") },
+  ],
+  medical_billing: [
+    { id: "bl-8a", description: "ER + MRI lumbar", service_date: "2025-07-20", cpt_codes: ["99284", "72148"], billed_amount: 7200, paid_amount: null, reviewer_recommended_amount: null, provider_name: "Emory ER", provenance: prov("demandiq") },
+    { id: "bl-8b", description: "Neurosurgical consults (3)", service_date: "2025-08-05", cpt_codes: ["99244"], billed_amount: 4500, paid_amount: null, reviewer_recommended_amount: null, provider_name: "Dr. Hensley", provenance: prov("demandiq") },
+    { id: "bl-8c", description: "PT (resumed)", service_date: "2026-01-10", cpt_codes: ["97110"], billed_amount: 3200, paid_amount: null, reviewer_recommended_amount: null, provider_name: "Atlanta PT", provenance: prov("demandiq", "partial") },
+  ],
+  upstream_concerns: [
+    { id: "uc-8a", category: "causation", description: "Prior lumbar surgery at L4-L5 — causation disputed for re-herniation", severity: "critical", provenance: prov("demandiq") },
+    { id: "uc-8b", category: "gap", description: "60-day treatment gap between neurosurgical follow-up and PT resumption", severity: "warning", provenance: prov("demandiq") },
+    { id: "uc-8c", category: "documentation", description: "Prior surgical records not yet obtained for comparison", severity: "critical", provenance: prov("demandiq") },
+  ],
+  completeness_warnings: [
+    { field: "prior_records", label: "Prior Surgical Records", status: "missing" as const, message: "Prior L4-L5 surgery records needed for causation analysis" },
+    { field: "treatment_gap", label: "Treatment Gap", status: "partial" as const, message: "60-day gap with patient-reported financial barrier" },
+  ],
+  clinical_flags: flags({ has_surgery: true, has_advanced_imaging: true }),
+  wage_loss: { total_lost_wages: f(12000), duration_description: f("8 weeks full disability — CDL driving restrictions") },
+  overall_completeness_score: 52,
+});
+
+// ═══════════════════════════════════════════════════════
 // Assembled Demo Seeds
 // ═══════════════════════════════════════════════════════
 
 export const EVALUATE_DEMO_SEEDS: EvaluateDemoSeed[] = [
   {
     id: "st-minor",
-    label: "Minor Soft Tissue — Short Duration",
+    label: "Minor Soft Tissue — Short Duration (Unrepresented)",
     archetype: "Profile A: Conservative care, rapid resolution",
     case_number: "CF-2026-00301",
     claimant: "Maria Delgado",
@@ -561,10 +615,13 @@ export const EVALUATE_DEMO_SEEDS: EvaluateDemoSeed[] = [
     doc_sufficiency: { overall_score: 78, gaps: ["No wage loss documentation"], tier: "moderate" },
     benchmark_support: { match_count: 8, best_similarity: 82, tier: "strong" },
     module_status: "completed",
+    is_represented: false,
+    has_revieweriq_data: true,
+    valuation_run: { run_id: "vr-st-minor", run_version: 1, computed_at: NOW, floor: 4200, likely: 6800, high: 9500, confidence: 72, confidence_label: "moderate", factor_count: 4, override_count: 0 },
   },
   {
     id: "st-extended",
-    label: "Extended Soft Tissue — PT & Work Restrictions",
+    label: "Extended Soft Tissue — PT & Work Restrictions (Represented)",
     archetype: "Profile B: Prolonged treatment, functional impact, wage loss",
     case_number: "CF-2026-00302",
     claimant: "James Whitfield",
@@ -578,11 +635,16 @@ export const EVALUATE_DEMO_SEEDS: EvaluateDemoSeed[] = [
     doc_sufficiency: { overall_score: 84, gaps: ["IME not performed"], tier: "moderate" },
     benchmark_support: { match_count: 5, best_similarity: 74, tier: "moderate" },
     module_status: "published",
+    is_represented: true,
+    attorney_name: "Marcus T. Rivera, Esq.",
+    firm_name: "Rivera & Associates",
+    has_revieweriq_data: true,
+    valuation_run: { run_id: "vr-st-extended", run_version: 2, computed_at: NOW, floor: 18500, likely: 27000, high: 36000, confidence: 78, confidence_label: "moderate", factor_count: 6, override_count: 0 },
   },
   {
     id: "ortho-nonsurg",
-    label: "Objective Ortho — Non-Surgical",
-    archetype: "Profile C: Objective findings, conservative orthopedic management",
+    label: "Objective Ortho — Imaging + Injections",
+    archetype: "Profile C: Objective findings, conservative orthopedic management with injections",
     case_number: "CF-2026-00303",
     claimant: "Catherine Novak",
     insured: "Unnamed Driver (personal auto)",
@@ -595,6 +657,18 @@ export const EVALUATE_DEMO_SEEDS: EvaluateDemoSeed[] = [
     doc_sufficiency: { overall_score: 86, gaps: ["Future treatment plan not formalized"], tier: "strong" },
     benchmark_support: { match_count: 4, best_similarity: 71, tier: "moderate" },
     module_status: "valued",
+    is_represented: true,
+    attorney_name: "Jennifer L. Castillo, Esq.",
+    firm_name: "Castillo Law Group",
+    has_revieweriq_data: true,
+    valuation_run: { run_id: "vr-ortho", run_version: 1, computed_at: NOW, floor: 22000, likely: 32000, high: 42000, confidence: 80, confidence_label: "high", factor_count: 5, override_count: 0 },
+    // Stale valuation: upstream ReviewerIQ was updated after this valuation
+    stale_state: {
+      is_stale: true,
+      stale_reason: "ReviewerIQ package was republished (v3) after this valuation was computed. Updated treatment records and revised specials may affect the corridor.",
+      upstream_module: "revieweriq",
+      upstream_version: 3,
+    },
   },
   {
     id: "fracture",
@@ -612,10 +686,13 @@ export const EVALUATE_DEMO_SEEDS: EvaluateDemoSeed[] = [
     doc_sufficiency: { overall_score: 89, gaps: ["No functional capacity evaluation"], tier: "strong" },
     benchmark_support: { match_count: 3, best_similarity: 68, tier: "moderate" },
     module_status: "completed",
+    is_represented: false,
+    has_revieweriq_data: true,
+    valuation_run: { run_id: "vr-fracture", run_version: 1, computed_at: NOW, floor: 42000, likely: 58000, high: 78000, confidence: 82, confidence_label: "high", factor_count: 7, override_count: 0 },
   },
   {
     id: "surgery",
-    label: "Surgery Case — Spine + Knee (Override)",
+    label: "Surgery Case — Spine + Knee (Override, Represented)",
     archetype: "Profile F: Multi-surgical, high specials, significant wage loss",
     case_number: "CF-2026-00305",
     claimant: "Patricia Morales",
@@ -637,10 +714,15 @@ export const EVALUATE_DEMO_SEEDS: EvaluateDemoSeed[] = [
       requires_supervisor_review: false,
     },
     module_status: "published",
+    is_represented: true,
+    attorney_name: "David A. Park, Esq.",
+    firm_name: "Park & Whitmore LLP",
+    has_revieweriq_data: true,
+    valuation_run: { run_id: "vr-surgery", run_version: 3, computed_at: NOW, floor: 185000, likely: 250000, high: 340000, confidence: 85, confidence_label: "high", factor_count: 9, override_count: 1 },
   },
   {
     id: "permanency",
-    label: "Impairment / Permanency — Multi-System",
+    label: "Impairment / Permanency — Multi-System (Represented)",
     archetype: "Profile G: 12% WPI, 3 surgeries, career-ending potential",
     case_number: "CF-2026-00306",
     claimant: "Robert Tran",
@@ -654,10 +736,15 @@ export const EVALUATE_DEMO_SEEDS: EvaluateDemoSeed[] = [
     doc_sufficiency: { overall_score: 95, gaps: [], tier: "strong" },
     benchmark_support: { match_count: 2, best_similarity: 62, tier: "weak" },
     module_status: "in_progress",
+    is_represented: true,
+    attorney_name: "William R. Granger, Esq.",
+    firm_name: "Granger Trial Law",
+    has_revieweriq_data: true,
+    valuation_run: { run_id: "vr-permanency", run_version: 1, computed_at: NOW, floor: 425000, likely: 580000, high: 750000, confidence: 75, confidence_label: "moderate", factor_count: 11, override_count: 0 },
   },
   {
     id: "provisional",
-    label: "Provisional — Insufficient Data",
+    label: "Provisional — Insufficient Data (Liability Disputed)",
     archetype: "Profile Z: Critical documentation gaps, liability disputed",
     case_number: "CF-2026-00307",
     claimant: "Linda Hawkins",
@@ -671,6 +758,29 @@ export const EVALUATE_DEMO_SEEDS: EvaluateDemoSeed[] = [
     doc_sufficiency: { overall_score: 32, gaps: ["No medical records", "No police report", "No imaging", "No wage docs", "No provider details"], tier: "weak" },
     benchmark_support: { match_count: 0, best_similarity: 0, tier: "none" },
     module_status: "in_progress",
+    is_represented: false,
+    has_revieweriq_data: false,
+    valuation_run: { run_id: "vr-provisional", run_version: 1, computed_at: NOW, floor: 0, likely: 0, high: 0, confidence: 15, confidence_label: "very_low", factor_count: 1, override_count: 0 },
+  },
+  {
+    id: "prior-injury",
+    label: "Prior Injury / Treatment Gap (DemandIQ Only)",
+    archetype: "Profile E: Pre-existing condition, causation dispute, treatment gap",
+    case_number: "CF-2026-00308",
+    claimant: "Derek Washington",
+    insured: "Southeast Freight Corp.",
+    jurisdiction: "GA — DeKalb",
+    date_of_loss: "2025-07-20",
+    expected_profile: "E",
+    expected_profile_label: "Prior Injury / Aggravation",
+    snapshot: SEED_8_SNAPSHOT,
+    corridor: { floor: 8500, mid: 14000, high: 22000 },
+    doc_sufficiency: { overall_score: 52, gaps: ["Prior surgical records", "Treatment gap explanation", "Updated imaging comparison"], tier: "weak" },
+    benchmark_support: { match_count: 1, best_similarity: 45, tier: "weak" },
+    module_status: "not_started",
+    is_represented: false,
+    has_revieweriq_data: false,
+    valuation_run: { run_id: "vr-prior-injury", run_version: 1, computed_at: NOW, floor: 8500, likely: 14000, high: 22000, confidence: 38, confidence_label: "low", factor_count: 5, override_count: 0 },
   },
 ];
 
