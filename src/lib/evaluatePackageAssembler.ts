@@ -397,3 +397,7 @@ function computeMeritsScore(snapshot: EvaluateIntakeSnapshot, ledger: Explanatio
 
   return Math.max(0, Math.min(100, Math.round(score)));
 }
+
+function formatDollars(val: number): string {
+  return new Intl.NumberFormat("en-US", { style: "currency", currency: "USD", maximumFractionDigits: 0 }).format(val);
+}
