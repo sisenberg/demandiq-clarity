@@ -350,6 +350,8 @@ const EvaluateWorkspacePage = () => {
                   </div>
                 )}
 
+                {activeTab === "modifiers" && <EvalModifierPanel snapshot={snapshot} />}
+
                 {activeTab === "range" && <EvalRangeTab snapshot={snapshot} />}
                 {activeTab === "explanation" && <EvalExplanationTab snapshot={snapshot} />}
                 {activeTab === "evidence" && <EvalEvidenceTab snapshot={snapshot} />}
