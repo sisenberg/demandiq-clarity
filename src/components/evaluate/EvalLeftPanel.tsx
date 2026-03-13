@@ -5,6 +5,8 @@
 
 import type { EvaluateIntakeSnapshot } from "@/types/evaluate-intake";
 import { EvaluateModuleState, EVALUATE_STATE_LABEL, EVALUATE_STATE_BADGE_CLASS } from "@/types/evaluateiq";
+import type { ClaimProfileResult } from "@/lib/claimProfileClassifier";
+import { PROFILE_META } from "@/lib/claimProfileClassifier";
 import {
   User,
   Calendar,
