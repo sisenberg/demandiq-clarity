@@ -187,13 +187,14 @@ const EvalCorridorSummary = ({ snapshot, isProvisional }: Props) => {
 };
 
 function CorridorPill({ low, mid, high, highlight }: { low: number; mid: number; high: number; highlight?: boolean }) {
+  const fmt = (n: number) => n >= 1000 ? `$${(n / 1000).toFixed(n >= 10000 ? 0 : 1)}K` : `$${n}`;
   return (
     <div className="flex items-baseline gap-1">
-      <span className="text-[10px] text-muted-foreground">{low}</span>
+      <span className="text-[10px] text-muted-foreground">{fmt(low)}</span>
       <span className="text-[8px] text-muted-foreground/50">—</span>
-      <span className={`text-sm font-bold ${highlight ? "text-primary" : "text-foreground"}`}>{mid}</span>
+      <span className={`text-sm font-bold ${highlight ? "text-primary" : "text-foreground"}`}>{fmt(mid)}</span>
       <span className="text-[8px] text-muted-foreground/50">—</span>
-      <span className="text-[10px] text-muted-foreground">{high}</span>
+      <span className="text-[10px] text-muted-foreground">{fmt(high)}</span>
     </div>
   );
 }

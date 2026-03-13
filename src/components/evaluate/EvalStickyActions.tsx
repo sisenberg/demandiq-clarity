@@ -72,7 +72,7 @@ const EvalStickyActions = ({ moduleState, onCTA, isPending, onAccept, onPublish,
           )}
 
           {/* Publish button */}
-          {isCompleted && (
+          {canAcceptPublish && isAccepted && (
             <button
               onClick={onPublish}
               className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md text-[11px] font-semibold bg-primary text-primary-foreground hover:bg-primary/90 transition-colors"
