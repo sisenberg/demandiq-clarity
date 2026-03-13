@@ -81,6 +81,10 @@ const EvaluateWorkspacePage = () => {
   const { snapshot } = useEvaluateIntakeSnapshot(caseId);
   const { data: publishedPackages = [] } = useEvaluatePackages(caseId);
 
+  // Representation context
+  const claimantPartyId = caseData?.claimant ? undefined : undefined; // Derived from case_parties in real usage
+  const { summary: repSummary } = useRepresentationSummary(caseId, claimantPartyId);
+
   // Override & audit state
   const assumptions = useAssumptionOverrides();
   const audit = useEvaluateAudit();
@@ -105,6 +109,14 @@ const EvaluateWorkspacePage = () => {
     const adjusted = computePostMeritAdjustments(corridor, snapshot);
     return adjusted.adjusted;
   }, [snapshot, claimProfile]);
+
+  // Compute representation-aware valuation
+  const repValuation = useMemo(() => {
+    if (!snapshot) return null;
+    const drivers = extractValuationDrivers(snapshot);
+    const rangeOutput = computeSettlementRange(snapshot, drivers);
+    return computeRepresentationAwareValuation(rangeOutput, snapshot, repSummary ?? null);
+  }, [snapshot, repSummary]);
 
   // Upstream freshness
   const upstreamModuleId = eligibility.inputSource === "revieweriq" ? "revieweriq" : "demandiq";
