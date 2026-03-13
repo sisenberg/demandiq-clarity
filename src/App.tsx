@@ -20,6 +20,7 @@ import EvaluateWorkspacePage from "@/pages/EvaluateWorkspacePage";
 import EvaluateCaseListPage from "@/pages/EvaluateCaseListPage";
 import EvaluatePackageViewPage from "@/pages/EvaluatePackageViewPage";
 import EvaluateConfigPage from "@/pages/EvaluateConfigPage";
+import EvaluateAnalyticsPage from "@/pages/EvaluateAnalyticsPage";
 import ModuleGuard from "@/components/auth/ModuleGuard";
 import CalibrationPage from "@/pages/CalibrationPage";
 import NegotiateWorkspacePage from "@/pages/NegotiateWorkspacePage";
