@@ -219,13 +219,17 @@ export interface EvaluationPackage {
   snapshot_id: string | null;
   valuation_run_id: string | null;
   selection_id: string | null;
-  package_payload: EvaluatePackagePayload;
+  /** The full EvaluatePackage v1 payload */
+  package_payload: EvaluatePackageV1;
   completed_by: string | null;
   completed_at: string | null;
   created_at: string;
 }
 
-/** The published EvaluatePackage payload for downstream consumption */
+/**
+ * @deprecated Use EvaluatePackageV1 from evaluate-package-v1.ts instead.
+ * Kept for backward compatibility during migration.
+ */
 export interface EvaluatePackagePayload {
   /** Package metadata */
   package_version: number;
