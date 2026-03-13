@@ -157,9 +157,11 @@ function TimelineEvent({ event }: { event: NegotiationEventRow }) {
   return (
     <div className="flex gap-2 py-1.5 px-2 rounded-lg hover:bg-accent/30 transition-colors">
       <div className={`mt-0.5 shrink-0 h-5 w-5 rounded-md flex items-center justify-center ${
-        isOffer ? "bg-primary/10" : "bg-accent"
+        isRepresentation ? "bg-[hsl(var(--status-attention))]/10" : isOffer ? "bg-primary/10" : "bg-accent"
       }`}>
-        <Icon className={`h-2.5 w-2.5 ${isOffer ? "text-primary" : "text-muted-foreground"}`} />
+        <Icon className={`h-2.5 w-2.5 ${
+          isRepresentation ? "text-[hsl(var(--status-attention))]" : isOffer ? "text-primary" : "text-muted-foreground"
+        }`} />
       </div>
       <div className="min-w-0 flex-1">
         <p className="text-[10px] text-foreground leading-snug line-clamp-2">{event.summary}</p>
