@@ -23,9 +23,13 @@ interface Props {
 
 const EvalStickyActions = ({ moduleState, onCTA, isPending, onAccept, onPublish, isAccepted }: Props) => {
   const cta = getEvaluateCTA(moduleState);
-  const isActive = moduleState !== EvaluateModuleState.NotStarted && moduleState !== EvaluateModuleState.Completed && moduleState !== EvaluateModuleState.Published;
+  const isActive = moduleState !== EvaluateModuleState.NotStarted
+    && moduleState !== EvaluateModuleState.Completed
+    && moduleState !== EvaluateModuleState.Published;
   const isCompleted = moduleState === EvaluateModuleState.Completed;
   const isPublished = moduleState === EvaluateModuleState.Published;
+  // Show accept/publish actions for active evaluations (valued or in-review)
+  const canAcceptPublish = isActive || isCompleted;
 
   if (!isActive && !isCompleted && !isPublished) return null;
 
