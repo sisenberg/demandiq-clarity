@@ -81,7 +81,7 @@ export function useAppendRepresentationEvent() {
         occurred_at: input.occurredAt ?? new Date().toISOString(),
         recorded_at: new Date().toISOString(),
         notes: input.notes ?? null,
-        created_by_user_id: profile?.id ?? null,
+        created_by_user_id: user?.id ?? null,
       };
 
       const { data, error } = await supabase
