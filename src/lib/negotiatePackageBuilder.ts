@@ -14,6 +14,8 @@ import type {
   NegotiationNoteRow,
   NegotiationSessionStatus,
   NegotiateRepresentationContext,
+  SettlementRepresentationFields,
+  TransferRepresentationFields,
 } from "@/types/negotiate-persistence";
 
 // ─── Outcome Types ──────────────────────────────────────

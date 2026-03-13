@@ -42,16 +42,38 @@ export type NegotiationEventType =
 // ─── Negotiate Representation Context ───────────────────
 
 export interface NegotiateRepresentationContext {
+  // Required
   representation_status_current: "represented" | "unrepresented" | "unknown";
   representation_status_at_first_negotiation_event: "represented" | "unrepresented" | "unknown" | null;
+  representation_status_at_publication: "represented" | "unrepresented" | "unknown";
   representation_status_at_outcome: "represented" | "unrepresented" | "unknown" | null;
   representation_transition_flag: boolean;
+
+  // Recommended
   attorney_retained_during_negotiation_flag: boolean;
   attorney_retained_after_initial_offer_flag: boolean;
+  unrepresented_resolved_flag: boolean;
   current_attorney_name: string | null;
   current_firm_name: string | null;
+  representation_history_summary: string;
+
   /** History of representation changes during this negotiation session */
   representation_changes: RepresentationChangeRecord[];
+}
+
+/** Outcome-specific representation fields for settlement */
+export interface SettlementRepresentationFields {
+  representation_status_at_settlement: "represented" | "unrepresented" | "unknown";
+  representation_transition_flag: boolean;
+  attorney_retained_during_claim_flag: boolean;
+  attorney_retained_after_initial_offer_flag: boolean;
+  unrepresented_resolved_flag: boolean;
+}
+
+/** Outcome-specific representation fields for transfer */
+export interface TransferRepresentationFields {
+  representation_status_at_transfer: "represented" | "unrepresented" | "unknown";
+  representation_transition_flag: boolean;
 }
 
 export interface RepresentationChangeRecord {
