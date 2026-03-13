@@ -33,6 +33,8 @@ import EvalValuationCards from "@/components/evaluate/EvalValuationCards";
 import EvalIntakeReadinessCard from "@/components/evaluate/EvalIntakeReadinessCard";
 import EvalStickyActions from "@/components/evaluate/EvalStickyActions";
 import EvalStaleDataBanner from "@/components/evaluate/EvalStaleDataBanner";
+import EvalClaimProfileCard from "@/components/evaluate/EvalClaimProfileCard";
+import { classifyClaimProfile } from "@/lib/claimProfileClassifier";
 import {
   ArrowLeft,
   Calculator,
