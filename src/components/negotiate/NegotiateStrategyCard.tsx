@@ -6,7 +6,7 @@
  */
 
 import { useState, useCallback } from "react";
-import type { GeneratedStrategy, StrategyOverride, OverridableField, ConcessionPosture } from "@/types/negotiate-strategy";
+import type { GeneratedStrategy, StrategyOverride, OverridableField, ConcessionPosture, RepresentationPosture } from "@/types/negotiate-strategy";
 import {
   Target,
   Shield,
