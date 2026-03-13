@@ -10,6 +10,7 @@ import { useEvaluateIntakeSnapshot } from "@/hooks/useEvaluateIntakeSnapshot";
 import { useReopenEvaluate, validateEvaluateCompletion } from "@/hooks/useEvaluateCompletion";
 import { usePublishEvaluate, useEvaluatePackages } from "@/hooks/useEvaluatePublish";
 import { useIsUpstreamCurrent } from "@/hooks/useUpstreamSnapshot";
+import { useRepresentationSummary } from "@/hooks/useRepresentationHistory";
 import { isEntitlementActive } from "@/hooks/useModuleEntitlements";
 import { useAssumptionOverrides } from "@/hooks/useAssumptionOverrides";
 import { useEvaluateAudit } from "@/hooks/useEvaluateAudit";
