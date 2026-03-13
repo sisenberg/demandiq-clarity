@@ -10,6 +10,7 @@ import { useEvaluateIntakeSnapshot } from "@/hooks/useEvaluateIntakeSnapshot";
 import { useReopenEvaluate, validateEvaluateCompletion } from "@/hooks/useEvaluateCompletion";
 import { usePublishEvaluate, useEvaluatePackages } from "@/hooks/useEvaluatePublish";
 import { useIsUpstreamCurrent } from "@/hooks/useUpstreamSnapshot";
+import { useRepresentationSummary } from "@/hooks/useRepresentationHistory";
 import { isEntitlementActive } from "@/hooks/useModuleEntitlements";
 import { useAssumptionOverrides } from "@/hooks/useAssumptionOverrides";
 import { useEvaluateAudit } from "@/hooks/useEvaluateAudit";
@@ -44,9 +45,15 @@ import EvalPostMeritAdjustmentCard from "@/components/evaluate/EvalPostMeritAdju
 import EvalDocSufficiencyCard from "@/components/evaluate/EvalDocSufficiencyCard";
 import EvalBenchmarkCard from "@/components/evaluate/EvalBenchmarkCard";
 import EvalCorridorSummary from "@/components/evaluate/EvalCorridorSummary";
+import EvalRepresentationCard from "@/components/evaluate/EvalRepresentationCard";
+import EvalDualRangeCard from "@/components/evaluate/EvalDualRangeCard";
+import EvalScenarioCard from "@/components/evaluate/EvalScenarioCard";
 import EvalOverrideDialog from "@/components/evaluate/EvalOverrideDialog";
 import EvalPublishDialog from "@/components/evaluate/EvalPublishDialog";
 import EvalGovernanceCard from "@/components/evaluate/EvalGovernanceCard";
+import { computeRepresentationAwareValuation } from "@/lib/representationValuationEngine";
+import { computeSettlementRange } from "@/lib/settlementRangeEngine";
+import { extractValuationDrivers } from "@/lib/valuationDriverEngine";
 import { scoreAllFactors } from "@/lib/factorScoringEngine";
 import { computeWeightedMeritsScore } from "@/lib/profileWeightingEngine";
 import { computeMeritsCorridor } from "@/lib/meritsCorridorEngine";
@@ -74,6 +81,10 @@ const EvaluateWorkspacePage = () => {
   const { snapshot } = useEvaluateIntakeSnapshot(caseId);
   const { data: publishedPackages = [] } = useEvaluatePackages(caseId);
 
+  // Representation context
+  const claimantPartyId = caseData?.claimant ? undefined : undefined; // Derived from case_parties in real usage
+  const { summary: repSummary } = useRepresentationSummary(caseId, claimantPartyId);
+
   // Override & audit state
   const assumptions = useAssumptionOverrides();
   const audit = useEvaluateAudit();
@@ -98,6 +109,14 @@ const EvaluateWorkspacePage = () => {
     const adjusted = computePostMeritAdjustments(corridor, snapshot);
     return adjusted.adjusted;
   }, [snapshot, claimProfile]);
+
+  // Compute representation-aware valuation
+  const repValuation = useMemo(() => {
+    if (!snapshot) return null;
+    const drivers = extractValuationDrivers(snapshot);
+    const rangeOutput = computeSettlementRange(snapshot, drivers);
+    return computeRepresentationAwareValuation(rangeOutput, snapshot, repSummary ?? null);
+  }, [snapshot, repSummary]);
 
   // Upstream freshness
   const upstreamModuleId = eligibility.inputSource === "revieweriq" ? "revieweriq" : "demandiq";
@@ -308,6 +327,9 @@ const EvaluateWorkspacePage = () => {
                 {activeTab === "overview" && (
                   <div className="space-y-4">
                     <EvalCorridorSummary snapshot={snapshot} isProvisional={isProvisional} />
+                    {repValuation && <EvalDualRangeCard valuation={repValuation} />}
+                    {repValuation && <EvalRepresentationCard valuation={repValuation} />}
+                    {repValuation && <EvalScenarioCard valuation={repValuation} />}
                     {claimProfile && <EvalClaimProfileCard profile={claimProfile} />}
                     <div className="grid grid-cols-1 xl:grid-cols-2 gap-4">
                       <EvalMeritsScoreCard snapshot={snapshot} />

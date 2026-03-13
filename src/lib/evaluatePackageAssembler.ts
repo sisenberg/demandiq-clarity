@@ -294,6 +294,31 @@ export function assembleEvaluatePackageV1(input: PackageAssemblyInput): Evaluate
     total_reviewed: totalReviewed,
     completeness_score: docScore,
     negotiation_handoff: handoff,
+    // Representation-aware valuation defaults (v1.1)
+    fact_based_value_range: { low: corridor.range_floor ?? 0, mid: corridor.range_likely ?? 0, high: corridor.range_stretch ?? 0 },
+    expected_resolution_range: { low: corridor.range_floor ?? 0, mid: corridor.range_likely ?? 0, high: corridor.range_stretch ?? 0 },
+    representation_context: {
+      representation_status_current: 'unknown',
+      representation_status_at_evaluation: 'unknown',
+      representation_transition_flag: false,
+      attorney_retained_during_claim_flag: false,
+      attorney_retained_after_initial_offer_flag: false,
+      representation_history_count: 0,
+      attorney_retention_risk: 0,
+      current_attorney_name: null,
+      current_firm_name: null,
+    },
+    representation_scenarios: {
+      direct_resolution_range_unrepresented: null,
+      likely_range_if_counsel_retained: null,
+      early_resolution_opportunity_range: null,
+      current_represented_posture_range: null,
+    },
+    representation_notes: {
+      fact_value_independence_statement: 'Fact-based value is determined exclusively by claim facts. Representation status has no effect.',
+      resolution_context_explanation: 'Representation context was not available at evaluation time.',
+      compliance_notes: ['Representation status treated as negotiation-context variable only.'],
+    },
     audit: {
       accepted_by: null,
       accepted_at: null,
