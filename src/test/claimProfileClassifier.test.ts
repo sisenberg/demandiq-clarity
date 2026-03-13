@@ -152,7 +152,7 @@ describe("Claim Profile Classifier", () => {
 
   it("classifies Profile G: permanency / impairment", () => {
     const result = classifyClaimProfile(makeSnapshot({
-      clinical_flags: { has_permanency: true },
+      clinical_flags: { has_permanency_indicators: true },
     }));
     expect(result.primary).toBe("G");
   });
