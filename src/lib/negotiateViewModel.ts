@@ -235,6 +235,8 @@ export function buildNegotiationViewModel(
 
     rationaleNotes: p.rationale_notes ?? "",
     completenessScore: p.completeness_score ?? 0,
+
+    representation: buildRepresentationView(pkg),
   };
 }
 
