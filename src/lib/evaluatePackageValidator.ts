@@ -248,6 +248,11 @@ export function isEvaluatePackageV1Shape(obj: unknown): obj is EvaluatePackageV1
     typeof o.merits === "object" &&
     typeof o.settlement_corridor === "object" &&
     typeof o.negotiation_handoff === "object" &&
-    typeof o.generated_at === "string"
+    typeof o.generated_at === "string" &&
+    // v1.1 required fields
+    typeof o.fact_based_value_range === "object" && o.fact_based_value_range !== null &&
+    typeof o.expected_resolution_range === "object" && o.expected_resolution_range !== null &&
+    typeof o.representation_context === "object" && o.representation_context !== null &&
+    typeof o.representation_notes === "object" && o.representation_notes !== null
   );
 }

@@ -157,6 +157,10 @@ function makeMinimalPackage(overrides?: Partial<EvaluatePackageV1>): EvaluatePac
     created_at: "2026-03-13T00:00:00Z",
     fact_based_value_range: { low: 25000, mid: 45000, high: 65000 },
     expected_resolution_range: { low: 25000, mid: 45000, high: 65000 },
+    valuation_outputs: {
+      fact_based_value_range: { low: 25000, mid: 45000, high: 65000 },
+      expected_resolution_range: { low: 25000, mid: 45000, high: 65000 },
+    },
     representation_context: {
       representation_status_current: 'unknown',
       representation_status_at_evaluation: 'unknown',
@@ -175,9 +179,25 @@ function makeMinimalPackage(overrides?: Partial<EvaluatePackageV1>): EvaluatePac
       current_represented_posture_range: null,
     },
     representation_notes: {
+      value_rule_applied: 'Representation status did not directly reduce fact-based case value.',
       fact_value_independence_statement: 'Fact-based value determined by claim facts only.',
       resolution_context_explanation: 'No representation context available.',
+      negotiation_context_summary: null,
       compliance_notes: [],
+    },
+    scenario_outputs: null,
+    confidence_and_uncertainty: {
+      confidence_score: 78,
+      confidence_level: 'high',
+      uncertainty_drivers: [],
+      documentation_quality_impact: null,
+      data_completeness_score: 85,
+    },
+    handoff_notes: {
+      evaluation_summary: 'Evaluation produced a high-confidence corridor.',
+      negotiation_considerations: [],
+      representation_posture_note: null,
+      constraint_notes: [],
     },
     ...overrides,
   };
