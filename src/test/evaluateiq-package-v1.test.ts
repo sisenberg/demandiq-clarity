@@ -157,6 +157,10 @@ function makeMinimalPackage(overrides?: Partial<EvaluatePackageV1>): EvaluatePac
     created_at: "2026-03-13T00:00:00Z",
     fact_based_value_range: { low: 25000, mid: 45000, high: 65000 },
     expected_resolution_range: { low: 25000, mid: 45000, high: 65000 },
+    valuation_outputs: {
+      fact_based_value_range: { low: 25000, mid: 45000, high: 65000 },
+      expected_resolution_range: { low: 25000, mid: 45000, high: 65000 },
+    },
     representation_context: {
       representation_status_current: 'unknown',
       representation_status_at_evaluation: 'unknown',
@@ -175,9 +179,25 @@ function makeMinimalPackage(overrides?: Partial<EvaluatePackageV1>): EvaluatePac
       current_represented_posture_range: null,
     },
     representation_notes: {
+      value_rule_applied: 'Representation status did not directly reduce fact-based case value.',
       fact_value_independence_statement: 'Fact-based value determined by claim facts only.',
       resolution_context_explanation: 'No representation context available.',
+      negotiation_context_summary: null,
       compliance_notes: [],
+    },
+    scenario_outputs: null,
+    confidence_and_uncertainty: {
+      confidence_score: 78,
+      confidence_level: 'high',
+      uncertainty_drivers: [],
+      documentation_quality_impact: null,
+      data_completeness_score: 85,
+    },
+    handoff_notes: {
+      evaluation_summary: 'Evaluation produced a high-confidence corridor.',
+      negotiation_considerations: [],
+      representation_posture_note: null,
+      constraint_notes: [],
     },
     ...overrides,
   };
@@ -303,20 +323,24 @@ describe("Publication State Transitions", () => {
 // ─── Serialization ──────────────────────────────────────
 
 describe("EvaluatePackage Serialization", () => {
-  it("serializes all fields for registry", () => {
+  it("serializes all fields for registry including representation", () => {
     const pkg = makeMinimalPackage();
     const serialized = serializeForRegistry(pkg);
     expect(serialized.contract_version).toBe(EVALUATE_PACKAGE_CONTRACT_VERSION);
     expect(serialized.case_id).toBe("case-001");
     expect(serialized.claim_profile).toBeDefined();
-    expect(serialized.merits).toBeDefined();
-    expect(serialized.settlement_corridor).toBeDefined();
     expect(serialized.negotiation_handoff).toBeDefined();
-    expect(serialized.audit).toBeDefined();
-    expect(serialized.generated_at).toBeDefined();
+    expect(serialized.fact_based_value_range).toBeDefined();
+    expect(serialized.expected_resolution_range).toBeDefined();
+    expect(serialized.representation_context).toBeDefined();
+    expect(serialized.representation_notes).toBeDefined();
+    expect(serialized.valuation_outputs).toBeDefined();
+    expect(serialized.confidence_and_uncertainty).toBeDefined();
+    expect(serialized.handoff_notes).toBeDefined();
+    expect(serialized.scenario_outputs).toBeDefined();
   });
 
-  it("preserves all top-level keys", () => {
+  it("preserves all top-level keys including v1.1 fields", () => {
     const pkg = makeMinimalPackage();
     const serialized = serializeForRegistry(pkg);
     const expectedKeys = [
@@ -329,8 +353,12 @@ describe("EvaluatePackage Serialization", () => {
       "top_suppressors", "top_uncertainty_drivers", "benchmark_summary",
       "post_merit_adjustments", "driver_summaries", "explanation_ledger",
       "assumptions", "overrides", "total_billed", "total_reviewed",
-      "completeness_score", "negotiation_handoff", "audit",
-      "generated_at", "created_at",
+      "completeness_score", "negotiation_handoff",
+      // v1.1 fields
+      "valuation_outputs", "fact_based_value_range", "expected_resolution_range",
+      "representation_context", "representation_notes", "representation_scenarios",
+      "scenario_outputs", "confidence_and_uncertainty", "handoff_notes",
+      "audit", "generated_at", "created_at",
     ];
     for (const key of expectedKeys) {
       expect(serialized).toHaveProperty(key);
@@ -368,5 +396,67 @@ describe("Package Shape Detection", () => {
   it("rejects non-objects", () => {
     expect(isEvaluatePackageV1Shape("string")).toBe(false);
     expect(isEvaluatePackageV1Shape(42)).toBe(false);
+  });
+});
+
+// ─── Representation Validation ──────────────────────────
+
+describe("Representation-Aware Validation", () => {
+  it("rejects package missing value_rule_applied", () => {
+    const pkg = makeMinimalPackage({
+      representation_notes: {
+        value_rule_applied: '',
+        fact_value_independence_statement: 'test',
+        resolution_context_explanation: 'test',
+        negotiation_context_summary: null,
+        compliance_notes: [],
+      },
+    });
+    const result = validateEvaluatePackage(pkg);
+    expect(result.findings.some(f => f.code === "MISSING_VALUE_RULE")).toBe(true);
+    expect(result.valid).toBe(false);
+  });
+
+  it("rejects package missing representation_context", () => {
+    const pkg = makeMinimalPackage();
+    (pkg as any).representation_context = undefined;
+    const result = validateEvaluatePackage(pkg);
+    expect(result.findings.some(f => f.code === "MISSING_REPRESENTATION_CONTEXT")).toBe(true);
+  });
+
+  it("validates complete package with all representation fields", () => {
+    const pkg = makeMinimalPackage();
+    const result = validateEvaluatePackage(pkg);
+    expect(result.findings.some(f => f.code === "MISSING_FACT_BASED_RANGE")).toBe(false);
+    expect(result.findings.some(f => f.code === "MISSING_EXPECTED_RESOLUTION_RANGE")).toBe(false);
+    expect(result.findings.some(f => f.code === "MISSING_REPRESENTATION_CONTEXT")).toBe(false);
+    expect(result.findings.some(f => f.code === "MISSING_VALUE_RULE")).toBe(false);
+  });
+
+  it("serializes representation fields for registry", () => {
+    const pkg = makeMinimalPackage();
+    const serialized = serializeForRegistry(pkg);
+    expect(serialized.valuation_outputs).toBeDefined();
+    expect(serialized.representation_context).toBeDefined();
+    expect(serialized.representation_notes).toBeDefined();
+    expect(serialized.confidence_and_uncertainty).toBeDefined();
+    expect(serialized.handoff_notes).toBeDefined();
+  });
+
+  it("shape detection requires representation fields", () => {
+    const legacy = {
+      contract_version: "1.0.0",
+      case_id: "c1",
+      evaluation_id: "e1",
+      package_version: 1,
+      evaluation_status: "draft",
+      claim_profile: {},
+      merits: {},
+      settlement_corridor: {},
+      negotiation_handoff: {},
+      generated_at: "2026-01-01",
+      // Missing representation fields
+    };
+    expect(isEvaluatePackageV1Shape(legacy)).toBe(false);
   });
 });

@@ -273,6 +273,33 @@ export interface EvalHandoffIssue {
   recommendation: string;
 }
 
+// ─── Confidence and Uncertainty ─────────────────────────
+
+export interface EvalConfidenceAndUncertainty {
+  /** Overall corridor confidence: 0–100 */
+  confidence_score: number | null;
+  confidence_level: EvalConfidenceLevel;
+  /** Top uncertainty drivers affecting range width */
+  uncertainty_drivers: string[];
+  /** Documentation quality impact on confidence */
+  documentation_quality_impact: string | null;
+  /** Data completeness score: 0–100 */
+  data_completeness_score: number;
+}
+
+// ─── Handoff Notes for NegotiateIQ ──────────────────────
+
+export interface EvalHandoffNotes {
+  /** Summary of the evaluation for NegotiateIQ consumption */
+  evaluation_summary: string;
+  /** Key considerations for negotiation strategy */
+  negotiation_considerations: string[];
+  /** Representation-aware notes for the negotiator */
+  representation_posture_note: string | null;
+  /** Policy or collectibility constraints to flag */
+  constraint_notes: string[];
+}
+
 // ─── Audit Metadata ─────────────────────────────────────
 
 export interface EvalPackageAuditMetadata {
@@ -361,17 +388,32 @@ export interface EvaluatePackageV1 {
   // ── Negotiation handoff ──
   negotiation_handoff: EvalNegotiationHandoff;
 
-  // ── Representation-aware valuation (v1.1) ──
-  /** Fact-based value range — grounded purely in claim facts, unaffected by representation */
+  // ── Valuation outputs (v1.1) ──
+  valuation_outputs: {
+    fact_based_value_range: FactBasedValueRange;
+    expected_resolution_range: ExpectedResolutionRange;
+  };
+  /** @deprecated Use valuation_outputs.fact_based_value_range */
   fact_based_value_range: FactBasedValueRange;
-  /** Expected resolution range — considers representation context for practical settlement */
+  /** @deprecated Use valuation_outputs.expected_resolution_range */
   expected_resolution_range: ExpectedResolutionRange;
+
+  // ── Representation ──
   /** Representation context captured at evaluation time */
   representation_context: EvalRepresentationContext;
-  /** Scenario modeling for different representation postures */
-  representation_scenarios: RepresentationScenarioSet;
   /** Explicit notes about representation/value independence */
   representation_notes: RepresentationNotes;
+  /** Scenario modeling for different representation postures */
+  representation_scenarios: RepresentationScenarioSet;
+
+  // ── Confidence and uncertainty ──
+  confidence_and_uncertainty: EvalConfidenceAndUncertainty;
+
+  // ── Scenario outputs (optional) ──
+  scenario_outputs: RepresentationScenarioSet | null;
+
+  // ── NegotiateIQ handoff notes ──
+  handoff_notes: EvalHandoffNotes;
 
   // ── Audit metadata ──
   audit: EvalPackageAuditMetadata;

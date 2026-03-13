@@ -75,10 +75,14 @@ export interface RepresentationScenarioSet {
 // ─── Representation Notes ───────────────────────────────
 
 export interface RepresentationNotes {
+  /** Required rule statement — must be present for publication */
+  value_rule_applied: string;
   /** Explicit statement that representation did not reduce fact-based value */
   fact_value_independence_statement: string;
   /** How representation context influenced expected resolution range */
   resolution_context_explanation: string;
+  /** Recommended: summary of how representation context was considered in negotiation posture */
+  negotiation_context_summary: string | null;
   /** Any additional compliance notes */
   compliance_notes: string[];
 }

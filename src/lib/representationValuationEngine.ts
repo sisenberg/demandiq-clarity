@@ -291,6 +291,8 @@ function generateRepresentationNotes(
   const status = repSummary?.representation_status_current ?? 'unknown';
 
   return {
+    value_rule_applied: 'Representation status did not directly reduce fact-based case value.',
+
     fact_value_independence_statement:
       'The fact-based value range is determined exclusively by the medical evidence, injury severity, treatment patterns, economic losses, and liability posture of this claim. ' +
       'Representation status has NO effect on the fact-based value range. A represented and an unrepresented claimant with identical claim facts will receive identical fact-based valuations.',
@@ -301,6 +303,13 @@ function generateRepresentationNotes(
         : status === 'unrepresented'
           ? 'The expected resolution range reflects practical settlement dynamics for unrepresented claimants, including the probability of direct resolution and the risk of future attorney retention. This is a negotiation-context consideration, not a claim-merit adjustment.'
           : 'Representation status is unknown. The expected resolution range uses moderate assumptions about negotiation dynamics.',
+
+    negotiation_context_summary:
+      status === 'represented'
+        ? 'Claimant is represented by counsel. Expected resolution reflects structured negotiation posture.'
+        : status === 'unrepresented'
+          ? 'Claimant is unrepresented. Expected resolution accounts for direct-resolution dynamics and attorney-retention risk.'
+          : null,
 
     compliance_notes: [
       'Representation status is treated as a negotiation-context and scenario variable only.',

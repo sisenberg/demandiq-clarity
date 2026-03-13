@@ -294,7 +294,12 @@ export function assembleEvaluatePackageV1(input: PackageAssemblyInput): Evaluate
     total_reviewed: totalReviewed,
     completeness_score: docScore,
     negotiation_handoff: handoff,
-    // Representation-aware valuation defaults (v1.1)
+    // Valuation outputs (v1.1)
+    valuation_outputs: {
+      fact_based_value_range: { low: corridor.range_floor ?? 0, mid: corridor.range_likely ?? 0, high: corridor.range_stretch ?? 0 },
+      expected_resolution_range: { low: corridor.range_floor ?? 0, mid: corridor.range_likely ?? 0, high: corridor.range_stretch ?? 0 },
+    },
+    // Deprecated top-level aliases preserved for backward compatibility
     fact_based_value_range: { low: corridor.range_floor ?? 0, mid: corridor.range_likely ?? 0, high: corridor.range_stretch ?? 0 },
     expected_resolution_range: { low: corridor.range_floor ?? 0, mid: corridor.range_likely ?? 0, high: corridor.range_stretch ?? 0 },
     representation_context: {
@@ -308,16 +313,37 @@ export function assembleEvaluatePackageV1(input: PackageAssemblyInput): Evaluate
       current_attorney_name: null,
       current_firm_name: null,
     },
+    representation_notes: {
+      value_rule_applied: 'Representation status did not directly reduce fact-based case value.',
+      fact_value_independence_statement: 'Fact-based value is determined exclusively by claim facts. Representation status has no effect.',
+      resolution_context_explanation: 'Representation context was not available at evaluation time.',
+      negotiation_context_summary: null,
+      compliance_notes: ['Representation status treated as negotiation-context variable only.'],
+    },
     representation_scenarios: {
       direct_resolution_range_unrepresented: null,
       likely_range_if_counsel_retained: null,
       early_resolution_opportunity_range: null,
       current_represented_posture_range: null,
     },
-    representation_notes: {
-      fact_value_independence_statement: 'Fact-based value is determined exclusively by claim facts. Representation status has no effect.',
-      resolution_context_explanation: 'Representation context was not available at evaluation time.',
-      compliance_notes: ['Representation status treated as negotiation-context variable only.'],
+    scenario_outputs: null,
+    confidence_and_uncertainty: {
+      confidence_score: input.confidence,
+      confidence_level: confidenceLevel,
+      uncertainty_drivers: topUncertainty.map(u => u.label),
+      documentation_quality_impact: docScore < 60 ? `Documentation score (${docScore}%) may widen corridor uncertainty` : null,
+      data_completeness_score: docScore,
+    },
+    handoff_notes: {
+      evaluation_summary: `Evaluation produced a ${confidenceLevel}-confidence corridor from ${formatDollars(corridorFloor ?? 0)} to ${formatDollars(corridorStretch ?? 0)}.`,
+      negotiation_considerations: [
+        ...(postMeritAdj.length > 0 ? [`${postMeritAdj.length} post-merit adjustment(s) applied.`] : []),
+        ...(docGaps.length > 0 ? [`${docGaps.length} documentation gap(s) may affect defensibility.`] : []),
+      ],
+      representation_posture_note: null,
+      constraint_notes: claimProfile.policy_limits != null && corridorStretch != null && corridorStretch > claimProfile.policy_limits
+        ? [`Policy limits ($${claimProfile.policy_limits.toLocaleString()}) constrain the corridor stretch.`]
+        : [],
     },
     audit: {
       accepted_by: null,

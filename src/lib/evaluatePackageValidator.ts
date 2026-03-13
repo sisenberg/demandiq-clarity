@@ -129,6 +129,20 @@ export function validateEvaluatePackage(
     findings.push({ field: "negotiation_handoff", severity: "warning", code: "EMPTY_HANDOFF", message: "Negotiation handoff has no strengths or weaknesses." });
   }
 
+  // ── Representation-aware valuation fields (required for publication) ──
+  if (!pkg.fact_based_value_range || (pkg.fact_based_value_range.low === 0 && pkg.fact_based_value_range.mid === 0 && pkg.fact_based_value_range.high === 0 && pkg.settlement_corridor.range_likely != null)) {
+    findings.push({ field: "fact_based_value_range", severity: "error", code: "MISSING_FACT_BASED_RANGE", message: "fact_based_value_range is required and must be populated." });
+  }
+  if (!pkg.expected_resolution_range || (pkg.expected_resolution_range.low === 0 && pkg.expected_resolution_range.mid === 0 && pkg.expected_resolution_range.high === 0 && pkg.settlement_corridor.range_likely != null)) {
+    findings.push({ field: "expected_resolution_range", severity: "error", code: "MISSING_EXPECTED_RESOLUTION_RANGE", message: "expected_resolution_range is required and must be populated." });
+  }
+  if (!pkg.representation_context) {
+    findings.push({ field: "representation_context", severity: "error", code: "MISSING_REPRESENTATION_CONTEXT", message: "representation_context is required." });
+  }
+  if (!pkg.representation_notes?.value_rule_applied) {
+    findings.push({ field: "representation_notes.value_rule_applied", severity: "error", code: "MISSING_VALUE_RULE", message: "representation_notes.value_rule_applied is required." });
+  }
+
   // ── Explanation ledger ──
   if (!pkg.explanation_ledger) {
     findings.push({ field: "explanation_ledger", severity: "warning", code: "NO_LEDGER", message: "Explanation ledger is null. Package will not be fully traceable." });
@@ -201,6 +215,16 @@ export function serializeForRegistry(pkg: EvaluatePackageV1): Record<string, unk
     total_reviewed: pkg.total_reviewed,
     completeness_score: pkg.completeness_score,
     negotiation_handoff: pkg.negotiation_handoff,
+    // Representation-aware fields (v1.1)
+    valuation_outputs: pkg.valuation_outputs,
+    fact_based_value_range: pkg.fact_based_value_range,
+    expected_resolution_range: pkg.expected_resolution_range,
+    representation_context: pkg.representation_context,
+    representation_notes: pkg.representation_notes,
+    representation_scenarios: pkg.representation_scenarios,
+    scenario_outputs: pkg.scenario_outputs,
+    confidence_and_uncertainty: pkg.confidence_and_uncertainty,
+    handoff_notes: pkg.handoff_notes,
     audit: pkg.audit,
     generated_at: pkg.generated_at,
     created_at: pkg.created_at,
@@ -224,6 +248,11 @@ export function isEvaluatePackageV1Shape(obj: unknown): obj is EvaluatePackageV1
     typeof o.merits === "object" &&
     typeof o.settlement_corridor === "object" &&
     typeof o.negotiation_handoff === "object" &&
-    typeof o.generated_at === "string"
+    typeof o.generated_at === "string" &&
+    // v1.1 required fields
+    typeof o.fact_based_value_range === "object" && o.fact_based_value_range !== null &&
+    typeof o.expected_resolution_range === "object" && o.expected_resolution_range !== null &&
+    typeof o.representation_context === "object" && o.representation_context !== null &&
+    typeof o.representation_notes === "object" && o.representation_notes !== null
   );
 }
