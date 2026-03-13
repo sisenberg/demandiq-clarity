@@ -15,3 +15,5 @@ export { mockIssueFlags } from "./issues";
 export { mockJobs } from "./jobs";
 export { mockAuditEvents } from "./auditEvents";
 export { mockActivityEvents } from "./activityEvents";
+export { EVALUATE_DEMO_SEEDS } from "./evaluateSeeds";
+export type { EvaluateDemoSeed } from "./evaluateSeeds";
