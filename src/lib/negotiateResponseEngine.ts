@@ -93,6 +93,8 @@ export function generateResponseRecommendations({
   latestCounteroffer: number;
   lastDefenseOffer: number | null;
 }): ResponseEngineOutput {
+  const repStatus = vm.representation?.status ?? "unknown";
+  const repPosture = strategy.representationPosture?.generated ?? "represented_balanced";
   const deltas = computeCounterofferDeltas({
     counterofferAmount: latestCounteroffer,
     lastDefenseOffer,
