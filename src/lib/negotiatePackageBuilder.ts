@@ -13,6 +13,7 @@ import type {
   NegotiationRoundRow,
   NegotiationNoteRow,
   NegotiationSessionStatus,
+  NegotiateRepresentationContext,
 } from "@/types/negotiate-persistence";
 
 // ─── Outcome Types ──────────────────────────────────────
