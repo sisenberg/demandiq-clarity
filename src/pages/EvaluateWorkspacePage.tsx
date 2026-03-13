@@ -171,6 +171,7 @@ const EvaluateWorkspacePage = () => {
             inputSource={eligibility.inputSource}
             sourceVersion={eligibility.sourceVersion}
             isStale={isStale}
+            claimProfile={claimProfile}
           />
         )}
 
