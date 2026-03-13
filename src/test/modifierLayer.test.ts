@@ -6,7 +6,7 @@ import { describe, it, expect } from "vitest";
 import { computeModifierLayer, extractRepresentationContext, MODIFIER_DEFINITIONS } from "@/lib/modifierLayerEngine";
 import type { EvaluateIntakeSnapshot } from "@/types/evaluate-intake";
 import { buildEvaluateIntakeSnapshot } from "@/lib/evaluateIntakeBuilder";
-import { MOCK_CASE_PACKAGE } from "@/data/mock/casePackage";
+import { MARTINEZ_CASE_PACKAGE } from "@/data/mock/casePackage";
 
 function makeSnapshot(): EvaluateIntakeSnapshot {
   return buildEvaluateIntakeSnapshot({
