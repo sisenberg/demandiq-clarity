@@ -7,6 +7,7 @@
 
 import type { EvaluateIntakeSnapshot, CompletenessWarning } from "./evaluate-intake";
 import type { ExplanationLedger } from "./explanation-ledger";
+import type { EvaluatePackageV1 } from "./evaluate-package-v1";
 
 // ─── Enums (match DB enums) ────────────────────────────
 
