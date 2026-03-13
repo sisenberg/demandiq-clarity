@@ -13,6 +13,9 @@ import { generateResponseRecommendations } from "@/lib/negotiateResponseEngine";
 import { generateDraft, DRAFT_TYPE_META, type DraftType } from "@/lib/negotiateDraftEngine";
 import { checkAuthority, buildEscalationSummary, formatEscalationSummaryText } from "@/lib/negotiateAuthorityEngine";
 import { validateNegotiateCompletion, buildNegotiatePackage, type NegotiateOutcomeType } from "@/lib/negotiatePackageBuilder";
+import { createDefaultRepresentationContext } from "@/hooks/useNegotiateRepresentation";
+
+const DEFAULT_REP_CTX = createDefaultRepresentationContext("represented", "Test Atty", "Test Firm");
 
 import {
   SCENARIO_REASONABLE,
