@@ -87,8 +87,9 @@ const CompleteNegotiationDialog = ({
       outcomeType,
       finalSettlement: parsed,
       outcomeNotes,
+      representationContext,
     });
-  }, [session, strategy, rounds, outcomeType, finalSettlement, outcomeNotes]);
+  }, [session, strategy, rounds, outcomeType, finalSettlement, outcomeNotes, representationContext]);
 
   const handlePublish = useCallback(() => {
     if (!outcomeType || !validation.valid) return;
