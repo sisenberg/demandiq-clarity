@@ -81,6 +81,14 @@ const App = () => (
                   </ModuleGuard>
                 }
               />
+              <Route
+                path="/evaluate/analytics"
+                element={
+                  <ModuleGuard moduleId="evaluateiq">
+                    <EvaluateAnalyticsPage />
+                  </ModuleGuard>
+                }
+              />
 
               {/* NegotiateIQ routes */}
               <Route
