@@ -42,6 +42,7 @@ interface CompleteNegotiationDialogProps {
   calibrationSignalsCount: number;
   calibrationHighConfCount: number;
   calibrationJurisdictionBand: string | null;
+  representationContext?: NegotiateRepresentationContext | null;
 }
 
 const OUTCOME_ICONS: Record<NegotiateOutcomeType, React.ElementType> = {
