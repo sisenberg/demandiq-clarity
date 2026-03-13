@@ -39,6 +39,17 @@ const POSTURE_LABELS: Record<ConcessionPosture, { label: string; color: string }
   flexible: { label: "Flexible", color: "text-[hsl(var(--status-attention))]" },
 };
 
+const REP_POSTURE_LABELS: Record<RepresentationPosture, string> = {
+  direct_resolution_unrepresented: "Direct Resolution",
+  early_resolution_unrepresented: "Early Resolution",
+  documentation_guided_unrepresented: "Documentation-Guided",
+  counsel_retention_risk: "Retention Risk",
+  represented_balanced: "Balanced",
+  represented_defensive: "Defensive",
+  post_retention_strategy_reset: "Post-Retention Reset",
+  litigation_prep: "Litigation Prep",
+};
+
 const NegotiateStrategyCard = ({
   strategy,
   overrides,
