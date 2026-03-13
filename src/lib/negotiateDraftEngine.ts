@@ -87,7 +87,8 @@ const ENGINE_VERSION = "1.1.0";
 function resolveAudience(inputs: DraftInputs): DraftAudience {
   if (inputs.audience) return inputs.audience;
   const meta = DRAFT_TYPE_META[inputs.draftType];
-  if (meta.isInternal) return "internal";
+  // Internal drafts are always internal, but phone talking points adapt to audience
+  if (meta.isInternal && inputs.draftType !== "phone_talking_points") return "internal";
   if (inputs.vm.representation.status === "unrepresented") return "claimant_direct";
   return "attorney";
 }
