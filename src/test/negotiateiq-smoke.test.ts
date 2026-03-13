@@ -471,6 +471,7 @@ describe("NegotiateIQ — Package Building", () => {
       calibrationSignalsCount: 0,
       calibrationHighConfCount: 0,
       calibrationJurisdictionBand: null,
+      representationContext: DEFAULT_REP_CTX,
     });
 
     expect(pkg.outcome_type).toBe("impasse");
