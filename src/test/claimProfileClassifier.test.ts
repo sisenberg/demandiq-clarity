@@ -159,7 +159,7 @@ describe("Claim Profile Classifier", () => {
 
   it("classifies Profile G with surgery secondary flag", () => {
     const result = classifyClaimProfile(makeSnapshot({
-      clinical_flags: { has_permanency: true, has_surgery: true },
+      clinical_flags: { has_permanency_indicators: true, has_surgery: true },
     }));
     expect(result.primary).toBe("G");
     expect(result.secondary_flags).toContain("F");
