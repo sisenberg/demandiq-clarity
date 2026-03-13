@@ -213,6 +213,7 @@ function FactorsPanel({ snapshot }: { snapshot: EvaluateIntakeSnapshot | null })
           ))}
         </div>
       </div>
+      )}
     </div>
   );
 }
