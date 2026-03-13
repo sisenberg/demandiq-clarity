@@ -48,12 +48,12 @@ const EvalStickyActions = ({ moduleState, onCTA, isPending, onAccept, onPublish,
             </>
           )}
 
-          {isCompleted && !isAccepted && (
+          {canAcceptPublish && !isAccepted && (
             <button
               onClick={onAccept}
               className="btn-secondary"
             >
-              <ShieldCheck className="h-3 w-3" /> Accept Package
+              <ShieldCheck className="h-3 w-3" /> Accept Corridor
             </button>
           )}
         </div>
