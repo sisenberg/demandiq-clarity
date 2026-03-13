@@ -273,18 +273,4 @@ export function useReopenEvaluate() {
   });
 }
 
-/** Fetch published packages for a case */
-export function useEvaluatePackages(caseId: string | undefined) {
-  return {
-    queryKey: ["evaluation-packages", caseId],
-    enabled: !!caseId,
-    queryFn: async () => {
-      const { data, error } = await (supabase.from("evaluation_packages") as any)
-        .select("*")
-        .eq("case_id", caseId!)
-        .order("version", { ascending: false });
-      if (error) throw error;
-      return data ?? [];
-    },
-  };
-}
+// Note: useEvaluatePackages is exported from useEvaluatePublish.ts — do not duplicate here.

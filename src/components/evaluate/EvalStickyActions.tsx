@@ -23,9 +23,13 @@ interface Props {
 
 const EvalStickyActions = ({ moduleState, onCTA, isPending, onAccept, onPublish, isAccepted }: Props) => {
   const cta = getEvaluateCTA(moduleState);
-  const isActive = moduleState !== EvaluateModuleState.NotStarted && moduleState !== EvaluateModuleState.Completed && moduleState !== EvaluateModuleState.Published;
+  const isActive = moduleState !== EvaluateModuleState.NotStarted
+    && moduleState !== EvaluateModuleState.Completed
+    && moduleState !== EvaluateModuleState.Published;
   const isCompleted = moduleState === EvaluateModuleState.Completed;
   const isPublished = moduleState === EvaluateModuleState.Published;
+  // Show accept/publish actions for active evaluations (valued or in-review)
+  const canAcceptPublish = isActive || isCompleted;
 
   if (!isActive && !isCompleted && !isPublished) return null;
 
@@ -44,12 +48,12 @@ const EvalStickyActions = ({ moduleState, onCTA, isPending, onAccept, onPublish,
             </>
           )}
 
-          {isCompleted && !isAccepted && (
+          {canAcceptPublish && !isAccepted && (
             <button
               onClick={onAccept}
               className="btn-secondary"
             >
-              <ShieldCheck className="h-3 w-3" /> Accept Package
+              <ShieldCheck className="h-3 w-3" /> Accept Corridor
             </button>
           )}
         </div>
@@ -68,7 +72,7 @@ const EvalStickyActions = ({ moduleState, onCTA, isPending, onAccept, onPublish,
           )}
 
           {/* Publish button */}
-          {isCompleted && (
+          {canAcceptPublish && isAccepted && (
             <button
               onClick={onPublish}
               className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md text-[11px] font-semibold bg-primary text-primary-foreground hover:bg-primary/90 transition-colors"

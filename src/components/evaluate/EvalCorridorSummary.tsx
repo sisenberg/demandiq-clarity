@@ -76,7 +76,7 @@ const EvalCorridorSummary = ({ snapshot, isProvisional }: Props) => {
 
       <div className="p-5">
         {/* 4-column summary */}
-        <div className="grid grid-cols-4 gap-4">
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
           {/* Merits Score */}
           <div className="space-y-1.5">
             <div className="flex items-center gap-1.5">
@@ -187,27 +187,34 @@ const EvalCorridorSummary = ({ snapshot, isProvisional }: Props) => {
 };
 
 function CorridorPill({ low, mid, high, highlight }: { low: number; mid: number; high: number; highlight?: boolean }) {
+  const fmt = (n: number) => n >= 1000 ? `$${(n / 1000).toFixed(n >= 10000 ? 0 : 1)}K` : `$${n}`;
   return (
     <div className="flex items-baseline gap-1">
-      <span className="text-[10px] text-muted-foreground">{low}</span>
+      <span className="text-[10px] text-muted-foreground">{fmt(low)}</span>
       <span className="text-[8px] text-muted-foreground/50">—</span>
-      <span className={`text-sm font-bold ${highlight ? "text-primary" : "text-foreground"}`}>{mid}</span>
+      <span className={`text-sm font-bold ${highlight ? "text-primary" : "text-foreground"}`}>{fmt(mid)}</span>
       <span className="text-[8px] text-muted-foreground/50">—</span>
-      <span className="text-[10px] text-muted-foreground">{high}</span>
+      <span className="text-[10px] text-muted-foreground">{fmt(high)}</span>
     </div>
   );
 }
 
 function MiniBar({ low, mid, high, color }: { low: number; mid: number; high: number; color: string }) {
+  // Normalize values to 0-100% range for visual display
+  const maxVal = high > 0 ? high * 1.2 : 100; // 20% headroom past high
+  const pctLow = Math.min((low / maxVal) * 100, 100);
+  const pctMid = Math.min((mid / maxVal) * 100, 100);
+  const pctHigh = Math.min((high / maxVal) * 100, 100);
+
   return (
     <div className="relative h-1.5 rounded-full bg-accent overflow-hidden">
       <div
         className={`absolute top-0 bottom-0 ${color} opacity-30 rounded-full`}
-        style={{ left: `${low}%`, width: `${Math.max(1, high - low)}%` }}
+        style={{ left: `${pctLow}%`, width: `${Math.max(1, pctHigh - pctLow)}%` }}
       />
       <div
         className={`absolute top-0 bottom-0 w-0.5 ${color}`}
-        style={{ left: `${mid}%` }}
+        style={{ left: `${pctMid}%` }}
       />
     </div>
   );

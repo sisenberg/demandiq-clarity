@@ -12,8 +12,23 @@ import { toast } from "sonner";
  * and derive EvaluateIQ states from it.
  */
 export function deriveEvaluateState(
-  completionStatus: ModuleCompletionStatus | undefined
+  completionStatus: ModuleCompletionStatus | undefined,
+  evaluationCaseStatus?: string | null,
 ): EvaluateModuleState {
+  // If we have a fine-grained evaluation_cases status, prefer it
+  if (evaluationCaseStatus) {
+    switch (evaluationCaseStatus) {
+      case "intake_in_progress": return EvaluateModuleState.IntakeInProgress;
+      case "valuation_ready": return EvaluateModuleState.ValuationReady;
+      case "valuation_in_review": return EvaluateModuleState.ValuationInReview;
+      case "provisional": return EvaluateModuleState.ProvisionalEvaluation;
+      case "valued": return EvaluateModuleState.Valued;
+      case "completed": return EvaluateModuleState.Completed;
+      case "published": return EvaluateModuleState.Published;
+    }
+  }
+
+  // Fallback to module_completions status
   switch (completionStatus) {
     case ModuleCompletionStatus.InProgress:
       return EvaluateModuleState.IntakeInProgress;

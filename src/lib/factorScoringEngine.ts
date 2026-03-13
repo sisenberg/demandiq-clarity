@@ -29,6 +29,7 @@ import type {
 } from "@/types/factor-taxonomy";
 import { FACTOR_LAYER_META } from "@/types/factor-taxonomy";
 import { getActiveFactors } from "./factorRegistry";
+import { enforceGovernancePolicy } from "./evaluateGovernanceEngine";
 
 // ─── Default metadata factories ───────────────────────
 
@@ -110,8 +111,6 @@ export function scoreAllFactors(snapshot: EvaluateIntakeSnapshot): FactorScoring
   const definitions = getActiveFactors();
 
   // ── Governance enforcement: validate no forbidden factors leak through ──
-  // Import is lazy to avoid circular deps in test environments
-  const { enforceGovernancePolicy } = require("./evaluateGovernanceEngine");
   enforceGovernancePolicy(definitions);
 
   const scored: ScoredFactor[] = definitions.map(def => scoreFactor(def, snapshot));

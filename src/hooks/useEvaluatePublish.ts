@@ -128,10 +128,16 @@ export function usePublishEvaluate() {
       pkg.audit.published_by = user.id;
       pkg.audit.published_at = new Date().toISOString();
 
-      // 5. Eligibility check
-      const eligibility = checkPublishEligibility(pkg, undefined, input.overrides);
-      // Allow through since we've set status to published—eligibility checks draft state
-      // but we've already transitioned. Focus on structural validation:
+      // 5. Eligibility check (structural validation only — status already transitioned)
+      const eligibility = checkPublishEligibility(pkg, "in_progress", input.overrides);
+      if (!eligibility.eligible) {
+        const blockerMsgs = eligibility.blockers
+          .filter(b => b.code !== "DRAFT_STATE" && b.code !== "ALREADY_PUBLISHED")
+          .map(b => b.message);
+        if (blockerMsgs.length > 0) {
+          throw new Error(`Publication blocked: ${blockerMsgs.join("; ")}`);
+        }
+      }
 
       // 6. Structural validation
       const validation = validateEvaluatePackage(pkg);
