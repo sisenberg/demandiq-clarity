@@ -39,6 +39,7 @@ import EvalFactorTaxonomyPanel from "@/components/evaluate/EvalFactorTaxonomyPan
 import EvalScoringRankedSummary from "@/components/evaluate/EvalScoringRankedSummary";
 import EvalMeritsScoreCard from "@/components/evaluate/EvalMeritsScoreCard";
 import EvalMeritsCorridorCard from "@/components/evaluate/EvalMeritsCorridorCard";
+import EvalPostMeritAdjustmentCard from "@/components/evaluate/EvalPostMeritAdjustmentCard";
 import {
   ArrowLeft,
   Calculator,
@@ -234,6 +235,7 @@ const EvaluateWorkspacePage = () => {
                 {activeTab === "overview" && claimProfile && <EvalClaimProfileCard profile={claimProfile} />}
                 {activeTab === "overview" && <EvalMeritsScoreCard snapshot={snapshot} />}
                 {activeTab === "overview" && <EvalMeritsCorridorCard snapshot={snapshot} />}
+                {activeTab === "overview" && <EvalPostMeritAdjustmentCard snapshot={snapshot} />}
                 {activeTab === "overview" && <EvalOverviewTab snapshot={snapshot} />}
                 {activeTab === "drivers" && <EvalScoringRankedSummary snapshot={snapshot} />}
                 {activeTab === "drivers" && <EvalFactorTaxonomyPanel snapshot={snapshot} />}
