@@ -35,12 +35,12 @@ export const REP_VALUATION_ENGINE_VERSION = 'v1.0.0';
  * of claim value due to negotiation dynamics, not claim merit differences.
  */
 const RESOLUTION_ADJUSTMENTS = {
-  /** Unrepresented claimants tend to accept settlements at lower % of claim value */
+  /** Unrepresented claimants historically resolve at different % of fact-based value due to negotiation dynamics, not merit */
   unrepresented_direct_resolution: {
     low_pct: 0.45,   // Floor: 45% of fact-based low
     mid_pct: 0.55,   // Likely: 55% of fact-based mid
     high_pct: 0.70,  // Stretch: 70% of fact-based high
-    reason: 'Direct resolution without counsel historically results in settlements at 45-70% of claim value',
+    reason: 'Direct resolution without counsel historically results in settlements at 45-70% of fact-based value due to negotiation dynamics',
   },
   /** Represented claimants with experienced counsel */
   represented_counsel: {
