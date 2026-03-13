@@ -46,6 +46,7 @@ import EvalBenchmarkCard from "@/components/evaluate/EvalBenchmarkCard";
 import EvalCorridorSummary from "@/components/evaluate/EvalCorridorSummary";
 import EvalOverrideDialog from "@/components/evaluate/EvalOverrideDialog";
 import EvalPublishDialog from "@/components/evaluate/EvalPublishDialog";
+import EvalGovernanceCard from "@/components/evaluate/EvalGovernanceCard";
 import { scoreAllFactors } from "@/lib/factorScoringEngine";
 import { computeWeightedMeritsScore } from "@/lib/profileWeightingEngine";
 import { computeMeritsCorridor } from "@/lib/meritsCorridorEngine";
@@ -330,6 +331,7 @@ const EvaluateWorkspacePage = () => {
                 {activeTab === "explanation" && <EvalExplanationTab snapshot={snapshot} />}
                 {activeTab === "evidence" && <EvalEvidenceTab snapshot={snapshot} />}
                 {activeTab === "calibration" && <EvalBenchmarkCard snapshot={snapshot} />}
+                {activeTab === "governance" && <EvalGovernanceCard />}
                 {activeTab === "handoff" && (
                   <EvalHandoffTab
                     snapshot={snapshot}
