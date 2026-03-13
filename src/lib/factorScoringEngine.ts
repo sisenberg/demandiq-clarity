@@ -111,12 +111,7 @@ export function scoreAllFactors(snapshot: EvaluateIntakeSnapshot): FactorScoring
   const definitions = getActiveFactors();
 
   // ── Governance enforcement: validate no forbidden factors leak through ──
-  try {
-    const { enforceGovernancePolicy } = await import("./evaluateGovernanceEngine");
-    enforceGovernancePolicy(definitions);
-  } catch {
-    // Governance module unavailable — continue without enforcement in test environments
-  }
+  enforceGovernancePolicy(definitions);
 
   const scored: ScoredFactor[] = definitions.map(def => scoreFactor(def, snapshot));
 
