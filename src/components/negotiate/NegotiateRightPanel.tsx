@@ -17,6 +17,9 @@ import {
   Clock,
   AlertTriangle,
   CheckCircle2,
+  UserCheck,
+  UserX,
+  ArrowRightLeft,
 } from "lucide-react";
 
 const EVENT_ICONS: Record<string, React.ElementType> = {
