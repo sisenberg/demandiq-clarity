@@ -168,9 +168,9 @@ function EvidenceGroup({ label, items }: { label: string; items: { text: string;
 // ─── Factors Panel ──────────────────────────────────────
 
 function FactorsPanel({ snapshot }: { snapshot: EvaluateIntakeSnapshot | null }) {
-  if (!snapshot) return <PlaceholderMessage message="No snapshot loaded" />;
+  const docSuff = useMemo(() => snapshot ? computeDocumentSufficiency(snapshot) : null, [snapshot]);
 
-  const docSuff = useMemo(() => computeDocumentSufficiency(snapshot), [snapshot]);
+  if (!snapshot) return <PlaceholderMessage message="No snapshot loaded" />;
 
   const factors = [
     { label: "Injury Count", value: String(snapshot.injuries.length), detail: `${snapshot.injuries.filter(i => !i.is_pre_existing).length} new, ${snapshot.injuries.filter(i => i.is_pre_existing).length} pre-existing` },
