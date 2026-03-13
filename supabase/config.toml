@@ -2,3 +2,6 @@ project_id = "hzcrkipdqaqklrnikcrm"
 
 [functions.extract-treatments]
 verify_jwt = false
+
+[functions.representation-history]
+verify_jwt = false
