@@ -61,9 +61,6 @@ const EvaluateWorkspacePage = () => {
   const isWorkspaceActive = eligibility.eligible && moduleState !== EvaluateModuleState.NotStarted;
 
   const claimProfile = useMemo(() => snapshot ? classifyClaimProfile(snapshot) : null, [snapshot]);
-  const moduleState = deriveEvaluateState(evalCompletion?.status);
-  const cta = getEvaluateCTA(moduleState);
-  const isWorkspaceActive = eligibility.eligible && moduleState !== EvaluateModuleState.NotStarted;
 
   // Upstream freshness
   const upstreamModuleId = eligibility.inputSource === "revieweriq" ? "revieweriq" : "demandiq";
