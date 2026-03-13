@@ -108,6 +108,12 @@ function buildIssueFlags(
 
 export function scoreAllFactors(snapshot: EvaluateIntakeSnapshot): FactorScoringResult {
   const definitions = getActiveFactors();
+
+  // ── Governance enforcement: validate no forbidden factors leak through ──
+  // Import is lazy to avoid circular deps in test environments
+  const { enforceGovernancePolicy } = require("./evaluateGovernanceEngine");
+  enforceGovernancePolicy(definitions);
+
   const scored: ScoredFactor[] = definitions.map(def => scoreFactor(def, snapshot));
 
   // Layer summaries
