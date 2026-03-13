@@ -9,6 +9,18 @@
 
 export type ConcessionPosture = "conservative" | "standard" | "flexible";
 
+// ─── Representation-Aware Strategy Posture ──────────────
+
+export type RepresentationPosture =
+  | "direct_resolution_unrepresented"
+  | "early_resolution_unrepresented"
+  | "documentation_guided_unrepresented"
+  | "counsel_retention_risk"
+  | "represented_balanced"
+  | "represented_defensive"
+  | "post_retention_strategy_reset"
+  | "litigation_prep";
+
 // ─── Recommendation with Reason ─────────────────────────
 
 export interface StrategyRecommendation<T = number> {
