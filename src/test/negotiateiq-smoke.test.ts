@@ -32,7 +32,7 @@ describe("NegotiateIQ — Strategy Generation", () => {
     for (const f of ALL_NEGOTIATE_FIXTURES) {
       const s = generateStrategy(f.vm);
       expect(s).toBeDefined();
-      expect(s.engineVersion).toBe("1.0.0");
+      expect(s.engineVersion).toBe("1.1.0");
       expect(s.openingOffer.generated).toBeGreaterThan(0);
       expect(s.authorityCeiling.generated).toBeGreaterThan(0);
       expect(s.targetSettlementZone.generated.low).toBeLessThanOrEqual(s.targetSettlementZone.generated.high);
