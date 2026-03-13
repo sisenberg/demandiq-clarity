@@ -42,7 +42,13 @@ const NegotiateInlineWorkspace = ({ caseId }: NegotiateInlineWorkspaceProps) => 
     );
   }
 
-  const payload = evalPackage.package_payload;
+  const raw = evalPackage.package_payload;
+  // Normalize v1 vs legacy
+  const isV1 = "settlement_corridor" in raw;
+  const floor = isV1 ? (raw as any).settlement_corridor.range_floor ?? (raw as any).settlement_corridor.selected_floor : (raw as any).range_floor ?? (raw as any).selected_floor;
+  const stretch = isV1 ? (raw as any).settlement_corridor.range_stretch ?? (raw as any).settlement_corridor.selected_stretch : (raw as any).range_stretch ?? (raw as any).selected_stretch;
+  const totalReviewed = isV1 ? (raw as any).total_reviewed : (raw as any).total_reviewed;
+  const completenessScore = isV1 ? (raw as any).completeness_score : (raw as any).completeness_score;
 
   return (
     <div className="space-y-4">
@@ -63,10 +69,10 @@ const NegotiateInlineWorkspace = ({ caseId }: NegotiateInlineWorkspaceProps) => 
       </div>
 
       <div className="grid grid-cols-2 gap-3">
-        <MiniMetric label="Range Floor" value={fmtCurrency(payload.range_floor ?? payload.selected_floor)} />
-        <MiniMetric label="Range Stretch" value={fmtCurrency(payload.range_stretch ?? payload.selected_stretch)} />
-        <MiniMetric label="Total Reviewed" value={fmtCurrency(payload.total_reviewed)} />
-        <MiniMetric label="Completeness" value={`${Math.round(payload.completeness_score ?? 0)}%`} />
+        <MiniMetric label="Range Floor" value={fmtCurrency(floor)} />
+        <MiniMetric label="Range Stretch" value={fmtCurrency(stretch)} />
+        <MiniMetric label="Total Reviewed" value={fmtCurrency(totalReviewed)} />
+        <MiniMetric label="Completeness" value={`${Math.round(completenessScore ?? 0)}%`} />
       </div>
 
       <div className="rounded-lg border border-dashed border-border p-4 text-center">

@@ -218,7 +218,7 @@ export function buildNegotiationViewModel(
 
 // ─── Risk Derivation ────────────────────────────────────
 
-function deriveRisks(p: EvaluatePackagePayload): NegotiateRisk[] {
+function deriveRisks(p: NormalizedEvalPayload): NegotiateRisk[] {
   const risks: NegotiateRisk[] = [];
 
   // Mine reducers for risk signals
