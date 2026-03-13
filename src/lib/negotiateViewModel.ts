@@ -112,6 +112,25 @@ export interface NegotiateAssumption {
   reason: string;
 }
 
+export interface NegotiateRepresentationView {
+  /** Current representation status */
+  status: "represented" | "unrepresented" | "unknown";
+  /** Whether a transition between represented/unrepresented occurred */
+  transitioned: boolean;
+  /** Attorney retention risk (0-100), from EvaluatePackage */
+  retentionRisk: number;
+  /** Current attorney name */
+  attorneyName: string | null;
+  /** Current firm name */
+  firmName: string | null;
+  /** History count */
+  historyCount: number;
+  /** Whether attorney was retained during the claim */
+  attorneyRetainedDuringClaim: boolean;
+  /** Whether attorney was retained after initial offer */
+  attorneyRetainedAfterInitialOffer: boolean;
+}
+
 export interface NegotiationViewModel {
   /** Read-only flag — UI must enforce no mutations */
   readonly: true;
@@ -145,6 +164,9 @@ export interface NegotiationViewModel {
 
   /** Completeness score at publish time */
   completenessScore: number;
+
+  /** Representation context from EvaluatePackage */
+  representation: NegotiateRepresentationView;
 }
 
 // ─── Adapter ────────────────────────────────────────────
