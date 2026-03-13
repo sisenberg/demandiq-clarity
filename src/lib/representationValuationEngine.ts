@@ -112,7 +112,7 @@ export function computeRepresentationContextFactors(
     narrative: status === 'represented'
       ? `Claimant is currently represented by ${repSummary?.represented_by_current_attorney_name ?? 'counsel'}. Expected resolution approaches full claim value.`
       : status === 'unrepresented'
-        ? 'Claimant is currently unrepresented. Direct resolution may be achievable at reduced percentage of claim value.'
+        ? 'Claimant is currently unrepresented. Expected resolution reflects direct-resolution negotiation dynamics; fact-based value is unchanged.'
         : 'Representation status unknown. Resolution range assumes moderate negotiation posture.',
     affects_expected_resolution: true,
     affects_fact_based_value: false,
