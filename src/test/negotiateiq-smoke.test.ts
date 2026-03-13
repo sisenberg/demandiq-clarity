@@ -306,6 +306,7 @@ describe("NegotiateIQ — Package Validation", () => {
       outcomeType: "settled",
       finalSettlement: 20000,
       outcomeNotes: "Settled at $20,000 after 3 rounds.",
+      representationContext: DEFAULT_REP_CTX,
     });
     expect(v.valid).toBe(true);
     expect(v.errors).toHaveLength(0);
