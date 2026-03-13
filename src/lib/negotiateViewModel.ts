@@ -152,7 +152,7 @@ export interface NegotiationViewModel {
 export function buildNegotiationViewModel(
   pkg: ResolvedEvalPackage
 ): NegotiationViewModel {
-  const p = pkg.package_payload;
+  const p = normalizePayload(pkg.package_payload);
 
   const drivers = p.driver_summaries ?? [];
   const expanders = drivers.filter((d) => d.impact === "expander");
