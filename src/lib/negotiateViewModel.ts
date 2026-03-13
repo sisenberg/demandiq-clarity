@@ -1,12 +1,65 @@
 /**
  * NegotiateIQ — View Model Adapter
  *
- * Maps EvaluatePackagePayload (read-only upstream) into a typed
- * NegotiationViewModel for UI consumption without mutation.
+ * Maps EvaluatePackagePayload or EvaluatePackageV1 (read-only upstream)
+ * into a typed NegotiationViewModel for UI consumption without mutation.
  */
 
 import type { EvaluatePackagePayload, ValuationRunAssumptionSummary } from "@/types/evaluate-persistence";
+import type { EvaluatePackageV1 } from "@/types/evaluate-package-v1";
 import type { ResolvedEvalPackage } from "@/hooks/useNegotiateEvalPackage";
+import { isEvaluatePackageV1Shape } from "@/lib/evaluatePackageValidator";
+
+/** Normalized flat view used internally for mapping */
+interface NormalizedEvalPayload {
+  package_version: number;
+  engine_version: string;
+  source_module: "demandiq" | "revieweriq";
+  source_package_version: number;
+  range_floor: number | null;
+  range_likely: number | null;
+  range_stretch: number | null;
+  confidence: number | null;
+  selected_floor: number | null;
+  selected_likely: number | null;
+  selected_stretch: number | null;
+  authority_recommendation: number | null;
+  rationale_notes: string;
+  driver_summaries: ValuationRunAssumptionSummary[];
+  explanation_ledger: EvaluatePackagePayload["explanation_ledger"];
+  assumptions: Array<{ category: string; key: string; value: string; reason: string }>;
+  total_billed: number;
+  total_reviewed: number | null;
+  completeness_score: number;
+}
+
+function normalizePayload(raw: EvaluatePackagePayload | EvaluatePackageV1): NormalizedEvalPayload {
+  if (isEvaluatePackageV1Shape(raw)) {
+    const v1 = raw as EvaluatePackageV1;
+    return {
+      package_version: v1.package_version,
+      engine_version: v1.engine_version,
+      source_module: v1.source_module,
+      source_package_version: v1.source_package_version,
+      range_floor: v1.settlement_corridor.range_floor,
+      range_likely: v1.settlement_corridor.range_likely,
+      range_stretch: v1.settlement_corridor.range_stretch,
+      confidence: v1.settlement_corridor.confidence,
+      selected_floor: v1.settlement_corridor.selected_floor,
+      selected_likely: v1.settlement_corridor.selected_likely,
+      selected_stretch: v1.settlement_corridor.selected_stretch,
+      authority_recommendation: v1.settlement_corridor.authority_recommendation,
+      rationale_notes: v1.settlement_corridor.rationale_notes,
+      driver_summaries: v1.driver_summaries,
+      explanation_ledger: v1.explanation_ledger,
+      assumptions: v1.assumptions.map(a => ({ category: a.category, key: a.key, value: a.value, reason: a.reason })),
+      total_billed: v1.total_billed,
+      total_reviewed: v1.total_reviewed,
+      completeness_score: v1.completeness_score,
+    };
+  }
+  return raw as NormalizedEvalPayload;
+}
 
 // ─── View Model Types ───────────────────────────────────
 
