@@ -76,7 +76,7 @@ const EvalCorridorSummary = ({ snapshot, isProvisional }: Props) => {
 
       <div className="p-5">
         {/* 4-column summary */}
-        <div className="grid grid-cols-4 gap-4">
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
           {/* Merits Score */}
           <div className="space-y-1.5">
             <div className="flex items-center gap-1.5">

@@ -67,7 +67,7 @@ const EvalRightPanel = ({
   const [activeTab, setActiveTab] = useState<RightTab>("evidence");
 
   return (
-    <div className="w-[320px] shrink-0 border-l border-border bg-card overflow-y-auto h-full flex flex-col">
+    <div className="w-[320px] shrink-0 border-l border-border bg-card overflow-y-auto h-full flex flex-col hidden 2xl:flex">
       {/* Tab bar */}
       <div className="shrink-0 border-b border-border px-2 pt-2">
         <div className="flex items-center gap-0.5">
