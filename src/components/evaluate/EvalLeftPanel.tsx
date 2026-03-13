@@ -21,6 +21,7 @@ import {
   DollarSign,
   FileText,
   Stethoscope,
+  Fingerprint,
 } from "lucide-react";
 
 interface Props {
