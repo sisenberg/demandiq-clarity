@@ -31,6 +31,7 @@ interface Props {
   inputSource: string | null;
   sourceVersion: number | null;
   isStale: boolean;
+  claimProfile: ClaimProfileResult | null;
 }
 
 const fmt = (n: number) => `$${n.toLocaleString()}`;
