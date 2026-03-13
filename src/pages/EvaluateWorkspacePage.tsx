@@ -45,6 +45,9 @@ import EvalPostMeritAdjustmentCard from "@/components/evaluate/EvalPostMeritAdju
 import EvalDocSufficiencyCard from "@/components/evaluate/EvalDocSufficiencyCard";
 import EvalBenchmarkCard from "@/components/evaluate/EvalBenchmarkCard";
 import EvalCorridorSummary from "@/components/evaluate/EvalCorridorSummary";
+import EvalRepresentationCard from "@/components/evaluate/EvalRepresentationCard";
+import EvalDualRangeCard from "@/components/evaluate/EvalDualRangeCard";
+import EvalScenarioCard from "@/components/evaluate/EvalScenarioCard";
 import EvalOverrideDialog from "@/components/evaluate/EvalOverrideDialog";
 import EvalPublishDialog from "@/components/evaluate/EvalPublishDialog";
 import EvalGovernanceCard from "@/components/evaluate/EvalGovernanceCard";
