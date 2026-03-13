@@ -502,6 +502,7 @@ describe("NegotiateIQ — Package Building", () => {
       calibrationSignalsCount: 4,
       calibrationHighConfCount: 2,
       calibrationJurisdictionBand: "$25K-$45K",
+      representationContext: DEFAULT_REP_CTX,
     });
 
     expect(pkg.attorney_intelligence).toBeDefined();
