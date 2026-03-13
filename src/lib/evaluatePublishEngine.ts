@@ -76,6 +76,20 @@ export function checkPublishEligibility(
     });
   }
 
+  // Representation-aware required fields
+  if (!pkg.fact_based_value_range || (pkg.fact_based_value_range.low === 0 && pkg.fact_based_value_range.mid === 0 && pkg.fact_based_value_range.high === 0 && sc.range_likely != null)) {
+    blockers.push({ code: "NO_FACT_BASED_RANGE", message: "fact_based_value_range is required for publication.", field: "fact_based_value_range" });
+  }
+  if (!pkg.expected_resolution_range || (pkg.expected_resolution_range.low === 0 && pkg.expected_resolution_range.mid === 0 && pkg.expected_resolution_range.high === 0 && sc.range_likely != null)) {
+    blockers.push({ code: "NO_EXPECTED_RESOLUTION_RANGE", message: "expected_resolution_range is required for publication.", field: "expected_resolution_range" });
+  }
+  if (!pkg.representation_context) {
+    blockers.push({ code: "NO_REPRESENTATION_CONTEXT", message: "representation_context is required for publication.", field: "representation_context" });
+  }
+  if (!pkg.representation_notes?.value_rule_applied) {
+    blockers.push({ code: "NO_VALUE_RULE", message: "representation_notes.value_rule_applied is required for publication.", field: "representation_notes.value_rule_applied" });
+  }
+
   if (pkg.merits.merits_score === 0 && pkg.factor_summaries.length === 0) {
     blockers.push({
       code: "NO_MERITS",
