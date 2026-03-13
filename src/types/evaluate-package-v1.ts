@@ -22,6 +22,14 @@ import type {
   DriverFamily,
   ValuationRunAssumptionSummary,
 } from "./evaluate-persistence";
+import type {
+  RepresentationAwareValuation,
+  EvalRepresentationContext,
+  FactBasedValueRange,
+  ExpectedResolutionRange,
+  RepresentationScenarioSet,
+  RepresentationNotes,
+} from "./representation-valuation";
 
 // ─── Package Publication State ──────────────────────────
 
