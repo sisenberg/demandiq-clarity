@@ -44,6 +44,7 @@ const EvalLeftPanel = ({
   inputSource,
   sourceVersion,
   isStale,
+  claimProfile,
 }: Props) => {
   return (
     <div className="w-[280px] shrink-0 border-r border-border bg-card overflow-y-auto h-full">
