@@ -54,8 +54,6 @@ const EvalPublishDialog = ({
   systemCorridor,
   isAccepted,
 }: Props) => {
-  if (!isOpen) return null;
-
   const newVersion = existingVersionCount + 1;
   const supersededVersion = existingVersionCount > 0 ? existingVersionCount : null;
   const activeOverride = overrides.length > 0 ? overrides[0] : null;
