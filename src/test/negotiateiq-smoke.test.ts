@@ -437,7 +437,7 @@ describe("NegotiateIQ — Package Building", () => {
       representationContext: DEFAULT_REP_CTX,
     });
 
-    expect(pkg.engine_version).toBe("negotiate-v1.0.0");
+    expect(pkg.engine_version).toBe("negotiate-v1.1.0");
     expect(pkg.outcome_type).toBe("settled");
     expect(pkg.final_settlement_amount).toBe(20000);
     expect(pkg.source_eval_package_id).toBe("eval-pkg-reasonable");
