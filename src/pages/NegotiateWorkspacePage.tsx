@@ -247,9 +247,12 @@ const NegotiateWorkspacePage = () => {
         {/* Strategy & Rounds Tab */}
         {viewModel && activeTab === "strategy" && (
           <div className="flex h-full">
-            {/* Left: Claim Context */}
-            <div className="w-[320px] shrink-0 border-r border-border bg-card/50 p-4 overflow-hidden">
+            {/* Left: Claim Context + Representation */}
+            <div className="w-[320px] shrink-0 border-r border-border bg-card/50 p-4 overflow-y-auto">
               <NegotiateClaimContext vm={viewModel} />
+              <div className="mt-4 pt-4 border-t border-border">
+                <NegotiateRepresentationPanel representation={viewModel.representation} />
+              </div>
             </div>
 
             {/* Center: Strategy */}
