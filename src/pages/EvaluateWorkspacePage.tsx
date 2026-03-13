@@ -10,6 +10,8 @@ import { useEvaluateIntakeSnapshot } from "@/hooks/useEvaluateIntakeSnapshot";
 import { useCompleteEvaluate, useReopenEvaluate, validateEvaluateCompletion } from "@/hooks/useEvaluateCompletion";
 import { useIsUpstreamCurrent } from "@/hooks/useUpstreamSnapshot";
 import { isEntitlementActive } from "@/hooks/useModuleEntitlements";
+import { useAssumptionOverrides } from "@/hooks/useAssumptionOverrides";
+import { useEvaluateAudit } from "@/hooks/useEvaluateAudit";
 import { ModuleId } from "@/types";
 import {
   EvaluateModuleState,
@@ -29,7 +31,6 @@ import EvalEvidenceTab from "@/components/evaluate/EvalEvidenceTab";
 import EvalExplanationTab from "@/components/evaluate/EvalExplanationTab";
 import EvalHandoffTab from "@/components/evaluate/EvalHandoffTab";
 import EvalValuationCards from "@/components/evaluate/EvalValuationCards";
-import EvalIntakeReadinessCard from "@/components/evaluate/EvalIntakeReadinessCard";
 import EvalStickyActions from "@/components/evaluate/EvalStickyActions";
 import EvalStaleDataBanner from "@/components/evaluate/EvalStaleDataBanner";
 import EvalClaimProfileCard from "@/components/evaluate/EvalClaimProfileCard";
@@ -42,6 +43,11 @@ import EvalPostMeritAdjustmentCard from "@/components/evaluate/EvalPostMeritAdju
 import EvalDocSufficiencyCard from "@/components/evaluate/EvalDocSufficiencyCard";
 import EvalBenchmarkCard from "@/components/evaluate/EvalBenchmarkCard";
 import EvalCorridorSummary from "@/components/evaluate/EvalCorridorSummary";
+import EvalOverrideDialog from "@/components/evaluate/EvalOverrideDialog";
+import { scoreAllFactors } from "@/lib/factorScoringEngine";
+import { computeWeightedMeritsScore } from "@/lib/profileWeightingEngine";
+import { computeMeritsCorridor } from "@/lib/meritsCorridorEngine";
+import { computePostMeritAdjustments } from "@/lib/postMeritAdjustmentEngine";
 import {
   ArrowLeft,
   Calculator,
@@ -49,7 +55,6 @@ import {
   Lock,
   AlertTriangle,
   Play,
-  Clock,
   Tag,
   Cpu,
 } from "lucide-react";
@@ -65,6 +70,11 @@ const EvaluateWorkspacePage = () => {
   const reopenEvaluate = useReopenEvaluate();
   const { snapshot } = useEvaluateIntakeSnapshot(caseId);
 
+  // Override & audit state
+  const assumptions = useAssumptionOverrides();
+  const audit = useEvaluateAudit();
+  const [overrideDialogOpen, setOverrideDialogOpen] = useState(false);
+
   const hasModule = isEntitlementActive(entitlements, ModuleId.EvaluateIQ);
   const moduleState = deriveEvaluateState(evalCompletion?.status);
   const cta = getEvaluateCTA(moduleState);
@@ -72,6 +82,16 @@ const EvaluateWorkspacePage = () => {
   const isProvisional = moduleState === EvaluateModuleState.ProvisionalEvaluation;
 
   const claimProfile = useMemo(() => snapshot ? classifyClaimProfile(snapshot) : null, [snapshot]);
+
+  // Compute system corridor for override dialog
+  const systemCorridor = useMemo(() => {
+    if (!snapshot || !claimProfile) return { low: 0, mid: 0, high: 0 };
+    const scoring = scoreAllFactors(snapshot);
+    const merits = computeWeightedMeritsScore(scoring, claimProfile.primary);
+    const corridor = computeMeritsCorridor(merits, scoring.top_drivers, scoring.top_suppressors);
+    const adjusted = computePostMeritAdjustments(corridor, snapshot);
+    return adjusted.adjusted;
+  }, [snapshot, claimProfile]);
 
   // Upstream freshness
   const upstreamModuleId = eligibility.inputSource === "revieweriq" ? "revieweriq" : "demandiq";
@@ -132,7 +152,6 @@ const EvaluateWorkspacePage = () => {
     <div className="flex flex-col h-full">
       {/* ── Top Header — Dense Enterprise Bar ────── */}
       <div className="shrink-0 bg-card border-b border-border">
-        {/* Row 1: Identity + Status */}
         <div className="px-6 py-2.5 flex items-center justify-between">
           <div className="flex items-center gap-3">
             <Link to={`/cases/${caseId}`} className="text-muted-foreground hover:text-foreground transition-colors">
@@ -157,34 +176,31 @@ const EvaluateWorkspacePage = () => {
           </div>
 
           <div className="flex items-center gap-2">
-            {/* Engine version badge */}
             <span className="text-[9px] font-mono text-muted-foreground/70 bg-accent px-1.5 py-0.5 rounded flex items-center gap-1">
               <Cpu className="h-2.5 w-2.5" /> v1.0.0
             </span>
-
-            {/* Source module */}
             {eligibility.inputSource && (
               <span className="text-[9px] font-medium text-muted-foreground bg-accent px-2 py-1 rounded-md flex items-center gap-1">
                 <Tag className="h-2.5 w-2.5" />
                 {eligibility.inputSource === "revieweriq" ? "ReviewerIQ" : "DemandIQ"} v{eligibility.sourceVersion}
               </span>
             )}
-
-            {/* Provisional flag */}
             {isProvisional && (
               <span className="text-[9px] font-bold uppercase tracking-wider px-2 py-1 rounded-md bg-[hsl(var(--status-attention))]/10 text-[hsl(var(--status-attention))] border border-[hsl(var(--status-attention))]/20 flex items-center gap-1">
                 <AlertTriangle className="h-2.5 w-2.5" /> Provisional
               </span>
             )}
-
-            {/* Module state */}
+            {audit.state.pendingReviewCount > 0 && (
+              <span className="text-[9px] font-bold uppercase tracking-wider px-2 py-1 rounded-md bg-[hsl(var(--status-attention))]/10 text-[hsl(var(--status-attention))] border border-[hsl(var(--status-attention))]/20 flex items-center gap-1">
+                <AlertTriangle className="h-2.5 w-2.5" /> {audit.state.pendingReviewCount} Review Pending
+              </span>
+            )}
             <span className={`text-[10px] font-semibold uppercase tracking-wider px-2.5 py-1 rounded-md ${EVALUATE_STATE_BADGE_CLASS[moduleState]} bg-current/5 border border-current/15`}>
               {EVALUATE_STATE_LABEL[moduleState]}
             </span>
           </div>
         </div>
 
-        {/* Row 2: Workspace Tabs */}
         {isWorkspaceActive && (
           <div className="px-6 border-t border-border pt-1 pb-0">
             <EvaluateWorkspaceTabs active={activeTab} onChange={setActiveTab} />
@@ -194,7 +210,6 @@ const EvaluateWorkspacePage = () => {
 
       {/* ── Body: Three-Panel Layout ──────────────── */}
       <div className="flex-1 flex overflow-hidden">
-        {/* Left panel */}
         {isWorkspaceActive && (
           <EvalLeftPanel
             snapshot={snapshot}
@@ -208,10 +223,8 @@ const EvaluateWorkspacePage = () => {
           />
         )}
 
-        {/* Center panel */}
         <div className="flex-1 overflow-y-auto">
           <div className="p-5 max-w-5xl mx-auto">
-            {/* Blocked */}
             {!eligibility.eligible && (
               <div className="mt-12">
                 <EmptyState
@@ -222,7 +235,6 @@ const EvaluateWorkspacePage = () => {
               </div>
             )}
 
-            {/* Not started */}
             {eligibility.eligible && moduleState === EvaluateModuleState.NotStarted && (
               <div className="space-y-6">
                 <div className="mt-6">
@@ -241,47 +253,30 @@ const EvaluateWorkspacePage = () => {
               </div>
             )}
 
-            {/* Active workspace */}
             {isWorkspaceActive && snapshot && (
               <div className="space-y-4">
-                {/* Stale banner */}
                 <EvalStaleDataBanner
                   isStale={isStale}
                   staleReason=""
                   upstreamModule={upstreamModuleId}
                   upstreamVersion={eligibility.sourceVersion}
-                  onRefresh={() => {
-                    toast.info("Refreshing inputs from upstream package…");
-                  }}
+                  onRefresh={() => toast.info("Refreshing inputs from upstream package…")}
                 />
 
-                {/* ── Overview Tab ────────────────────── */}
                 {activeTab === "overview" && (
                   <div className="space-y-4">
-                    {/* 1. Corridor summary hero */}
                     <EvalCorridorSummary snapshot={snapshot} isProvisional={isProvisional} />
-
-                    {/* 2. Claim profile */}
                     {claimProfile && <EvalClaimProfileCard profile={claimProfile} />}
-
-                    {/* 3. Merits + Corridor + Adjustments (dense grid) */}
                     <div className="grid grid-cols-1 xl:grid-cols-2 gap-4">
                       <EvalMeritsScoreCard snapshot={snapshot} />
                       <EvalMeritsCorridorCard snapshot={snapshot} />
                     </div>
-
-                    {/* 4. Post-merit adjustments */}
                     <EvalPostMeritAdjustmentCard snapshot={snapshot} />
-
-                    {/* 5. Documentation Sufficiency */}
                     <EvalDocSufficiencyCard snapshot={snapshot} />
-
-                    {/* 6. Case facts overview */}
                     <EvalOverviewTab snapshot={snapshot} />
                   </div>
                 )}
 
-                {/* ── Drivers Tab ────────────────────── */}
                 {activeTab === "drivers" && (
                   <div className="space-y-4">
                     <EvalScoringRankedSummary snapshot={snapshot} />
@@ -290,28 +285,28 @@ const EvaluateWorkspacePage = () => {
                   </div>
                 )}
 
-                {/* ── Range Tab ──────────────────────── */}
                 {activeTab === "range" && <EvalRangeTab snapshot={snapshot} />}
-
-                {/* ── Explanation Tab ─────────────────── */}
                 {activeTab === "explanation" && <EvalExplanationTab snapshot={snapshot} />}
-
-                {/* ── Evidence Tab ────────────────────── */}
                 {activeTab === "evidence" && <EvalEvidenceTab snapshot={snapshot} />}
-
-                {/* ── Calibration Tab ─────────────────── */}
                 {activeTab === "calibration" && <EvalBenchmarkCard snapshot={snapshot} />}
-
-                {/* ── Handoff Tab ─────────────────────── */}
                 {activeTab === "handoff" && <EvalHandoffTab snapshot={snapshot} />}
               </div>
             )}
           </div>
         </div>
 
-        {/* Right panel */}
         {isWorkspaceActive && (
-          <EvalRightPanel snapshot={snapshot} caseId={caseId} />
+          <EvalRightPanel
+            snapshot={snapshot}
+            caseId={caseId}
+            corridorOverrides={audit.overrides}
+            auditEvents={audit.auditEvents}
+            pendingReviewCount={audit.state.pendingReviewCount}
+            assumptionOverrides={assumptions.overrides}
+            assumptionChangeLog={assumptions.changeLog}
+            activeOverrideCount={assumptions.state.activeOverrideCount}
+            onOpenOverrideDialog={() => setOverrideDialogOpen(true)}
+          />
         )}
       </div>
 
@@ -321,10 +316,38 @@ const EvaluateWorkspacePage = () => {
           moduleState={moduleState}
           onCTA={handleCTA}
           isPending={isPending}
-          onAccept={() => toast.info("Package accepted. Ready for publish.")}
-          onPublish={() => toast.info("Publishing evaluation package…")}
+          onAccept={() => {
+            audit.submitOverride(
+              "accept_recommended",
+              systemCorridor,
+              systemCorridor,
+              "adjuster_judgment",
+              "Accepted system-recommended corridor",
+              null,
+            );
+            toast.info("Package accepted. Ready for publish.");
+          }}
+          onPublish={() => {
+            audit.addAuditEvent("package_published", "Package Published", "Evaluation package published for downstream consumption");
+            toast.info("Publishing evaluation package…");
+          }}
         />
       )}
+
+      {/* Override Dialog */}
+      <EvalOverrideDialog
+        isOpen={overrideDialogOpen}
+        onClose={() => setOverrideDialogOpen(false)}
+        systemCorridor={systemCorridor}
+        onSubmit={(action, corridor, reasonCode, rationale, evidenceNote) => {
+          const entry = audit.submitOverride(action, systemCorridor, corridor, reasonCode, rationale, evidenceNote);
+          if (entry.requires_supervisor_review) {
+            toast.warning("This override has been flagged for supervisory review.");
+          } else {
+            toast.success("Corridor override recorded.");
+          }
+        }}
+      />
     </div>
   );
 };

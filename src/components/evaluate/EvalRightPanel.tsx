@@ -7,6 +7,9 @@ import { useState, useMemo } from "react";
 import type { EvaluateIntakeSnapshot } from "@/types/evaluate-intake";
 import { computeBenchmarkMatching } from "@/lib/benchmarkMatchingEngine";
 import { computeDocumentSufficiency } from "@/lib/documentSufficiencyEngine";
+import type { CorridorOverrideEntry, EvalAuditEvent, CorridorValues } from "@/lib/evaluateOverrideEngine";
+import { OVERRIDE_REASON_LABELS, computeBeforeAfter } from "@/lib/evaluateOverrideEngine";
+import type { HumanAssumptionOverrides, AssumptionChangeEntry } from "@/hooks/useAssumptionOverrides";
 import {
   ExternalLink,
   BarChart3,
@@ -17,10 +20,15 @@ import {
   Clock,
   CheckCircle2,
   AlertTriangle,
-  Info,
   FileSearch,
-  XCircle,
   Users,
+  ArrowRightLeft,
+  Replace,
+  ShieldAlert,
+  RotateCcw,
+  User,
+  MessageSquare,
+  Cpu,
 } from "lucide-react";
 
 type RightTab = "evidence" | "factors" | "benchmarks" | "overrides" | "audit";
@@ -36,9 +44,26 @@ const TABS: { key: RightTab; label: string; icon: React.ElementType }[] = [
 interface Props {
   snapshot: EvaluateIntakeSnapshot | null;
   caseId: string | undefined;
+  corridorOverrides?: CorridorOverrideEntry[];
+  auditEvents?: EvalAuditEvent[];
+  pendingReviewCount?: number;
+  assumptionOverrides?: HumanAssumptionOverrides;
+  assumptionChangeLog?: AssumptionChangeEntry[];
+  activeOverrideCount?: number;
+  onOpenOverrideDialog?: () => void;
 }
 
-const EvalRightPanel = ({ snapshot, caseId }: Props) => {
+const EvalRightPanel = ({
+  snapshot,
+  caseId,
+  corridorOverrides = [],
+  auditEvents = [],
+  pendingReviewCount = 0,
+  assumptionOverrides,
+  assumptionChangeLog = [],
+  activeOverrideCount = 0,
+  onOpenOverrideDialog,
+}: Props) => {
   const [activeTab, setActiveTab] = useState<RightTab>("evidence");
 
   return (
@@ -48,6 +73,11 @@ const EvalRightPanel = ({ snapshot, caseId }: Props) => {
         <div className="flex items-center gap-0.5">
           {TABS.map((tab) => {
             const isActive = activeTab === tab.key;
+            const badge = tab.key === "overrides" && (corridorOverrides.length + activeOverrideCount) > 0
+              ? corridorOverrides.length + activeOverrideCount
+              : tab.key === "audit" && pendingReviewCount > 0
+                ? pendingReviewCount
+                : null;
             return (
               <button
                 key={tab.key}
@@ -60,6 +90,11 @@ const EvalRightPanel = ({ snapshot, caseId }: Props) => {
               >
                 <tab.icon className="h-3 w-3" />
                 {tab.label}
+                {badge !== null && (
+                  <span className="text-[7px] font-bold bg-primary/15 text-primary px-1 py-0.5 rounded-full min-w-[14px] text-center">
+                    {badge}
+                  </span>
+                )}
                 {isActive && (
                   <span className="absolute bottom-0 left-2 right-2 h-[1.5px] bg-primary rounded-full" />
                 )}
@@ -74,8 +109,20 @@ const EvalRightPanel = ({ snapshot, caseId }: Props) => {
         {activeTab === "evidence" && <EvidencePanel snapshot={snapshot} />}
         {activeTab === "factors" && <FactorsPanel snapshot={snapshot} />}
         {activeTab === "benchmarks" && <BenchmarksPanel snapshot={snapshot} />}
-        {activeTab === "overrides" && <OverridesPanel />}
-        {activeTab === "audit" && <AuditPanel caseId={caseId} />}
+        {activeTab === "overrides" && (
+          <OverridesPanel
+            corridorOverrides={corridorOverrides}
+            assumptionChangeLog={assumptionChangeLog}
+            activeOverrideCount={activeOverrideCount}
+            onOpenOverrideDialog={onOpenOverrideDialog}
+          />
+        )}
+        {activeTab === "audit" && (
+          <AuditPanel
+            auditEvents={auditEvents}
+            pendingReviewCount={pendingReviewCount}
+          />
+        )}
       </div>
     </div>
   );
@@ -196,23 +243,22 @@ function FactorsPanel({ snapshot }: { snapshot: EvaluateIntakeSnapshot | null })
         </div>
       ))}
 
-      {/* Doc sufficiency mini */}
       {docSuff && (
-      <div className="rounded-lg border border-border p-2.5">
-        <div className="flex items-center gap-1.5 mb-1.5">
-          <FileSearch className="h-3 w-3 text-muted-foreground" />
-          <span className="text-[10px] font-semibold text-foreground">Documentation Sufficiency</span>
+        <div className="rounded-lg border border-border p-2.5">
+          <div className="flex items-center gap-1.5 mb-1.5">
+            <FileSearch className="h-3 w-3 text-muted-foreground" />
+            <span className="text-[10px] font-semibold text-foreground">Documentation Sufficiency</span>
+          </div>
+          <div className="grid grid-cols-2 gap-1.5">
+            {docSuff.subcomponents.map(sub => (
+              <div key={sub.key} className="flex items-center gap-1.5">
+                <SuffDot label={sub.sufficiency} />
+                <span className="text-[8px] text-muted-foreground truncate">{sub.label}</span>
+                <span className="text-[8px] font-semibold text-foreground ml-auto">{sub.score}</span>
+              </div>
+            ))}
+          </div>
         </div>
-        <div className="grid grid-cols-2 gap-1.5">
-          {docSuff.subcomponents.map(sub => (
-            <div key={sub.key} className="flex items-center gap-1.5">
-              <SuffDot label={sub.sufficiency} />
-              <span className="text-[8px] text-muted-foreground truncate">{sub.label}</span>
-              <span className="text-[8px] font-semibold text-foreground ml-auto">{sub.score}</span>
-            </div>
-          ))}
-        </div>
-      </div>
       )}
     </div>
   );
@@ -240,7 +286,6 @@ function BenchmarksPanel({ snapshot }: { snapshot: EvaluateIntakeSnapshot | null
         <QualityBadge quality={result.match_quality} />
       </div>
 
-      {/* Stats */}
       {result.settlement_stats.median !== null && (
         <div className="grid grid-cols-2 gap-2">
           <MiniStat label="Median" value={`$${result.settlement_stats.median.toLocaleString()}`} highlight />
@@ -253,7 +298,6 @@ function BenchmarksPanel({ snapshot }: { snapshot: EvaluateIntakeSnapshot | null
         {result.outlier_count > 0 && ` ${result.outlier_count} outlier(s) excluded from stats.`}
       </p>
 
-      {/* Top matches */}
       {result.selected_matches.slice(0, 5).map(m => (
         <div key={m.case_id} className="rounded-lg border border-border p-2.5 hover:bg-accent/20 transition-colors">
           <div className="flex items-center justify-between">
@@ -312,93 +356,235 @@ function MiniStat({ label, value, highlight }: { label: string; value: string; h
   );
 }
 
-// ─── Overrides Panel ────────────────────────────────────
+// ─── Overrides Panel (Real Data) ────────────────────────
 
-function OverridesPanel() {
-  return (
-    <div className="space-y-3">
-      <span className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">Override Controls</span>
-
-      <div className="rounded-lg border border-border p-3 space-y-2.5">
-        <p className="text-[10px] text-muted-foreground leading-relaxed">
-          Override engine assumptions to see real-time impact on the settlement corridor.
-          Changes are tracked in the audit trail.
-        </p>
-
-        <OverrideRow label="Medical Base Selection" value="Reviewed Medical" status="system" />
-        <OverrideRow label="Liability Percentage" value="100%" status="system" />
-        <OverrideRow label="Severity Multiplier" value="Auto-computed" status="system" />
-        <OverrideRow label="Comparative Negligence" value="0%" status="system" />
-        <OverrideRow label="Venue Multiplier" value="1.0x (PA)" status="system" />
-        <OverrideRow label="Treatment Reliability" value="Auto-scored" status="system" />
-      </div>
-
-      <div className="rounded-lg bg-accent/50 p-3">
-        <p className="text-[9px] text-muted-foreground leading-relaxed">
-          Use the <span className="font-semibold">Range Output</span> tab to modify assumptions and see system vs. revised comparisons.
-          All overrides are logged with timestamps and user attribution.
-        </p>
-      </div>
-    </div>
-  );
-}
-
-function OverrideRow({ label, value, status }: { label: string; value: string; status: "system" | "overridden" }) {
-  return (
-    <div className="flex items-center justify-between py-1.5 border-b border-border last:border-0">
-      <span className="text-[10px] text-foreground font-medium">{label}</span>
-      <div className="flex items-center gap-1.5">
-        <span className="text-[10px] text-muted-foreground">{value}</span>
-        {status === "system" ? (
-          <CheckCircle2 className="h-2.5 w-2.5 text-muted-foreground/40" />
-        ) : (
-          <AlertTriangle className="h-2.5 w-2.5 text-[hsl(var(--status-attention))]" />
-        )}
-      </div>
-    </div>
-  );
-}
-
-// ─── Audit Panel ────────────────────────────────────────
-
-function AuditPanel({ caseId }: { caseId: string | undefined }) {
-  const auditEntries = [
-    { action: "Module started", time: "2 hours ago", actor: "System", type: "system" },
-    { action: "Intake snapshot created", time: "2 hours ago", actor: "Engine v1.0", type: "system" },
-    { action: "Claim profile classified", time: "2 hours ago", actor: "Engine v1.0", type: "system" },
-    { action: "Factor scoring completed", time: "1 hour ago", actor: "Engine v1.0", type: "system" },
-    { action: "Merits corridor computed", time: "1 hour ago", actor: "Engine v1.0", type: "system" },
-    { action: "Post-merit adjustments applied", time: "1 hour ago", actor: "Engine v1.0", type: "system" },
-    { action: "Documentation sufficiency scored", time: "1 hour ago", actor: "Engine v1.0", type: "system" },
-    { action: "Benchmark matching completed", time: "1 hour ago", actor: "Engine v1.0", type: "system" },
-    { action: "Settlement range computed", time: "58 min ago", actor: "Engine v1.0", type: "system" },
-  ];
+function OverridesPanel({
+  corridorOverrides,
+  assumptionChangeLog,
+  activeOverrideCount,
+  onOpenOverrideDialog,
+}: {
+  corridorOverrides: CorridorOverrideEntry[];
+  assumptionChangeLog: AssumptionChangeEntry[];
+  activeOverrideCount: number;
+  onOpenOverrideDialog?: () => void;
+}) {
+  const totalOverrides = corridorOverrides.length + activeOverrideCount;
 
   return (
     <div className="space-y-3">
       <div className="flex items-center justify-between">
-        <span className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">Audit Trail</span>
-        <span className="text-[9px] text-muted-foreground">{auditEntries.length} events</span>
+        <span className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">Override History</span>
+        {totalOverrides > 0 && (
+          <span className="text-[8px] font-bold bg-primary/15 text-primary px-1.5 py-0.5 rounded-full">
+            {totalOverrides} active
+          </span>
+        )}
       </div>
-      <div className="space-y-0">
-        {auditEntries.map((entry, i) => (
-          <div key={i} className="flex items-start gap-2.5 py-2 border-b border-border/50 last:border-0 group hover:bg-accent/20 rounded px-1 -mx-1 transition-colors">
-            <div className="mt-1 flex flex-col items-center">
-              <span className="h-1.5 w-1.5 rounded-full bg-primary/40 group-hover:bg-primary transition-colors" />
-              {i < auditEntries.length - 1 && <span className="w-px h-full bg-border mt-0.5" />}
+
+      {/* CTA button */}
+      {onOpenOverrideDialog && (
+        <button
+          onClick={onOpenOverrideDialog}
+          className="w-full flex items-center justify-center gap-1.5 px-3 py-2 rounded-lg border border-primary/30 bg-primary/5 text-primary text-[10px] font-semibold hover:bg-primary/10 transition-colors"
+        >
+          <ArrowRightLeft className="h-3 w-3" />
+          Override Corridor
+        </button>
+      )}
+
+      {/* Corridor overrides */}
+      {corridorOverrides.length > 0 && (
+        <div className="space-y-2">
+          <span className="text-[9px] font-semibold text-muted-foreground">Corridor Overrides</span>
+          {corridorOverrides.map(o => {
+            const comparison = computeBeforeAfter(o.system_corridor, o.override_corridor);
+            const actionIcon = o.action === "accept_recommended" ? CheckCircle2
+              : o.action === "override_corridor" ? ArrowRightLeft
+              : Replace;
+            const ActionIcon = actionIcon;
+            return (
+              <div key={o.id} className={`rounded-lg border p-2.5 ${
+                o.requires_supervisor_review ? "border-[hsl(var(--status-attention))]/30 bg-[hsl(var(--status-attention))]/5" : "border-border"
+              }`}>
+                <div className="flex items-center gap-2 mb-1.5">
+                  <ActionIcon className="h-3 w-3 text-primary" />
+                  <span className="text-[10px] font-semibold text-foreground">
+                    {o.action === "accept_recommended" ? "Accepted" : o.action === "override_corridor" ? "Overridden" : "Replaced"}
+                  </span>
+                  {o.requires_supervisor_review && (
+                    <span className={`text-[7px] font-bold uppercase px-1 py-0.5 rounded ${
+                      o.supervisor_review_status === "pending"
+                        ? "bg-[hsl(var(--status-attention))]/15 text-[hsl(var(--status-attention))]"
+                        : o.supervisor_review_status === "approved"
+                          ? "bg-[hsl(var(--status-approved))]/15 text-[hsl(var(--status-approved))]"
+                          : "bg-destructive/15 text-destructive"
+                    }`}>
+                      {o.supervisor_review_status}
+                    </span>
+                  )}
+                </div>
+
+                {/* Before/After mini */}
+                {o.action !== "accept_recommended" && (
+                  <div className="grid grid-cols-3 gap-1 mb-1.5 text-center">
+                    <div>
+                      <p className="text-[7px] text-muted-foreground">Floor</p>
+                      <p className="text-[8px] text-muted-foreground line-through">{o.system_corridor.low}</p>
+                      <p className="text-[9px] font-semibold text-foreground">{o.override_corridor.low}</p>
+                    </div>
+                    <div>
+                      <p className="text-[7px] text-muted-foreground">Mid</p>
+                      <p className="text-[8px] text-muted-foreground line-through">{o.system_corridor.mid}</p>
+                      <p className="text-[9px] font-bold text-primary">{o.override_corridor.mid}</p>
+                    </div>
+                    <div>
+                      <p className="text-[7px] text-muted-foreground">Ceil</p>
+                      <p className="text-[8px] text-muted-foreground line-through">{o.system_corridor.high}</p>
+                      <p className="text-[9px] font-semibold text-foreground">{o.override_corridor.high}</p>
+                    </div>
+                  </div>
+                )}
+
+                <p className="text-[8px] text-muted-foreground">
+                  <span className="font-semibold">{OVERRIDE_REASON_LABELS[o.reason_code]}</span>
+                </p>
+                <p className="text-[8px] text-muted-foreground italic mt-0.5 line-clamp-2">{o.rationale}</p>
+                {o.evidence_note && (
+                  <p className="text-[7px] text-primary mt-0.5">📎 {o.evidence_note}</p>
+                )}
+                <div className="flex items-center gap-2 mt-1.5 text-[7px] text-muted-foreground/60">
+                  <span>{o.actor_name}</span>
+                  <span>·</span>
+                  <span>{new Date(o.timestamp).toLocaleString()}</span>
+                  <span>·</span>
+                  <span className="flex items-center gap-0.5"><Cpu className="h-2 w-2" />v{o.logic_version}</span>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      )}
+
+      {/* Assumption overrides */}
+      {assumptionChangeLog.length > 0 && (
+        <div className="space-y-2">
+          <span className="text-[9px] font-semibold text-muted-foreground">Assumption Changes</span>
+          {assumptionChangeLog.slice(0, 10).map((entry, i) => (
+            <div key={i} className="rounded-lg border border-border p-2.5">
+              <div className="flex items-center justify-between">
+                <span className="text-[10px] font-medium text-foreground">{entry.label}</span>
+                <span className="text-[8px] text-muted-foreground">
+                  {formatValue(entry.previous_value)} → {formatValue(entry.new_value)}
+                </span>
+              </div>
+              <div className="flex items-center gap-1 mt-0.5">
+                <MessageSquare className="h-2.5 w-2.5 text-muted-foreground shrink-0" />
+                <p className="text-[8px] text-muted-foreground italic truncate">{entry.reason}</p>
+              </div>
+              <p className="text-[7px] text-muted-foreground/60 mt-0.5">
+                {entry.changed_by_name} · {new Date(entry.changed_at).toLocaleString()}
+              </p>
             </div>
-            <div className="min-w-0 flex-1">
-              <p className="text-[10px] font-medium text-foreground">{entry.action}</p>
-              <div className="flex items-center gap-2 mt-0.5">
-                <Clock className="h-2.5 w-2.5 text-muted-foreground/50" />
-                <span className="text-[9px] text-muted-foreground">{entry.time}</span>
-                <span className="text-[9px] text-muted-foreground">·</span>
-                <span className="text-[9px] text-muted-foreground">{entry.actor}</span>
+          ))}
+        </div>
+      )}
+
+      {/* Empty state */}
+      {totalOverrides === 0 && assumptionChangeLog.length === 0 && (
+        <div className="rounded-lg bg-accent/50 p-3">
+          <p className="text-[9px] text-muted-foreground leading-relaxed">
+            No overrides have been applied. Use the <span className="font-semibold">Override Corridor</span> button
+            or the <span className="font-semibold">Range Output</span> tab to modify assumptions.
+            All changes are logged with timestamps and user attribution.
+          </p>
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ─── Audit Panel (Real Data) ────────────────────────────
+
+function AuditPanel({
+  auditEvents,
+  pendingReviewCount,
+}: {
+  auditEvents: EvalAuditEvent[];
+  pendingReviewCount: number;
+}) {
+  return (
+    <div className="space-y-3">
+      <div className="flex items-center justify-between">
+        <span className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">Audit Trail</span>
+        <div className="flex items-center gap-2">
+          {pendingReviewCount > 0 && (
+            <span className="text-[7px] font-bold bg-[hsl(var(--status-attention))]/15 text-[hsl(var(--status-attention))] px-1.5 py-0.5 rounded-full flex items-center gap-0.5">
+              <ShieldAlert className="h-2.5 w-2.5" /> {pendingReviewCount} pending
+            </span>
+          )}
+          <span className="text-[9px] text-muted-foreground">{auditEvents.length} events</span>
+        </div>
+      </div>
+
+      <div className="space-y-0">
+        {auditEvents.map((event, i) => {
+          const severityColor = event.severity === "critical" ? "bg-destructive"
+            : event.severity === "warning" ? "bg-[hsl(var(--status-attention))]"
+            : "bg-primary/40";
+          const isOverrideEvent = event.override_id !== null;
+
+          return (
+            <div key={event.id} className={`flex items-start gap-2.5 py-2 border-b border-border/50 last:border-0 group hover:bg-accent/20 rounded px-1 -mx-1 transition-colors ${
+              isOverrideEvent ? "bg-primary/3" : ""
+            }`}>
+              <div className="mt-1 flex flex-col items-center">
+                <span className={`h-1.5 w-1.5 rounded-full ${severityColor} group-hover:scale-125 transition-transform`} />
+                {i < auditEvents.length - 1 && <span className="w-px h-full bg-border mt-0.5" />}
+              </div>
+              <div className="min-w-0 flex-1">
+                <div className="flex items-center gap-1.5">
+                  <p className="text-[10px] font-medium text-foreground">{event.label}</p>
+                  {isOverrideEvent && (
+                    <span className="text-[7px] font-bold bg-primary/10 text-primary px-1 py-0.5 rounded">OVERRIDE</span>
+                  )}
+                  {event.severity === "warning" && (
+                    <AlertTriangle className="h-2.5 w-2.5 text-[hsl(var(--status-attention))]" />
+                  )}
+                </div>
+                <p className="text-[8px] text-muted-foreground leading-snug mt-0.5 line-clamp-2">{event.detail}</p>
+
+                {/* Before/After for override events */}
+                {isOverrideEvent && event.before_value && event.after_value && (
+                  <div className="flex items-center gap-2 mt-1 text-[8px]">
+                    <span className="text-muted-foreground line-through">
+                      {(event.before_value as CorridorValues).low}–{(event.before_value as CorridorValues).mid}–{(event.before_value as CorridorValues).high}
+                    </span>
+                    <span className="text-muted-foreground">→</span>
+                    <span className="text-primary font-semibold">
+                      {(event.after_value as CorridorValues).low}–{(event.after_value as CorridorValues).mid}–{(event.after_value as CorridorValues).high}
+                    </span>
+                  </div>
+                )}
+
+                <div className="flex items-center gap-2 mt-0.5">
+                  <Clock className="h-2.5 w-2.5 text-muted-foreground/50" />
+                  <span className="text-[8px] text-muted-foreground">{new Date(event.timestamp).toLocaleString()}</span>
+                  <span className="text-[8px] text-muted-foreground">·</span>
+                  <span className="text-[8px] text-muted-foreground">{event.actor_name}</span>
+                  <span className="text-[8px] text-muted-foreground flex items-center gap-0.5">
+                    · <Cpu className="h-2 w-2" />v{event.logic_version}
+                  </span>
+                </div>
               </div>
             </div>
-          </div>
-        ))}
+          );
+        })}
       </div>
+
+      {auditEvents.length === 0 && (
+        <PlaceholderMessage message="No audit events recorded" />
+      )}
     </div>
   );
 }
@@ -409,6 +595,12 @@ function PlaceholderMessage({ message }: { message: string }) {
       <p className="text-[11px] text-muted-foreground italic">{message}</p>
     </div>
   );
+}
+
+function formatValue(v: unknown): string {
+  if (v === null || v === undefined) return "default";
+  if (typeof v === "number") return v.toString();
+  return String(v);
 }
 
 export default EvalRightPanel;
