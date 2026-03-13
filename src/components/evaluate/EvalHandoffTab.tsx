@@ -1,6 +1,4 @@
 import { useParams } from "react-router-dom";
-import { useQuery } from "@tanstack/react-query";
-import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { useModuleCompletion } from "@/hooks/useModuleCompletion";
 import { isEntitlementActive } from "@/hooks/useModuleEntitlements";
@@ -14,13 +12,29 @@ import {
   ArrowRight,
   AlertTriangle,
   FileText,
+  History,
+  Send,
+  User,
 } from "lucide-react";
+
+interface PublishedPackage {
+  id: string;
+  version: number;
+  completed_at: string | null;
+  completed_by: string | null;
+  package_payload: Record<string, unknown>;
+  snapshot_id?: string | null;
+  valuation_run_id?: string | null;
+  selection_id?: string | null;
+  created_at: string;
+}
 
 interface Props {
   snapshot: EvaluateIntakeSnapshot;
+  publishedPackages: PublishedPackage[];
 }
 
-const EvalHandoffTab = ({ snapshot }: Props) => {
+const EvalHandoffTab = ({ snapshot, publishedPackages }: Props) => {
   const { caseId } = useParams<{ caseId: string }>();
   const { entitlements } = useAuth();
   const { data: evalCompletion } = useModuleCompletion(caseId, "evaluateiq");
@@ -28,22 +42,9 @@ const EvalHandoffTab = ({ snapshot }: Props) => {
   const hasNegotiateIQ = isEntitlementActive(entitlements, ModuleId.NegotiateIQ);
   const isCompleted = evalCompletion?.status === ModuleCompletionStatus.Completed;
 
-  // Fetch published packages
-  const { data: packages = [] } = useQuery({
-    queryKey: ["evaluation-packages", caseId],
-    enabled: !!caseId,
-    queryFn: async () => {
-      const { data, error } = await (supabase.from("evaluation_packages") as any)
-        .select("id, version, completed_at, completed_by, package_payload")
-        .eq("case_id", caseId!)
-        .order("version", { ascending: false });
-      if (error) throw error;
-      return data ?? [];
-    },
-  });
-
-  const latestPkg = packages[0];
+  const latestPkg = publishedPackages[0] ?? null;
   const payload = latestPkg?.package_payload as Record<string, unknown> | undefined;
+  const priorPackages = publishedPackages.slice(1);
 
   return (
     <div className="space-y-6">
@@ -54,7 +55,7 @@ const EvalHandoffTab = ({ snapshot }: Props) => {
           <h3 className="text-sm font-semibold text-foreground">EvaluatePackage Status</h3>
         </div>
 
-        {isCompleted && latestPkg ? (
+        {latestPkg ? (
           <div className="space-y-3">
             <div className="flex items-center gap-2 text-[hsl(var(--status-approved))]">
               <CheckCircle2 className="h-4 w-4" />
@@ -64,6 +65,15 @@ const EvalHandoffTab = ({ snapshot }: Props) => {
               <div>
                 <span className="font-medium text-foreground">Published At</span>
                 <p>{latestPkg.completed_at ? new Date(latestPkg.completed_at).toLocaleString() : "—"}</p>
+              </div>
+              <div>
+                <span className="font-medium text-foreground">Published By</span>
+                <p className="flex items-center gap-1">
+                  <User className="h-3 w-3" />
+                  {(payload?.audit as any)?.published_by
+                    ? String((payload?.audit as any).published_by).slice(0, 8) + "…"
+                    : latestPkg.completed_by?.slice(0, 8) + "…" ?? "—"}
+                </p>
               </div>
               <div>
                 <span className="font-medium text-foreground">Source</span>
@@ -77,7 +87,19 @@ const EvalHandoffTab = ({ snapshot }: Props) => {
                 <span className="font-medium text-foreground">Completeness</span>
                 <p>{(payload?.completeness_score as number ?? 0).toFixed(0)}%</p>
               </div>
+              <div>
+                <span className="font-medium text-foreground">Status</span>
+                <p className="capitalize">{payload?.evaluation_status as string ?? "published"}</p>
+              </div>
             </div>
+
+            {/* Superseded indicator */}
+            {priorPackages.length > 0 && (
+              <div className="text-[10px] text-muted-foreground flex items-center gap-1 mt-1 pt-2 border-t border-border">
+                <History className="h-3 w-3" />
+                Supersedes v{priorPackages[0].version} · {priorPackages.length} prior version{priorPackages.length > 1 ? "s" : ""}
+              </div>
+            )}
           </div>
         ) : (
           <div className="flex items-center gap-2 text-muted-foreground">
@@ -88,7 +110,7 @@ const EvalHandoffTab = ({ snapshot }: Props) => {
       </section>
 
       {/* Package Preview */}
-      {isCompleted && payload && (
+      {latestPkg && payload && (
         <section className="rounded-xl border border-border bg-card p-5">
           <div className="flex items-center gap-2 mb-4">
             <FileText className="h-4 w-4 text-primary" />
@@ -97,11 +119,12 @@ const EvalHandoffTab = ({ snapshot }: Props) => {
           <div className="space-y-2 text-xs">
             <PackageRow label="Total Billed" value={formatCurrency(payload.total_billed as number)} />
             <PackageRow label="Total Reviewed" value={payload.total_reviewed ? formatCurrency(payload.total_reviewed as number) : "N/A"} />
-            <PackageRow label="Range Floor" value={payload.range_floor ? formatCurrency(payload.range_floor as number) : "Pending"} />
-            <PackageRow label="Range Likely" value={payload.range_likely ? formatCurrency(payload.range_likely as number) : "Pending"} />
-            <PackageRow label="Range Stretch" value={payload.range_stretch ? formatCurrency(payload.range_stretch as number) : "Pending"} />
-            <PackageRow label="Authority Recommendation" value={payload.authority_recommendation ? formatCurrency(payload.authority_recommendation as number) : "Not set"} />
-            <PackageRow label="Confidence" value={payload.confidence ? `${((payload.confidence as number) * 100).toFixed(0)}%` : "—"} />
+            <PackageRow label="Range Floor" value={formatCorridorValue(payload, "range_floor")} />
+            <PackageRow label="Range Likely" value={formatCorridorValue(payload, "range_likely")} />
+            <PackageRow label="Range Stretch" value={formatCorridorValue(payload, "range_stretch")} />
+            <PackageRow label="Authority Recommendation" value={formatCorridorValue(payload, "authority_recommendation")} />
+            <PackageRow label="Confidence" value={formatConfidence(payload)} />
+            <PackageRow label="Overrides" value={`${(payload.overrides as unknown[])?.length ?? 0} recorded`} />
             <PackageRow label="Driver Summaries" value={`${(payload.driver_summaries as unknown[])?.length ?? 0} entries`} />
             <PackageRow label="Assumptions" value={`${(payload.assumptions as unknown[])?.length ?? 0} adopted`} />
             <PackageRow label="Explanation Ledger" value={payload.explanation_ledger ? "Included" : "Not available"} />
@@ -117,14 +140,12 @@ const EvalHandoffTab = ({ snapshot }: Props) => {
         </div>
 
         <div className="space-y-3">
-          {/* NegotiateIQ */}
           <DownstreamRow
             name="NegotiateIQ"
             licensed={hasNegotiateIQ}
-            ready={isCompleted}
+            ready={!!latestPkg}
             packageVersion={latestPkg?.version ?? null}
           />
-          {/* LitIQ — always shown as future */}
           <DownstreamRow
             name="LitIQ"
             licensed={isEntitlementActive(entitlements, ModuleId.LitIQ)}
@@ -135,16 +156,52 @@ const EvalHandoffTab = ({ snapshot }: Props) => {
       </section>
 
       {/* Version History */}
-      {packages.length > 1 && (
+      {publishedPackages.length > 1 && (
         <section className="rounded-xl border border-border bg-card p-5">
-          <h3 className="text-sm font-semibold text-foreground mb-3">Package History</h3>
-          <div className="space-y-2">
-            {packages.map((pkg: any) => (
-              <div key={pkg.id} className="flex items-center justify-between text-xs text-muted-foreground py-1.5 border-b border-border last:border-0">
-                <span className="font-medium text-foreground">v{pkg.version}</span>
-                <span>{pkg.completed_at ? new Date(pkg.completed_at).toLocaleString() : "—"}</span>
-              </div>
-            ))}
+          <div className="flex items-center gap-2 mb-3">
+            <History className="h-4 w-4 text-primary" />
+            <h3 className="text-sm font-semibold text-foreground">Package History</h3>
+          </div>
+          <div className="space-y-1">
+            {publishedPackages.map((pkg, idx) => {
+              const pkgPayload = pkg.package_payload as Record<string, unknown> | undefined;
+              const isCurrent = idx === 0;
+              const supersededBy = idx > 0 ? publishedPackages[idx - 1].version : null;
+
+              return (
+                <div
+                  key={pkg.id}
+                  className={`flex items-center justify-between text-xs py-2 px-3 rounded-lg ${
+                    isCurrent ? "bg-primary/5 border border-primary/15" : "bg-muted/20"
+                  }`}
+                >
+                  <div className="flex items-center gap-2">
+                    {isCurrent ? (
+                      <Send className="h-3 w-3 text-primary" />
+                    ) : (
+                      <History className="h-3 w-3 text-muted-foreground" />
+                    )}
+                    <span className={`font-semibold ${isCurrent ? "text-primary" : "text-foreground"}`}>
+                      v{pkg.version}
+                    </span>
+                    {isCurrent && (
+                      <span className="text-[9px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded bg-primary/10 text-primary">
+                        Current
+                      </span>
+                    )}
+                    {supersededBy && (
+                      <span className="text-[9px] text-muted-foreground">
+                        superseded by v{supersededBy}
+                      </span>
+                    )}
+                  </div>
+                  <div className="flex items-center gap-3 text-muted-foreground">
+                    <span>{pkgPayload?.evaluation_status as string ?? "published"}</span>
+                    <span>{pkg.completed_at ? new Date(pkg.completed_at).toLocaleDateString() : "—"}</span>
+                  </div>
+                </div>
+              );
+            })}
           </div>
         </section>
       )}
@@ -197,7 +254,7 @@ function DownstreamRow({
         <span className="text-xs font-medium text-foreground">{name}</span>
       </div>
       <span className="text-[10px] text-muted-foreground">
-        {ready ? `Ready — will receive v${packageVersion}` : "Awaiting EvaluateIQ completion"}
+        {ready ? `Ready — will receive v${packageVersion}` : "Awaiting EvaluateIQ publication"}
       </span>
     </div>
   );
@@ -205,6 +262,20 @@ function DownstreamRow({
 
 function formatCurrency(val: number): string {
   return new Intl.NumberFormat("en-US", { style: "currency", currency: "USD", maximumFractionDigits: 0 }).format(val);
+}
+
+function formatCorridorValue(payload: Record<string, unknown>, key: string): string {
+  const corridor = payload.settlement_corridor as Record<string, unknown> | undefined;
+  const val = corridor?.[key] as number | null | undefined;
+  if (val == null) return "Pending";
+  return formatCurrency(val);
+}
+
+function formatConfidence(payload: Record<string, unknown>): string {
+  const corridor = payload.settlement_corridor as Record<string, unknown> | undefined;
+  const conf = corridor?.confidence as number | null | undefined;
+  if (conf == null) return "—";
+  return `${(conf * 100).toFixed(0)}%`;
 }
 
 export default EvalHandoffTab;

@@ -7,7 +7,8 @@ import { useModuleCompletion } from "@/hooks/useModuleCompletion";
 import { useEvaluateEligibility } from "@/hooks/useEvaluateEligibility";
 import { useStartEvaluate, deriveEvaluateState } from "@/hooks/useEvaluateState";
 import { useEvaluateIntakeSnapshot } from "@/hooks/useEvaluateIntakeSnapshot";
-import { useCompleteEvaluate, useReopenEvaluate, validateEvaluateCompletion } from "@/hooks/useEvaluateCompletion";
+import { useReopenEvaluate, validateEvaluateCompletion } from "@/hooks/useEvaluateCompletion";
+import { usePublishEvaluate, useEvaluatePackages } from "@/hooks/useEvaluatePublish";
 import { useIsUpstreamCurrent } from "@/hooks/useUpstreamSnapshot";
 import { isEntitlementActive } from "@/hooks/useModuleEntitlements";
 import { useAssumptionOverrides } from "@/hooks/useAssumptionOverrides";
@@ -44,6 +45,7 @@ import EvalDocSufficiencyCard from "@/components/evaluate/EvalDocSufficiencyCard
 import EvalBenchmarkCard from "@/components/evaluate/EvalBenchmarkCard";
 import EvalCorridorSummary from "@/components/evaluate/EvalCorridorSummary";
 import EvalOverrideDialog from "@/components/evaluate/EvalOverrideDialog";
+import EvalPublishDialog from "@/components/evaluate/EvalPublishDialog";
 import { scoreAllFactors } from "@/lib/factorScoringEngine";
 import { computeWeightedMeritsScore } from "@/lib/profileWeightingEngine";
 import { computeMeritsCorridor } from "@/lib/meritsCorridorEngine";
@@ -66,14 +68,17 @@ const EvaluateWorkspacePage = () => {
   const { data: evalCompletion } = useModuleCompletion(caseId, "evaluateiq");
   const eligibility = useEvaluateEligibility(caseId);
   const startEvaluate = useStartEvaluate();
-  const completeEvaluate = useCompleteEvaluate();
+  const publishEvaluate = usePublishEvaluate();
   const reopenEvaluate = useReopenEvaluate();
   const { snapshot } = useEvaluateIntakeSnapshot(caseId);
+  const { data: publishedPackages = [] } = useEvaluatePackages(caseId);
 
   // Override & audit state
   const assumptions = useAssumptionOverrides();
   const audit = useEvaluateAudit();
   const [overrideDialogOpen, setOverrideDialogOpen] = useState(false);
+  const [publishDialogOpen, setPublishDialogOpen] = useState(false);
+  const [isAccepted, setIsAccepted] = useState(false);
 
   const hasModule = isEntitlementActive(entitlements, ModuleId.EvaluateIQ);
   const moduleState = deriveEvaluateState(evalCompletion?.status);
@@ -135,17 +140,48 @@ const EvaluateWorkspacePage = () => {
         validation.errors.forEach((e) => toast.error(e));
         return;
       }
-      completeEvaluate.mutate({
-        caseId,
-        snapshot,
-        sourceModule: eligibility.inputSource ?? "demandiq",
-        sourceVersion: eligibility.sourceVersion ?? 1,
-        explanationLedger: null,
-      });
+      // Open publish dialog instead of completing directly
+      setPublishDialogOpen(true);
     }
   };
 
-  const isPending = startEvaluate.isPending || completeEvaluate.isPending;
+  const handleAccept = () => {
+    audit.submitOverride(
+      "accept_recommended",
+      systemCorridor,
+      systemCorridor,
+      "adjuster_judgment",
+      "Accepted system-recommended corridor",
+      null,
+    );
+    setIsAccepted(true);
+    toast.info("Package accepted. Ready for publish.");
+  };
+
+  const handlePublish = () => {
+    if (!caseId || !snapshot) return;
+    const activeOverride = audit.overrides.length > 0 ? audit.overrides[0] : null;
+
+    publishEvaluate.mutate({
+      caseId,
+      snapshot,
+      sourceModule: eligibility.inputSource ?? "demandiq",
+      sourceVersion: eligibility.sourceVersion ?? 1,
+      explanationLedger: null,
+      corridorOverride: activeOverride
+        ? { floor: activeOverride.override_corridor.low, mid: activeOverride.override_corridor.mid, high: activeOverride.override_corridor.high }
+        : null,
+      overrides: audit.overrides,
+    }, {
+      onSuccess: () => {
+        setPublishDialogOpen(false);
+        setIsAccepted(false);
+        audit.addAuditEvent("package_published", "Package Published", "Evaluation package published to registry");
+      },
+    });
+  };
+
+  const isPending = startEvaluate.isPending || publishEvaluate.isPending;
   const claimVsInsured = caseData.title || `${caseData.claimant} v. ${caseData.insured}`;
 
   return (
@@ -176,6 +212,11 @@ const EvaluateWorkspacePage = () => {
           </div>
 
           <div className="flex items-center gap-2">
+            {publishedPackages.length > 0 && (
+              <span className="text-[9px] font-mono text-muted-foreground bg-accent px-1.5 py-0.5 rounded flex items-center gap-1">
+                v{publishedPackages[0].version} published
+              </span>
+            )}
             <span className="text-[9px] font-mono text-muted-foreground/70 bg-accent px-1.5 py-0.5 rounded flex items-center gap-1">
               <Cpu className="h-2.5 w-2.5" /> v1.0.0
             </span>
@@ -289,7 +330,12 @@ const EvaluateWorkspacePage = () => {
                 {activeTab === "explanation" && <EvalExplanationTab snapshot={snapshot} />}
                 {activeTab === "evidence" && <EvalEvidenceTab snapshot={snapshot} />}
                 {activeTab === "calibration" && <EvalBenchmarkCard snapshot={snapshot} />}
-                {activeTab === "handoff" && <EvalHandoffTab snapshot={snapshot} />}
+                {activeTab === "handoff" && (
+                  <EvalHandoffTab
+                    snapshot={snapshot}
+                    publishedPackages={publishedPackages}
+                  />
+                )}
               </div>
             )}
           </div>
@@ -316,21 +362,9 @@ const EvaluateWorkspacePage = () => {
           moduleState={moduleState}
           onCTA={handleCTA}
           isPending={isPending}
-          onAccept={() => {
-            audit.submitOverride(
-              "accept_recommended",
-              systemCorridor,
-              systemCorridor,
-              "adjuster_judgment",
-              "Accepted system-recommended corridor",
-              null,
-            );
-            toast.info("Package accepted. Ready for publish.");
-          }}
-          onPublish={() => {
-            audit.addAuditEvent("package_published", "Package Published", "Evaluation package published for downstream consumption");
-            toast.info("Publishing evaluation package…");
-          }}
+          isAccepted={isAccepted}
+          onAccept={handleAccept}
+          onPublish={() => setPublishDialogOpen(true)}
         />
       )}
 
@@ -341,6 +375,7 @@ const EvaluateWorkspacePage = () => {
         systemCorridor={systemCorridor}
         onSubmit={(action, corridor, reasonCode, rationale, evidenceNote) => {
           const entry = audit.submitOverride(action, systemCorridor, corridor, reasonCode, rationale, evidenceNote);
+          setIsAccepted(true); // Override counts as acceptance
           if (entry.requires_supervisor_review) {
             toast.warning("This override has been flagged for supervisory review.");
           } else {
@@ -348,6 +383,24 @@ const EvaluateWorkspacePage = () => {
           }
         }}
       />
+
+      {/* Publish Dialog */}
+      {snapshot && (
+        <EvalPublishDialog
+          isOpen={publishDialogOpen}
+          onClose={() => setPublishDialogOpen(false)}
+          onPublish={handlePublish}
+          isPending={publishEvaluate.isPending}
+          snapshot={snapshot}
+          moduleStatus={evalCompletion?.status}
+          overrides={audit.overrides}
+          sourceModule={eligibility.inputSource ?? "demandiq"}
+          sourceVersion={eligibility.sourceVersion ?? 1}
+          existingVersionCount={publishedPackages.length}
+          systemCorridor={systemCorridor}
+          isAccepted={isAccepted}
+        />
+      )}
     </div>
   );
 };
