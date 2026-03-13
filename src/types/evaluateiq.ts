@@ -64,15 +64,18 @@ export type EvaluateCTA = "start" | "resume" | "complete";
 export function getEvaluateCTA(state: EvaluateModuleState): { label: string; action: EvaluateCTA } | null {
   switch (state) {
     case EvaluateModuleState.NotStarted:
+    case EvaluateModuleState.PackageReady:
     case EvaluateModuleState.IntakeReady:
       return { label: "Start Evaluate", action: "start" };
     case EvaluateModuleState.IntakeInProgress:
     case EvaluateModuleState.ValuationReady:
     case EvaluateModuleState.ValuationInReview:
+    case EvaluateModuleState.ProvisionalEvaluation:
       return { label: "Resume Evaluate", action: "resume" };
     case EvaluateModuleState.Valued:
       return { label: "Complete Evaluate", action: "complete" };
     case EvaluateModuleState.Completed:
+    case EvaluateModuleState.Published:
       return null;
   }
 }
