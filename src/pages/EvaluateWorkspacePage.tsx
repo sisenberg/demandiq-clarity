@@ -28,7 +28,6 @@ import EvalRangeTab from "@/components/evaluate/EvalRangeTab";
 import EvalEvidenceTab from "@/components/evaluate/EvalEvidenceTab";
 import EvalExplanationTab from "@/components/evaluate/EvalExplanationTab";
 import EvalHandoffTab from "@/components/evaluate/EvalHandoffTab";
-import EvalPlaceholderTab from "@/components/evaluate/EvalPlaceholderTab";
 import EvalValuationCards from "@/components/evaluate/EvalValuationCards";
 import EvalIntakeReadinessCard from "@/components/evaluate/EvalIntakeReadinessCard";
 import EvalStickyActions from "@/components/evaluate/EvalStickyActions";
@@ -42,6 +41,7 @@ import EvalMeritsCorridorCard from "@/components/evaluate/EvalMeritsCorridorCard
 import EvalPostMeritAdjustmentCard from "@/components/evaluate/EvalPostMeritAdjustmentCard";
 import EvalDocSufficiencyCard from "@/components/evaluate/EvalDocSufficiencyCard";
 import EvalBenchmarkCard from "@/components/evaluate/EvalBenchmarkCard";
+import EvalCorridorSummary from "@/components/evaluate/EvalCorridorSummary";
 import {
   ArrowLeft,
   Calculator,
@@ -49,6 +49,9 @@ import {
   Lock,
   AlertTriangle,
   Play,
+  Clock,
+  Tag,
+  Cpu,
 } from "lucide-react";
 
 const EvaluateWorkspacePage = () => {
@@ -66,6 +69,7 @@ const EvaluateWorkspacePage = () => {
   const moduleState = deriveEvaluateState(evalCompletion?.status);
   const cta = getEvaluateCTA(moduleState);
   const isWorkspaceActive = eligibility.eligible && moduleState !== EvaluateModuleState.NotStarted;
+  const isProvisional = moduleState === EvaluateModuleState.ProvisionalEvaluation;
 
   const claimProfile = useMemo(() => snapshot ? classifyClaimProfile(snapshot) : null, [snapshot]);
 
@@ -126,9 +130,10 @@ const EvaluateWorkspacePage = () => {
 
   return (
     <div className="flex flex-col h-full">
-      {/* ── Top Header ────────────────────────────── */}
-      <div className="shrink-0 bg-card border-b border-border px-6 py-3">
-        <div className="flex items-center justify-between">
+      {/* ── Top Header — Dense Enterprise Bar ────── */}
+      <div className="shrink-0 bg-card border-b border-border">
+        {/* Row 1: Identity + Status */}
+        <div className="px-6 py-2.5 flex items-center justify-between">
           <div className="flex items-center gap-3">
             <Link to={`/cases/${caseId}`} className="text-muted-foreground hover:text-foreground transition-colors">
               <ArrowLeft className="h-4 w-4" />
@@ -137,27 +142,51 @@ const EvaluateWorkspacePage = () => {
               <Calculator className="h-4 w-4 text-primary" />
             </div>
             <div>
-              <h1 className="text-sm font-semibold text-foreground">EvaluateIQ</h1>
-              <p className="text-[11px] text-muted-foreground mt-0.5">
-                {claimVsInsured} · {caseData.case_number}
-              </p>
+              <div className="flex items-center gap-2">
+                <h1 className="text-sm font-semibold text-foreground">EvaluateIQ</h1>
+                <span className="text-[10px] text-muted-foreground font-mono">·</span>
+                <span className="text-[11px] text-muted-foreground truncate max-w-[240px]">{claimVsInsured}</span>
+              </div>
+              <div className="flex items-center gap-3 mt-0.5">
+                <span className="text-[10px] text-muted-foreground font-mono">{caseData.case_number}</span>
+                {caseData.jurisdiction_state && (
+                  <span className="text-[10px] text-muted-foreground">{caseData.jurisdiction_state}</span>
+                )}
+              </div>
             </div>
           </div>
 
           <div className="flex items-center gap-2">
+            {/* Engine version badge */}
+            <span className="text-[9px] font-mono text-muted-foreground/70 bg-accent px-1.5 py-0.5 rounded flex items-center gap-1">
+              <Cpu className="h-2.5 w-2.5" /> v1.0.0
+            </span>
+
+            {/* Source module */}
             {eligibility.inputSource && (
-              <span className="text-[10px] font-medium text-muted-foreground bg-accent px-2 py-1 rounded-md">
-                Source: {eligibility.inputSource === "revieweriq" ? "ReviewerIQ" : "DemandIQ"} v{eligibility.sourceVersion}
+              <span className="text-[9px] font-medium text-muted-foreground bg-accent px-2 py-1 rounded-md flex items-center gap-1">
+                <Tag className="h-2.5 w-2.5" />
+                {eligibility.inputSource === "revieweriq" ? "ReviewerIQ" : "DemandIQ"} v{eligibility.sourceVersion}
               </span>
             )}
-            <span className={`text-[10px] font-semibold uppercase tracking-wider px-2.5 py-1 rounded-md ${EVALUATE_STATE_BADGE_CLASS[moduleState]}`}>
+
+            {/* Provisional flag */}
+            {isProvisional && (
+              <span className="text-[9px] font-bold uppercase tracking-wider px-2 py-1 rounded-md bg-[hsl(var(--status-attention))]/10 text-[hsl(var(--status-attention))] border border-[hsl(var(--status-attention))]/20 flex items-center gap-1">
+                <AlertTriangle className="h-2.5 w-2.5" /> Provisional
+              </span>
+            )}
+
+            {/* Module state */}
+            <span className={`text-[10px] font-semibold uppercase tracking-wider px-2.5 py-1 rounded-md ${EVALUATE_STATE_BADGE_CLASS[moduleState]} bg-current/5 border border-current/15`}>
               {EVALUATE_STATE_LABEL[moduleState]}
             </span>
           </div>
         </div>
 
+        {/* Row 2: Workspace Tabs */}
         {isWorkspaceActive && (
-          <div className="mt-2 -mb-3 border-t border-border pt-2">
+          <div className="px-6 border-t border-border pt-1 pb-0">
             <EvaluateWorkspaceTabs active={activeTab} onChange={setActiveTab} />
           </div>
         )}
@@ -165,7 +194,7 @@ const EvaluateWorkspacePage = () => {
 
       {/* ── Body: Three-Panel Layout ──────────────── */}
       <div className="flex-1 flex overflow-hidden">
-        {/* Left panel — only when workspace is active */}
+        {/* Left panel */}
         {isWorkspaceActive && (
           <EvalLeftPanel
             snapshot={snapshot}
@@ -181,7 +210,7 @@ const EvaluateWorkspacePage = () => {
 
         {/* Center panel */}
         <div className="flex-1 overflow-y-auto">
-          <div className="p-6 max-w-5xl mx-auto">
+          <div className="p-5 max-w-5xl mx-auto">
             {/* Blocked */}
             {!eligibility.eligible && (
               <div className="mt-12">
@@ -195,8 +224,8 @@ const EvaluateWorkspacePage = () => {
 
             {/* Not started */}
             {eligibility.eligible && moduleState === EvaluateModuleState.NotStarted && (
-              <div className="space-y-8">
-                <div className="mt-8">
+              <div className="space-y-6">
+                <div className="mt-6">
                   <EmptyState
                     icon={Calculator}
                     title="Ready to Evaluate"
@@ -208,22 +237,14 @@ const EvaluateWorkspacePage = () => {
                     }
                   />
                 </div>
-                {/* Show placeholder valuation cards before starting */}
                 <EvalValuationCards />
               </div>
             )}
 
             {/* Active workspace */}
             {isWorkspaceActive && snapshot && (
-              <div className="space-y-5">
-                <EvalIntakeReadinessCard
-                  validation={null}
-                  packageVersion={eligibility.sourceVersion}
-                  sourceModule={eligibility.inputSource ?? "demandiq"}
-                  publishedAt={null}
-                  isProvisional={false}
-                />
-
+              <div className="space-y-4">
+                {/* Stale banner */}
                 <EvalStaleDataBanner
                   isStale={isStale}
                   staleReason=""
@@ -234,26 +255,61 @@ const EvaluateWorkspacePage = () => {
                   }}
                 />
 
-                {activeTab === "overview" && claimProfile && <EvalClaimProfileCard profile={claimProfile} />}
-                {activeTab === "overview" && <EvalMeritsScoreCard snapshot={snapshot} />}
-                {activeTab === "overview" && <EvalMeritsCorridorCard snapshot={snapshot} />}
-                {activeTab === "overview" && <EvalPostMeritAdjustmentCard snapshot={snapshot} />}
-                {activeTab === "overview" && <EvalDocSufficiencyCard snapshot={snapshot} />}
-                {activeTab === "overview" && <EvalOverviewTab snapshot={snapshot} />}
-                {activeTab === "drivers" && <EvalScoringRankedSummary snapshot={snapshot} />}
-                {activeTab === "drivers" && <EvalFactorTaxonomyPanel snapshot={snapshot} />}
-                {activeTab === "drivers" && <EvalDriversTab snapshot={snapshot} />}
+                {/* ── Overview Tab ────────────────────── */}
+                {activeTab === "overview" && (
+                  <div className="space-y-4">
+                    {/* 1. Corridor summary hero */}
+                    <EvalCorridorSummary snapshot={snapshot} isProvisional={isProvisional} />
+
+                    {/* 2. Claim profile */}
+                    {claimProfile && <EvalClaimProfileCard profile={claimProfile} />}
+
+                    {/* 3. Merits + Corridor + Adjustments (dense grid) */}
+                    <div className="grid grid-cols-1 xl:grid-cols-2 gap-4">
+                      <EvalMeritsScoreCard snapshot={snapshot} />
+                      <EvalMeritsCorridorCard snapshot={snapshot} />
+                    </div>
+
+                    {/* 4. Post-merit adjustments */}
+                    <EvalPostMeritAdjustmentCard snapshot={snapshot} />
+
+                    {/* 5. Documentation Sufficiency */}
+                    <EvalDocSufficiencyCard snapshot={snapshot} />
+
+                    {/* 6. Case facts overview */}
+                    <EvalOverviewTab snapshot={snapshot} />
+                  </div>
+                )}
+
+                {/* ── Drivers Tab ────────────────────── */}
+                {activeTab === "drivers" && (
+                  <div className="space-y-4">
+                    <EvalScoringRankedSummary snapshot={snapshot} />
+                    <EvalFactorTaxonomyPanel snapshot={snapshot} />
+                    <EvalDriversTab snapshot={snapshot} />
+                  </div>
+                )}
+
+                {/* ── Range Tab ──────────────────────── */}
                 {activeTab === "range" && <EvalRangeTab snapshot={snapshot} />}
+
+                {/* ── Explanation Tab ─────────────────── */}
                 {activeTab === "explanation" && <EvalExplanationTab snapshot={snapshot} />}
+
+                {/* ── Evidence Tab ────────────────────── */}
                 {activeTab === "evidence" && <EvalEvidenceTab snapshot={snapshot} />}
+
+                {/* ── Calibration Tab ─────────────────── */}
                 {activeTab === "calibration" && <EvalBenchmarkCard snapshot={snapshot} />}
+
+                {/* ── Handoff Tab ─────────────────────── */}
                 {activeTab === "handoff" && <EvalHandoffTab snapshot={snapshot} />}
               </div>
             )}
           </div>
         </div>
 
-        {/* Right panel — only when workspace is active */}
+        {/* Right panel */}
         {isWorkspaceActive && (
           <EvalRightPanel snapshot={snapshot} caseId={caseId} />
         )}
@@ -265,6 +321,8 @@ const EvaluateWorkspacePage = () => {
           moduleState={moduleState}
           onCTA={handleCTA}
           isPending={isPending}
+          onAccept={() => toast.info("Package accepted. Ready for publish.")}
+          onPublish={() => toast.info("Publishing evaluation package…")}
         />
       )}
     </div>

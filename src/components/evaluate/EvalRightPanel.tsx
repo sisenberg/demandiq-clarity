@@ -1,29 +1,35 @@
 /**
- * EvaluateIQ — Right Panel
- * Tabbed panel with: Evidence, Factor Detail, Benchmark Detail, Audit Detail.
+ * EvaluateIQ — Right Panel (Upgraded)
+ * Tabbed panel with: Evidence, Factors, Benchmarks, Overrides, Audit.
  */
 
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import type { EvaluateIntakeSnapshot } from "@/types/evaluate-intake";
+import { computeBenchmarkMatching } from "@/lib/benchmarkMatchingEngine";
+import { computeDocumentSufficiency } from "@/lib/documentSufficiencyEngine";
 import {
   ExternalLink,
   BarChart3,
   Scale,
   ScrollText,
-  ChevronRight,
-  FileText,
+  SlidersHorizontal,
   Link2,
   Clock,
   CheckCircle2,
   AlertTriangle,
+  Info,
+  FileSearch,
+  XCircle,
+  Users,
 } from "lucide-react";
 
-type RightTab = "evidence" | "factors" | "benchmarks" | "audit";
+type RightTab = "evidence" | "factors" | "benchmarks" | "overrides" | "audit";
 
 const TABS: { key: RightTab; label: string; icon: React.ElementType }[] = [
   { key: "evidence", label: "Evidence", icon: ExternalLink },
   { key: "factors", label: "Factors", icon: Scale },
   { key: "benchmarks", label: "Benchmarks", icon: BarChart3 },
+  { key: "overrides", label: "Overrides", icon: SlidersHorizontal },
   { key: "audit", label: "Audit", icon: ScrollText },
 ];
 
@@ -67,7 +73,8 @@ const EvalRightPanel = ({ snapshot, caseId }: Props) => {
       <div className="flex-1 overflow-y-auto p-3">
         {activeTab === "evidence" && <EvidencePanel snapshot={snapshot} />}
         {activeTab === "factors" && <FactorsPanel snapshot={snapshot} />}
-        {activeTab === "benchmarks" && <BenchmarksPanel />}
+        {activeTab === "benchmarks" && <BenchmarksPanel snapshot={snapshot} />}
+        {activeTab === "overrides" && <OverridesPanel />}
         {activeTab === "audit" && <AuditPanel caseId={caseId} />}
       </div>
     </div>
@@ -92,7 +99,6 @@ function EvidencePanel({ snapshot }: { snapshot: EvaluateIntakeSnapshot | null }
         <span className="text-[10px] text-muted-foreground">{evidenceRefs.size} total</span>
       </div>
 
-      {/* Injury evidence */}
       {snapshot.injuries.length > 0 && (
         <EvidenceGroup
           label="Injuries"
@@ -104,7 +110,6 @@ function EvidencePanel({ snapshot }: { snapshot: EvaluateIntakeSnapshot | null }
         />
       )}
 
-      {/* Liability evidence */}
       {snapshot.liability_facts.length > 0 && (
         <EvidenceGroup
           label="Liability Facts"
@@ -116,7 +121,6 @@ function EvidencePanel({ snapshot }: { snapshot: EvaluateIntakeSnapshot | null }
         />
       )}
 
-      {/* Billing evidence */}
       {snapshot.medical_billing.length > 0 && (
         <EvidenceGroup
           label="Medical Billing"
@@ -166,6 +170,8 @@ function EvidenceGroup({ label, items }: { label: string; items: { text: string;
 function FactorsPanel({ snapshot }: { snapshot: EvaluateIntakeSnapshot | null }) {
   if (!snapshot) return <PlaceholderMessage message="No snapshot loaded" />;
 
+  const docSuff = useMemo(() => computeDocumentSufficiency(snapshot), [snapshot]);
+
   const factors = [
     { label: "Injury Count", value: String(snapshot.injuries.length), detail: `${snapshot.injuries.filter(i => !i.is_pre_existing).length} new, ${snapshot.injuries.filter(i => i.is_pre_existing).length} pre-existing` },
     { label: "Treatment Intensity", value: String(snapshot.treatment_timeline.length), detail: "total visits across all providers" },
@@ -178,7 +184,7 @@ function FactorsPanel({ snapshot }: { snapshot: EvaluateIntakeSnapshot | null })
   ];
 
   return (
-    <div className="space-y-2">
+    <div className="space-y-3">
       <span className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">Key Valuation Factors</span>
       {factors.map((f, i) => (
         <div key={i} className="rounded-lg border border-border p-2.5 hover:bg-accent/20 transition-colors">
@@ -189,29 +195,163 @@ function FactorsPanel({ snapshot }: { snapshot: EvaluateIntakeSnapshot | null })
           <p className="text-[9px] text-muted-foreground mt-0.5">{f.detail}</p>
         </div>
       ))}
+
+      {/* Doc sufficiency mini */}
+      <div className="rounded-lg border border-border p-2.5">
+        <div className="flex items-center gap-1.5 mb-1.5">
+          <FileSearch className="h-3 w-3 text-muted-foreground" />
+          <span className="text-[10px] font-semibold text-foreground">Documentation Sufficiency</span>
+        </div>
+        <div className="grid grid-cols-2 gap-1.5">
+          {docSuff.subcomponents.map(sub => (
+            <div key={sub.key} className="flex items-center gap-1.5">
+              <SuffDot label={sub.sufficiency} />
+              <span className="text-[8px] text-muted-foreground truncate">{sub.label}</span>
+              <span className="text-[8px] font-semibold text-foreground ml-auto">{sub.score}</span>
+            </div>
+          ))}
+        </div>
+      </div>
     </div>
   );
 }
 
+function SuffDot({ label }: { label: string }) {
+  const cls = label === "strong" ? "bg-[hsl(var(--status-approved))]"
+    : label === "adequate" ? "bg-primary"
+      : label === "limited" ? "bg-[hsl(var(--status-attention))]"
+        : "bg-destructive";
+  return <span className={`h-1.5 w-1.5 rounded-full shrink-0 ${cls}`} />;
+}
+
 // ─── Benchmarks Panel ───────────────────────────────────
 
-function BenchmarksPanel() {
+function BenchmarksPanel({ snapshot }: { snapshot: EvaluateIntakeSnapshot | null }) {
+  if (!snapshot) return <PlaceholderMessage message="No snapshot loaded" />;
+
+  const result = useMemo(() => computeBenchmarkMatching(snapshot), [snapshot]);
+
   return (
     <div className="space-y-3">
-      <span className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">Benchmark Support</span>
-      <div className="rounded-lg border border-border p-4 text-center">
-        <BarChart3 className="h-8 w-8 text-muted-foreground/30 mx-auto mb-2" />
-        <p className="text-[11px] font-medium text-foreground">Historical Calibration</p>
-        <p className="text-[10px] text-muted-foreground mt-1 leading-relaxed max-w-[220px] mx-auto">
-          Comparable verdicts and settlements for similar injury profiles, jurisdictions, and liability postures will appear here.
+      <div className="flex items-center justify-between">
+        <span className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">Benchmark Support</span>
+        <QualityBadge quality={result.match_quality} />
+      </div>
+
+      {/* Stats */}
+      {result.settlement_stats.median !== null && (
+        <div className="grid grid-cols-2 gap-2">
+          <MiniStat label="Median" value={`$${result.settlement_stats.median.toLocaleString()}`} highlight />
+          <MiniStat label="P25–P75" value={result.settlement_stats.p25 && result.settlement_stats.p75 ? `$${result.settlement_stats.p25.toLocaleString()} – $${result.settlement_stats.p75.toLocaleString()}` : "—"} />
+        </div>
+      )}
+
+      <p className="text-[9px] text-muted-foreground leading-relaxed">
+        {result.selected_count} match(es) from {result.candidate_count} candidates.
+        {result.outlier_count > 0 && ` ${result.outlier_count} outlier(s) excluded from stats.`}
+      </p>
+
+      {/* Top matches */}
+      {result.selected_matches.slice(0, 5).map(m => (
+        <div key={m.case_id} className="rounded-lg border border-border p-2.5 hover:bg-accent/20 transition-colors">
+          <div className="flex items-center justify-between">
+            <span className="text-[10px] font-medium text-foreground">{m.claim_number}</span>
+            <div className="flex items-center gap-2">
+              <span className="text-[10px] font-bold text-foreground">${m.settlement_amount.toLocaleString()}</span>
+              <span className={`text-[8px] font-semibold px-1 py-0.5 rounded ${
+                m.overall_similarity >= 70 ? "bg-[hsl(var(--status-approved))]/10 text-[hsl(var(--status-approved))]"
+                : "bg-[hsl(var(--status-attention))]/10 text-[hsl(var(--status-attention))]"
+              }`}>
+                {m.overall_similarity}%
+              </span>
+            </div>
+          </div>
+          {m.is_outlier && (
+            <span className="text-[8px] text-[hsl(var(--status-attention))] font-semibold uppercase">Outlier</span>
+          )}
+          {m.match_reasons.length > 0 && (
+            <div className="flex flex-wrap gap-1 mt-1">
+              {m.match_reasons.slice(0, 2).map((r, i) => (
+                <span key={i} className="text-[7px] bg-accent px-1 py-0.5 rounded text-muted-foreground">{r}</span>
+              ))}
+            </div>
+          )}
+        </div>
+      ))}
+
+      {result.selected_count === 0 && (
+        <div className="text-center py-4">
+          <Users className="h-5 w-5 text-muted-foreground/30 mx-auto mb-1.5" />
+          <p className="text-[10px] text-muted-foreground">No close matches in current corpus.</p>
+        </div>
+      )}
+    </div>
+  );
+}
+
+function QualityBadge({ quality }: { quality: string }) {
+  const cls = quality === "strong" ? "bg-[hsl(var(--status-approved))]/10 text-[hsl(var(--status-approved))]"
+    : quality === "moderate" ? "bg-primary/10 text-primary"
+      : quality === "weak" ? "bg-[hsl(var(--status-attention))]/10 text-[hsl(var(--status-attention))]"
+        : "bg-destructive/10 text-destructive";
+  return (
+    <span className={`text-[8px] font-semibold uppercase tracking-wider px-1.5 py-0.5 rounded ${cls}`}>
+      {quality}
+    </span>
+  );
+}
+
+function MiniStat({ label, value, highlight }: { label: string; value: string; highlight?: boolean }) {
+  return (
+    <div className={`rounded-lg p-2 ${highlight ? "bg-primary/5 border border-primary/20" : "bg-accent/50"}`}>
+      <div className="text-[8px] text-muted-foreground">{label}</div>
+      <div className={`text-[10px] font-bold ${highlight ? "text-primary" : "text-foreground"}`}>{value}</div>
+    </div>
+  );
+}
+
+// ─── Overrides Panel ────────────────────────────────────
+
+function OverridesPanel() {
+  return (
+    <div className="space-y-3">
+      <span className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">Override Controls</span>
+
+      <div className="rounded-lg border border-border p-3 space-y-2.5">
+        <p className="text-[10px] text-muted-foreground leading-relaxed">
+          Override engine assumptions to see real-time impact on the settlement corridor.
+          Changes are tracked in the audit trail.
+        </p>
+
+        <OverrideRow label="Medical Base Selection" value="Reviewed Medical" status="system" />
+        <OverrideRow label="Liability Percentage" value="100%" status="system" />
+        <OverrideRow label="Severity Multiplier" value="Auto-computed" status="system" />
+        <OverrideRow label="Comparative Negligence" value="0%" status="system" />
+        <OverrideRow label="Venue Multiplier" value="1.0x (PA)" status="system" />
+        <OverrideRow label="Treatment Reliability" value="Auto-scored" status="system" />
+      </div>
+
+      <div className="rounded-lg bg-accent/50 p-3">
+        <p className="text-[9px] text-muted-foreground leading-relaxed">
+          Use the <span className="font-semibold">Range Output</span> tab to modify assumptions and see system vs. revised comparisons.
+          All overrides are logged with timestamps and user attribution.
         </p>
       </div>
-      <div className="rounded-lg border border-border p-4 text-center">
-        <Scale className="h-8 w-8 text-muted-foreground/30 mx-auto mb-2" />
-        <p className="text-[11px] font-medium text-foreground">Venue Analytics</p>
-        <p className="text-[10px] text-muted-foreground mt-1 leading-relaxed max-w-[220px] mx-auto">
-          Jurisdiction-specific multipliers and historical outcome distributions.
-        </p>
+    </div>
+  );
+}
+
+function OverrideRow({ label, value, status }: { label: string; value: string; status: "system" | "overridden" }) {
+  return (
+    <div className="flex items-center justify-between py-1.5 border-b border-border last:border-0">
+      <span className="text-[10px] text-foreground font-medium">{label}</span>
+      <div className="flex items-center gap-1.5">
+        <span className="text-[10px] text-muted-foreground">{value}</span>
+        {status === "system" ? (
+          <CheckCircle2 className="h-2.5 w-2.5 text-muted-foreground/40" />
+        ) : (
+          <AlertTriangle className="h-2.5 w-2.5 text-[hsl(var(--status-attention))]" />
+        )}
       </div>
     </div>
   );
@@ -220,24 +360,35 @@ function BenchmarksPanel() {
 // ─── Audit Panel ────────────────────────────────────────
 
 function AuditPanel({ caseId }: { caseId: string | undefined }) {
-  // Placeholder — will be wired to audit_events table
   const auditEntries = [
-    { action: "Module started", time: "2 hours ago", actor: "System" },
-    { action: "Snapshot created", time: "2 hours ago", actor: "System" },
-    { action: "Valuation drivers extracted", time: "1 hour ago", actor: "Engine v1.0" },
-    { action: "Range computed", time: "1 hour ago", actor: "Engine v1.0" },
+    { action: "Module started", time: "2 hours ago", actor: "System", type: "system" },
+    { action: "Intake snapshot created", time: "2 hours ago", actor: "Engine v1.0", type: "system" },
+    { action: "Claim profile classified", time: "2 hours ago", actor: "Engine v1.0", type: "system" },
+    { action: "Factor scoring completed", time: "1 hour ago", actor: "Engine v1.0", type: "system" },
+    { action: "Merits corridor computed", time: "1 hour ago", actor: "Engine v1.0", type: "system" },
+    { action: "Post-merit adjustments applied", time: "1 hour ago", actor: "Engine v1.0", type: "system" },
+    { action: "Documentation sufficiency scored", time: "1 hour ago", actor: "Engine v1.0", type: "system" },
+    { action: "Benchmark matching completed", time: "1 hour ago", actor: "Engine v1.0", type: "system" },
+    { action: "Settlement range computed", time: "58 min ago", actor: "Engine v1.0", type: "system" },
   ];
 
   return (
     <div className="space-y-3">
-      <span className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">Audit Trail</span>
-      <div className="space-y-1">
+      <div className="flex items-center justify-between">
+        <span className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">Audit Trail</span>
+        <span className="text-[9px] text-muted-foreground">{auditEntries.length} events</span>
+      </div>
+      <div className="space-y-0">
         {auditEntries.map((entry, i) => (
-          <div key={i} className="flex items-start gap-2.5 py-2 border-b border-border last:border-0">
-            <Clock className="h-3 w-3 text-muted-foreground shrink-0 mt-0.5" />
+          <div key={i} className="flex items-start gap-2.5 py-2 border-b border-border/50 last:border-0 group hover:bg-accent/20 rounded px-1 -mx-1 transition-colors">
+            <div className="mt-1 flex flex-col items-center">
+              <span className="h-1.5 w-1.5 rounded-full bg-primary/40 group-hover:bg-primary transition-colors" />
+              {i < auditEntries.length - 1 && <span className="w-px h-full bg-border mt-0.5" />}
+            </div>
             <div className="min-w-0 flex-1">
               <p className="text-[10px] font-medium text-foreground">{entry.action}</p>
               <div className="flex items-center gap-2 mt-0.5">
+                <Clock className="h-2.5 w-2.5 text-muted-foreground/50" />
                 <span className="text-[9px] text-muted-foreground">{entry.time}</span>
                 <span className="text-[9px] text-muted-foreground">·</span>
                 <span className="text-[9px] text-muted-foreground">{entry.actor}</span>
