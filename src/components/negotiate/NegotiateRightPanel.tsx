@@ -34,6 +34,13 @@ const EVENT_ICONS: Record<string, React.ElementType> = {
   session_completed: CheckCircle2,
   status_changed: Clock,
   strategy_override: ArrowDownUp,
+  // Representation events
+  representation_status_recorded: UserCheck,
+  representation_confirmed_unrepresented: UserX,
+  attorney_retained: UserCheck,
+  attorney_substituted: ArrowRightLeft,
+  attorney_withdrew: UserX,
+  strategy_refresh_triggered: AlertTriangle,
 };
 
 interface NegotiateRightPanelProps {
