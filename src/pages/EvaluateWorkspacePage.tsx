@@ -41,6 +41,7 @@ import EvalMeritsScoreCard from "@/components/evaluate/EvalMeritsScoreCard";
 import EvalMeritsCorridorCard from "@/components/evaluate/EvalMeritsCorridorCard";
 import EvalPostMeritAdjustmentCard from "@/components/evaluate/EvalPostMeritAdjustmentCard";
 import EvalDocSufficiencyCard from "@/components/evaluate/EvalDocSufficiencyCard";
+import EvalBenchmarkCard from "@/components/evaluate/EvalBenchmarkCard";
 import {
   ArrowLeft,
   Calculator,
@@ -245,7 +246,7 @@ const EvaluateWorkspacePage = () => {
                 {activeTab === "range" && <EvalRangeTab snapshot={snapshot} />}
                 {activeTab === "explanation" && <EvalExplanationTab snapshot={snapshot} />}
                 {activeTab === "evidence" && <EvalEvidenceTab snapshot={snapshot} />}
-                {activeTab === "calibration" && <EvalPlaceholderTab tab="calibration" />}
+                {activeTab === "calibration" && <EvalBenchmarkCard snapshot={snapshot} />}
                 {activeTab === "handoff" && <EvalHandoffTab snapshot={snapshot} />}
               </div>
             )}
