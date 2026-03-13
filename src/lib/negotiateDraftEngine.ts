@@ -1,8 +1,11 @@
 /**
- * NegotiateIQ — Drafting Engine v1
+ * NegotiateIQ — Drafting Engine v1.1
  *
  * Generates editable draft content from case evaluation context,
  * negotiation posture, and adjuster tone selection.
+ *
+ * Representation-aware: branches language for unrepresented claimants
+ * (plain language, non-coercive) vs. attorney-facing (tighter phrasing).
  *
  * Drafting-only — no outbound send capability.
  */
@@ -26,6 +29,8 @@ export type DraftType =
 
 export type DraftTone = "neutral" | "firm" | "collaborative";
 
+export type DraftAudience = "attorney" | "claimant_direct" | "internal";
+
 export interface DraftInputs {
   draftType: DraftType;
   tone: DraftTone;
@@ -37,11 +42,14 @@ export interface DraftInputs {
   customInstructions?: string;
   recipientName?: string;
   recipientFirm?: string;
+  /** Override audience; auto-detected from vm.representation if omitted */
+  audience?: DraftAudience;
 }
 
 export interface GeneratedDraft {
   draftType: DraftType;
   tone: DraftTone;
+  audience: DraftAudience;
   title: string;
   /** External-facing draft content */
   externalContent: string;
@@ -72,17 +80,28 @@ export const DRAFT_TYPE_META: Record<DraftType, { label: string; description: st
   phone_talking_points: { label: "Phone Talking Points", description: "Structured talking points for verbal negotiation", isInternal: true },
 };
 
-const ENGINE_VERSION = "1.0.0";
+const ENGINE_VERSION = "1.1.0";
+
+// ─── Audience Detection ─────────────────────────────────
+
+function resolveAudience(inputs: DraftInputs): DraftAudience {
+  if (inputs.audience) return inputs.audience;
+  const meta = DRAFT_TYPE_META[inputs.draftType];
+  // Internal drafts are always internal, but phone talking points adapt to audience
+  if (meta.isInternal && inputs.draftType !== "phone_talking_points") return "internal";
+  if (inputs.vm.representation.status === "unrepresented") return "claimant_direct";
+  return "attorney";
+}
 
 // ─── Engine ─────────────────────────────────────────────
 
 export function generateDraft(inputs: DraftInputs): GeneratedDraft {
   const { draftType, tone, vm, strategy, rounds, selectedAction, proposedOffer, customInstructions, recipientName, recipientFirm } = inputs;
+  const audience = resolveAudience(inputs);
 
   const snippets = buildContextSnippets(vm, strategy, rounds);
   const meta = DRAFT_TYPE_META[draftType];
 
-  const caseName = `${vm.provenance.packageId.slice(0, 8)}`;
   const rangeFloor = vm.valuationRange.selectedFloor ?? vm.valuationRange.floor ?? 0;
   const rangeLikely = vm.valuationRange.selectedLikely ?? vm.valuationRange.likely ?? 0;
   const rangeStretch = vm.valuationRange.selectedStretch ?? vm.valuationRange.stretch ?? 0;
@@ -92,13 +111,12 @@ export function generateDraft(inputs: DraftInputs): GeneratedDraft {
   const targetLow = strategy?.targetSettlementZone.generated.low ?? rangeFloor;
   const targetHigh = strategy?.targetSettlementZone.generated.high ?? rangeLikely;
   const offerAmount = proposedOffer ?? lastOffer ?? strategy?.openingOffer.generated ?? rangeFloor;
-  const recipient = recipientName || "[Claimant Counsel]";
+  const recipient = recipientName || (audience === "claimant_direct" ? "[Claimant Name]" : "[Claimant Counsel]");
   const firm = recipientFirm || "[Firm Name]";
 
   const toneAdj = tone === "firm" ? "direct and firm" : tone === "collaborative" ? "respectful and collaborative" : "professional and neutral";
   const toneVerb = tone === "firm" ? "maintains" : tone === "collaborative" ? "acknowledges" : "notes";
 
-  // Build driver references
   const expanderList = vm.expanders.slice(0, 3).map(d => d.label).join(", ") || "N/A";
   const reducerList = vm.reducers.slice(0, 3).map(d => d.label).join(", ") || "N/A";
   const riskList = vm.risks.slice(0, 3).map(r => r.label).join(", ") || "N/A";
@@ -108,32 +126,42 @@ export function generateDraft(inputs: DraftInputs): GeneratedDraft {
 
   switch (draftType) {
     case "offer_letter":
-      externalContent = buildOfferLetter(recipient, firm, offerAmount, toneAdj, toneVerb, expanderList, reducerList, vm, customInstructions);
-      internalNotes = buildInternalNote("Offer Letter", offerAmount, lastCounter, ceiling, targetLow, targetHigh, selectedAction, strategy, rounds, vm);
+      externalContent = audience === "claimant_direct"
+        ? buildOfferLetterDirect(recipient, offerAmount, vm, customInstructions)
+        : buildOfferLetterAttorney(recipient, firm, offerAmount, toneAdj, toneVerb, expanderList, reducerList, vm, customInstructions);
+      internalNotes = buildInternalNote("Offer Letter", offerAmount, lastCounter, ceiling, targetLow, targetHigh, selectedAction, strategy, rounds, vm, audience);
       break;
 
     case "counteroffer_letter":
-      externalContent = buildCounterofferLetter(recipient, firm, offerAmount, lastCounter, toneAdj, toneVerb, expanderList, reducerList, vm, customInstructions);
-      internalNotes = buildInternalNote("Counteroffer Letter", offerAmount, lastCounter, ceiling, targetLow, targetHigh, selectedAction, strategy, rounds, vm);
+      externalContent = audience === "claimant_direct"
+        ? buildCounterofferLetterDirect(recipient, offerAmount, lastCounter, vm, customInstructions)
+        : buildCounterofferLetterAttorney(recipient, firm, offerAmount, lastCounter, toneAdj, toneVerb, expanderList, reducerList, vm, customInstructions);
+      internalNotes = buildInternalNote("Counteroffer Letter", offerAmount, lastCounter, ceiling, targetLow, targetHigh, selectedAction, strategy, rounds, vm, audience);
       break;
 
     case "excessive_demand_response":
-      externalContent = buildExcessiveDemandResponse(recipient, firm, lastCounter, offerAmount, toneAdj, reducerList, riskList, vm, customInstructions);
-      internalNotes = buildInternalNote("Excessive Demand Response", offerAmount, lastCounter, ceiling, targetLow, targetHigh, selectedAction, strategy, rounds, vm);
+      externalContent = audience === "claimant_direct"
+        ? buildExcessiveDemandDirect(recipient, lastCounter, offerAmount, vm, customInstructions)
+        : buildExcessiveDemandAttorney(recipient, firm, lastCounter, offerAmount, toneAdj, reducerList, riskList, vm, customInstructions);
+      internalNotes = buildInternalNote("Excessive Demand Response", offerAmount, lastCounter, ceiling, targetLow, targetHigh, selectedAction, strategy, rounds, vm, audience);
       break;
 
     case "request_support":
-      externalContent = buildRequestSupport(recipient, firm, vm, customInstructions);
+      externalContent = audience === "claimant_direct"
+        ? buildRequestSupportDirect(recipient, vm, customInstructions)
+        : buildRequestSupportAttorney(recipient, firm, vm, customInstructions);
       internalNotes = `Requesting additional documentation to strengthen defense position. Key gaps: ${riskList}. Current evaluated range: ${fmt(rangeFloor)}–${fmt(rangeStretch)}.`;
       break;
 
     case "counter_review_response":
-      externalContent = buildCounterReviewResponse(recipient, firm, lastCounter, offerAmount, toneAdj, toneVerb, vm, customInstructions);
-      internalNotes = buildInternalNote("Counter Review Response", offerAmount, lastCounter, ceiling, targetLow, targetHigh, selectedAction, strategy, rounds, vm);
+      externalContent = audience === "claimant_direct"
+        ? buildCounterReviewDirect(recipient, lastCounter, offerAmount, vm, customInstructions)
+        : buildCounterReviewAttorney(recipient, firm, lastCounter, offerAmount, toneAdj, toneVerb, vm, customInstructions);
+      internalNotes = buildInternalNote("Counter Review Response", offerAmount, lastCounter, ceiling, targetLow, targetHigh, selectedAction, strategy, rounds, vm, audience);
       break;
 
     case "claim_file_note":
-      externalContent = ""; // No external content for internal drafts
+      externalContent = "";
       internalNotes = buildClaimFileNote(offerAmount, lastCounter, ceiling, targetLow, targetHigh, selectedAction, strategy, rounds, vm, expanderList, reducerList, riskList, customInstructions);
       break;
 
@@ -143,14 +171,15 @@ export function generateDraft(inputs: DraftInputs): GeneratedDraft {
       break;
 
     case "phone_talking_points":
-      externalContent = buildPhoneTalkingPoints(offerAmount, lastCounter, toneAdj, expanderList, reducerList, vm, strategy, customInstructions);
-      internalNotes = `Phone talking points generated for ${tone} tone. Proposed position: ${fmt(offerAmount)}. Do not deviate from approved authority of ${ceiling ? fmt(ceiling) : "TBD"}.`;
+      externalContent = buildPhoneTalkingPoints(offerAmount, lastCounter, toneAdj, expanderList, reducerList, vm, strategy, audience, customInstructions);
+      internalNotes = `Phone talking points generated for ${tone} tone (${audience === "claimant_direct" ? "direct claimant" : "attorney"} audience). Proposed position: ${fmt(offerAmount)}. Do not deviate from approved authority of ${ceiling ? fmt(ceiling) : "TBD"}.`;
       break;
   }
 
   return {
     draftType,
     tone,
+    audience,
     title: meta.label,
     externalContent,
     internalNotes,
@@ -160,9 +189,146 @@ export function generateDraft(inputs: DraftInputs): GeneratedDraft {
   };
 }
 
-// ─── External Draft Builders ────────────────────────────
+// ═══════════════════════════════════════════════════════
+// CLAIMANT DIRECT (UNREPRESENTED) DRAFTS
+// Plain language, non-coercive, explanatory
+// ═══════════════════════════════════════════════════════
 
-function buildOfferLetter(recipient: string, firm: string, offer: number, toneAdj: string, toneVerb: string, expanders: string, reducers: string, vm: NegotiationViewModel, custom?: string): string {
+function buildOfferLetterDirect(recipient: string, offer: number, vm: NegotiationViewModel, custom?: string): string {
+  return `Dear ${recipient},
+
+Thank you for filing your claim. We have completed our review of the medical records and documentation you provided.
+
+After carefully reviewing the details of your claim, including your medical treatment and how the incident occurred, we would like to offer ${fmt(offer)} to resolve this matter.
+
+Here is how we arrived at this amount:
+
+• We reviewed the medical bills and treatment records you submitted.${vm.specials.reductionPercent != null && vm.specials.reductionPercent > 0 ? `\n• After comparing the charges to standard rates for similar treatment, we adjusted the medical costs, which is a standard part of our review process.` : ""}
+• We considered the nature and extent of your injuries as documented by your medical providers.
+• We took into account all the information available about how the incident occurred.
+
+What this means for you:
+• This offer represents what we believe is a fair amount based on the documented evidence.
+• You are not required to accept this offer. You have the right to negotiate, seek legal advice, or pursue other options.
+• If you have questions about how we reached this amount, we are happy to explain further.
+
+Please take the time you need to consider this offer. If you would like to discuss it, you can reach us at the contact information below.${custom ? `\n\n${custom}` : ""}
+
+Sincerely,
+[Adjuster Name]
+[Company Name]
+[Phone Number]`;
+}
+
+function buildCounterofferLetterDirect(recipient: string, offer: number, lastCounter: number | null, vm: NegotiationViewModel, custom?: string): string {
+  return `Dear ${recipient},
+
+Thank you for your response${lastCounter ? ` and for sharing that you believe the claim is worth ${fmt(lastCounter)}` : ""}. We appreciate you taking the time to explain your position.
+
+After reviewing your response and reconsidering the information available, we are prepared to increase our offer to ${fmt(offer)}.
+
+This revised amount reflects:
+• Our continued review of your medical treatment and documentation
+• The factors that support the value of your claim
+• A fair assessment based on the evidence we have reviewed
+
+We want to make sure you understand:
+• You are not required to accept this revised offer.
+• You are welcome to respond with your own thoughts on a fair amount.
+• You have the right to consult with an attorney at any time if you wish.
+
+We are committed to reaching a fair resolution and welcome further discussion.${custom ? `\n\n${custom}` : ""}
+
+Sincerely,
+[Adjuster Name]
+[Company Name]
+[Phone Number]`;
+}
+
+function buildExcessiveDemandDirect(recipient: string, lastCounter: number | null, offer: number, vm: NegotiationViewModel, custom?: string): string {
+  return `Dear ${recipient},
+
+Thank you for letting us know what you believe your claim is worth${lastCounter ? ` (${fmt(lastCounter)})` : ""}. We understand that dealing with an injury can be stressful, and we want to work with you toward a fair resolution.
+
+After reviewing all of the documentation, we believe the amount you have requested is higher than what the evidence supports. Here is why:
+
+• The medical records show specific treatments and costs, and we have compared these to standard rates for similar care.
+• Some of the charges may exceed what is typically considered reasonable for the type of treatment received.
+• We have considered all the circumstances of the incident in our evaluation.
+
+Based on our review, our current position is ${fmt(offer)}. We believe this reflects a fair assessment of your claim based on the documented evidence.
+
+What you can do:
+• If you have additional medical records or documentation that we have not yet reviewed, please send them to us. Additional information may affect our evaluation.
+• You are welcome to share your thoughts on why you believe a different amount is appropriate.
+• You have the right to consult with an attorney at any time.
+
+We remain committed to resolving this matter fairly.${custom ? `\n\n${custom}` : ""}
+
+Sincerely,
+[Adjuster Name]
+[Company Name]
+[Phone Number]`;
+}
+
+function buildRequestSupportDirect(recipient: string, vm: NegotiationViewModel, custom?: string): string {
+  const gaps = vm.risks.filter(r => r.category === "gap" || r.category === "treatment" || r.category === "causation");
+  return `Dear ${recipient},
+
+To help us evaluate your claim as fairly and completely as possible, we need some additional information from you. Having complete records helps us ensure you receive a fair offer.
+
+Here is what we need:
+
+• Updated medical records from all of your doctors and treatment providers
+• Itemized bills showing the specific treatments and their costs
+• If you missed work because of your injury, documentation from your employer showing the time missed and any lost wages
+• Any recent test results (X-rays, MRIs, etc.) that we may not have received yet
+${gaps.length > 0 ? `\nSpecifically, we noticed the following gaps in the information we have:\n${gaps.map(g => `• ${g.label}: ${g.description}`).join("\n")}` : ""}
+
+Why this matters:
+Complete documentation helps us make the most accurate assessment of your claim. Without it, we can only evaluate based on what is currently available.
+
+If you need help obtaining these records, please let us know and we can discuss options.${custom ? `\n\n${custom}` : ""}
+
+Thank you for your cooperation.
+
+Sincerely,
+[Adjuster Name]
+[Company Name]
+[Phone Number]`;
+}
+
+function buildCounterReviewDirect(recipient: string, lastCounter: number | null, offer: number, vm: NegotiationViewModel, custom?: string): string {
+  return `Dear ${recipient},
+
+Thank you for your recent response${lastCounter ? ` and for sharing your position of ${fmt(lastCounter)}` : ""}. We have taken the time to carefully review what you have shared.
+
+After consideration, we are prepared to ${offer > (lastCounter ?? 0) ? "maintain" : "adjust"} our position to ${fmt(offer)}.
+
+This amount is based on:
+• A thorough review of your medical records and treatment
+• A comparison of the charges to standard rates for similar care
+• Consideration of all the circumstances of your claim
+
+As always, you have the right to:
+• Continue discussing the amount with us
+• Provide additional documentation that may affect our evaluation
+• Seek legal advice at any time
+
+We are here to help reach a fair resolution.${custom ? `\n\n${custom}` : ""}
+
+Sincerely,
+[Adjuster Name]
+[Company Name]
+[Phone Number]`;
+}
+
+// ═══════════════════════════════════════════════════════
+// ATTORNEY-FACING DRAFTS
+// Professional, tighter negotiation phrasing
+// ═══════════════════════════════════════════════════════
+
+function buildOfferLetterAttorney(recipient: string, firm: string, offer: number, toneAdj: string, toneVerb: string, expanders: string, reducers: string, vm: NegotiationViewModel, custom?: string): string {
   return `Dear ${recipient},
 
 Thank you for providing the demand package on behalf of your client. We have completed a thorough review of the submitted medical records, billing documentation, and supporting materials.
@@ -188,7 +354,7 @@ Sincerely,
 [Company Name]`;
 }
 
-function buildCounterofferLetter(recipient: string, firm: string, offer: number, lastCounter: number | null, toneAdj: string, toneVerb: string, expanders: string, reducers: string, vm: NegotiationViewModel, custom?: string): string {
+function buildCounterofferLetterAttorney(recipient: string, firm: string, offer: number, lastCounter: number | null, toneAdj: string, toneVerb: string, expanders: string, reducers: string, vm: NegotiationViewModel, custom?: string): string {
   return `Dear ${recipient},
 
 Thank you for your response${lastCounter ? ` and your revised demand of ${fmt(lastCounter)}` : ""}. We have carefully considered your position and the supporting documentation provided.
@@ -212,7 +378,7 @@ Sincerely,
 [Company Name]`;
 }
 
-function buildExcessiveDemandResponse(recipient: string, firm: string, lastCounter: number | null, offer: number, toneAdj: string, reducers: string, risks: string, vm: NegotiationViewModel, custom?: string): string {
+function buildExcessiveDemandAttorney(recipient: string, firm: string, lastCounter: number | null, offer: number, toneAdj: string, reducers: string, risks: string, vm: NegotiationViewModel, custom?: string): string {
   return `Dear ${recipient},
 
 We have received and reviewed your demand${lastCounter ? ` of ${fmt(lastCounter)}` : ""}. While we appreciate the opportunity to evaluate the claim, we believe the demand significantly exceeds the supportable value of this matter based on the documented evidence.
@@ -232,7 +398,7 @@ Sincerely,
 [Company Name]`;
 }
 
-function buildRequestSupport(recipient: string, firm: string, vm: NegotiationViewModel, custom?: string): string {
+function buildRequestSupportAttorney(recipient: string, firm: string, vm: NegotiationViewModel, custom?: string): string {
   const gaps = vm.risks.filter(r => r.category === "gap" || r.category === "treatment" || r.category === "causation");
   return `Dear ${recipient},
 
@@ -253,7 +419,7 @@ Sincerely,
 [Company Name]`;
 }
 
-function buildCounterReviewResponse(recipient: string, firm: string, lastCounter: number | null, offer: number, toneAdj: string, toneVerb: string, vm: NegotiationViewModel, custom?: string): string {
+function buildCounterReviewAttorney(recipient: string, firm: string, lastCounter: number | null, offer: number, toneAdj: string, toneVerb: string, vm: NegotiationViewModel, custom?: string): string {
   return `Dear ${recipient},
 
 Thank you for your recent correspondence${lastCounter ? ` and your revised position of ${fmt(lastCounter)}` : ""}. We have completed our review of the updated position and supporting rationale.
@@ -273,26 +439,37 @@ Sincerely,
 [Company Name]`;
 }
 
-function buildPhoneTalkingPoints(offer: number, lastCounter: number | null, toneAdj: string, expanders: string, reducers: string, vm: NegotiationViewModel, strategy: GeneratedStrategy | null, custom?: string): string {
+// ═══════════════════════════════════════════════════════
+// PHONE TALKING POINTS (audience-branched)
+// ═══════════════════════════════════════════════════════
+
+function buildPhoneTalkingPoints(offer: number, lastCounter: number | null, toneAdj: string, expanders: string, reducers: string, vm: NegotiationViewModel, strategy: GeneratedStrategy | null, audience: DraftAudience, custom?: string): string {
   const ceiling = strategy?.authorityCeiling.generated;
   const walkAway = strategy?.walkAwayThreshold.generated;
+  const isDirect = audience === "claimant_direct";
+
   return `PHONE TALKING POINTS — CONFIDENTIAL
 
 ─── OPENING ────────────────────────────────
-• Thank counsel for their time
-• Reference the ongoing negotiation and acknowledge the claim
+• ${isDirect ? "Thank the claimant for their time; use simple, clear language" : "Thank counsel for their time"}
+• Reference the ongoing ${isDirect ? "claim" : "negotiation"} and acknowledge the ${isDirect ? "claimant's situation" : "claim"}
 • Tone: ${toneAdj}
+${isDirect ? "• REMINDER: Claimant is unrepresented. Use plain language. Do not use legal jargon. Do not pressure or create urgency." : ""}
 
 ─── CURRENT POSITION ──────────────────────
 • Our current offer: ${fmt(offer)}
-${lastCounter ? `• Their last counter: ${fmt(lastCounter)}` : "• No counteroffer received yet"}
+${lastCounter ? `• Their last ${isDirect ? "request" : "counter"}: ${fmt(lastCounter)}` : `• No ${isDirect ? "response" : "counteroffer"} received yet`}
 • Gap: ${lastCounter ? fmt(lastCounter - offer) : "N/A"}
 
 ─── KEY POINTS TO MAKE ────────────────────
-• Medical review supports ${vm.specials.totalReviewed != null ? fmt(vm.specials.totalReviewed) : "reviewed amount"} in reasonable specials
+${isDirect ? `• Explain clearly how the offer was determined based on the medical evidence
+• "We reviewed your medical records and treatment, and this offer reflects the documented care you received"
+• If asked about specials adjustments: "We compared the charges to standard rates for similar treatment in your area"
+• Value supported by: ${expanders}
+• Value considerations: ${reducers}` : `• Medical review supports ${vm.specials.totalReviewed != null ? fmt(vm.specials.totalReviewed) : "reviewed amount"} in reasonable specials
 ${vm.specials.reductionPercent != null && vm.specials.reductionPercent > 0 ? `• ${vm.specials.reductionPercent}% reduction from billed to reviewed is supported by treatment analysis` : ""}
 • Value supported by: ${expanders}
-• Value constrained by: ${reducers}
+• Value constrained by: ${reducers}`}
 
 ─── BOUNDARIES (DO NOT SHARE) ─────────────
 ${ceiling ? `• Authority ceiling: ${fmt(ceiling)} — DO NOT EXCEED` : "• Authority ceiling: Not set"}
@@ -300,23 +477,30 @@ ${walkAway ? `• Walk-away threshold: ${fmt(walkAway)}` : ""}
 • Target zone: ${strategy ? `${fmt(strategy.targetSettlementZone.generated.low)}–${fmt(strategy.targetSettlementZone.generated.high)}` : "Not set"}
 
 ─── IF THEY PUSH BACK ─────────────────────
-• Reiterate that our position is based on documented medical evidence
+${isDirect ? `• "I understand this may be less than you expected. Let me explain how we arrived at this number."
+• Offer to walk through the medical review findings
+• Remind them: "You have the right to consult with an attorney if you wish"
+• Do NOT pressure them to accept or imply the offer is take-it-or-leave-it
+• Do NOT suggest the amount is lower because they don't have an attorney` : `• Reiterate that our position is based on documented medical evidence
 • Reference specific treatment concerns if applicable
 • Avoid committing to movement without reviewing authority
-• Do not discuss internal valuation methodology
+• Do not discuss internal valuation methodology`}
 
 ─── CLOSING ───────────────────────────────
 • Summarize any agreement or next steps
 • Confirm timeline for response if no agreement reached
+${isDirect ? "• Remind them they can take time to consider and are welcome to call back with questions" : ""}
 • Document the conversation immediately after the call${custom ? `\n\n─── CUSTOM NOTES ──────────────────────────\n${custom}` : ""}`;
 }
 
 // ─── Internal Note Builders ─────────────────────────────
 
-function buildInternalNote(context: string, offer: number, lastCounter: number | null, ceiling: number | null, targetLow: number, targetHigh: number, selectedAction: ResponseActionType | undefined, strategy: GeneratedStrategy | null, rounds: NegotiationRoundRow[], vm: NegotiationViewModel): string {
+function buildInternalNote(context: string, offer: number, lastCounter: number | null, ceiling: number | null, targetLow: number, targetHigh: number, selectedAction: ResponseActionType | undefined, strategy: GeneratedStrategy | null, rounds: NegotiationRoundRow[], vm: NegotiationViewModel, audience: DraftAudience): string {
   const parts: string[] = [];
   parts.push(`INTERNAL NOTE — ${context.toUpperCase()}`);
   parts.push(`Date: ${new Date().toLocaleDateString("en-US", { year: "numeric", month: "long", day: "numeric" })}`);
+  parts.push(`Audience: ${audience === "claimant_direct" ? "Direct Claimant (Unrepresented)" : audience === "attorney" ? "Attorney" : "Internal"}`);
+  parts.push(`Representation Status: ${vm.representation.status}`);
   parts.push("");
   parts.push(`Current Position: ${fmt(offer)}`);
   if (lastCounter) parts.push(`Last Counteroffer: ${fmt(lastCounter)}`);
@@ -329,10 +513,15 @@ function buildInternalNote(context: string, offer: number, lastCounter: number |
   parts.push("");
   if (selectedAction) parts.push(`Selected Action: ${selectedAction}`);
   parts.push(`Concession Posture: ${strategy?.concessionPosture.generated ?? "N/A"}`);
+  if (strategy?.representationPosture) {
+    parts.push(`Representation Posture: ${strategy.representationPosture.generated}`);
+  }
   parts.push("");
   parts.push(`EvaluatePackage v${vm.provenance.packageVersion} (${vm.provenance.sourceModule} v${vm.provenance.sourcePackageVersion})`);
   parts.push(`Valuation Confidence: ${vm.valuationRange.confidence != null ? Math.round(vm.valuationRange.confidence * 100) + "%" : "N/A"}`);
   if (vm.specials.reductionPercent != null) parts.push(`Medical Specials Reduction: ${vm.specials.reductionPercent}%`);
+  parts.push("");
+  parts.push("NOTE: Representation status did not directly reduce fact-based case value.");
   return parts.join("\n");
 }
 
@@ -341,6 +530,7 @@ function buildClaimFileNote(offer: number, lastCounter: number | null, ceiling: 
   parts.push("CLAIM FILE NOTE — NEGOTIATION ACTIVITY");
   parts.push(`Date: ${new Date().toLocaleDateString("en-US", { year: "numeric", month: "long", day: "numeric" })}`);
   parts.push(`Round: ${rounds.length}`);
+  parts.push(`Representation: ${vm.representation.status}${vm.representation.transitioned ? " (transitioned during claim)" : ""}`);
   parts.push("");
   parts.push("── CURRENT POSTURE ──");
   parts.push(`Our Offer: ${fmt(offer)}`);
@@ -348,6 +538,7 @@ function buildClaimFileNote(offer: number, lastCounter: number | null, ceiling: 
   parts.push(`Target Zone: ${fmt(targetLow)}–${fmt(targetHigh)}`);
   if (ceiling) parts.push(`Authority: ${fmt(ceiling)}`);
   parts.push(`Posture: ${strategy?.concessionPosture.generated ?? "N/A"}`);
+  if (strategy?.representationPosture) parts.push(`Representation Posture: ${strategy.representationPosture.generated}`);
   if (selectedAction) parts.push(`Action Taken: ${selectedAction}`);
   parts.push("");
   parts.push("── VALUATION BASIS ──");
@@ -357,6 +548,9 @@ function buildClaimFileNote(offer: number, lastCounter: number | null, ceiling: 
   parts.push(`Reducers: ${reducers}`);
   parts.push(`Risks: ${risks}`);
   if (vm.specials.reductionPercent != null) parts.push(`Specials Reduction: ${vm.specials.reductionPercent}%`);
+  parts.push("");
+  parts.push("── COMPLIANCE ──");
+  parts.push("Representation status did not directly reduce fact-based case value.");
   parts.push("");
   parts.push("── ROUND HISTORY ──");
   for (const r of rounds) {
@@ -370,6 +564,7 @@ function buildSupervisorEscalation(offer: number, lastCounter: number | null, ce
   const parts: string[] = [];
   parts.push("SUPERVISOR ESCALATION SUMMARY");
   parts.push(`Date: ${new Date().toLocaleDateString("en-US", { year: "numeric", month: "long", day: "numeric" })}`);
+  parts.push(`Representation: ${vm.representation.status}${vm.representation.transitioned ? " (transitioned during claim)" : ""}`);
   parts.push("");
   parts.push("── REQUEST ──");
   parts.push(ceiling ? `Current authority: ${fmt(ceiling)}` : "No authority ceiling set.");
@@ -396,6 +591,9 @@ function buildSupervisorEscalation(offer: number, lastCounter: number | null, ce
   parts.push("");
   parts.push("── RECOMMENDATION ──");
   parts.push(strategy?.rationaleSummary ?? "No strategy rationale available.");
+  parts.push("");
+  parts.push("── COMPLIANCE NOTE ──");
+  parts.push("Representation status did not directly reduce fact-based case value.");
   if (custom) { parts.push(""); parts.push(`── ADDITIONAL CONTEXT ──\n${custom}`); }
   return parts.join("\n");
 }
@@ -433,6 +631,11 @@ function buildContextSnippets(vm: NegotiationViewModel, strategy: GeneratedStrat
     snippets.push({
       label: "Concession Posture",
       value: `${strategy.concessionPosture.generated} — ${strategy.concessionPosture.reason}`,
+      source: "strategy",
+    });
+    snippets.push({
+      label: "Representation Posture",
+      value: `${strategy.representationPosture.generated} — ${strategy.representationPosture.reason}`,
       source: "strategy",
     });
   }

@@ -1,22 +1,25 @@
 /**
- * NegotiateIQ — Strategy Engine v1
+ * NegotiateIQ — Strategy Engine v1.1
  *
  * Generates an initial negotiation plan from a NegotiationViewModel
  * (derived from EvaluatePackage v1). No re-valuation is performed.
  *
- * Every recommendation includes a short reason string.
+ * Representation-aware: selects posture based on representation context
+ * without reducing fact-based value. Same value logic, different
+ * negotiation logic.
  */
 
 import type { NegotiationViewModel } from "@/lib/negotiateViewModel";
 import type {
   GeneratedStrategy,
   ConcessionPosture,
+  RepresentationPosture,
   MovementPlan,
   TacticalRecommendation,
   StrategyRecommendation,
 } from "@/types/negotiate-strategy";
 
-const ENGINE_VERSION = "1.0.0";
+const ENGINE_VERSION = "1.1.0";
 
 export function generateStrategy(vm: NegotiationViewModel): GeneratedStrategy {
   const r = vm.valuationRange;
@@ -35,7 +38,7 @@ export function generateStrategy(vm: NegotiationViewModel): GeneratedStrategy {
   const significantReduction = (vm.specials.reductionPercent ?? 0) > 25;
   const expCount = vm.expanders.length;
   const redCount = vm.reducers.length;
-  const netDriverBias = expCount - redCount; // positive = stronger position
+  const netDriverBias = expCount - redCount;
 
   // ── Concession Posture ───────────────────────────────
   const concessionPosture = deriveConcessionPosture(
@@ -44,6 +47,9 @@ export function generateStrategy(vm: NegotiationViewModel): GeneratedStrategy {
     hasStrongLiability,
     hasTreatmentGaps
   );
+
+  // ── Representation Posture ───────────────────────────
+  const representationPosture = deriveRepresentationPosture(vm);
 
   // ── Position Calculations ────────────────────────────
   const openingOffer = deriveOpeningOffer(floor, likely, stretch, concessionPosture.generated, hasStrongLiability, confidence);
@@ -58,7 +64,8 @@ export function generateStrategy(vm: NegotiationViewModel): GeneratedStrategy {
   const tacticalRecommendations = deriveTactical(
     floor, likely, stretch,
     hasStrongLiability, hasVenueRisk, hasCausationIssues,
-    hasCredibilityIssues, significantReduction, confidence
+    hasCredibilityIssues, significantReduction, confidence,
+    vm.representation.status
   );
 
   // ── Rationale ────────────────────────────────────────
@@ -67,7 +74,7 @@ export function generateStrategy(vm: NegotiationViewModel): GeneratedStrategy {
     ...vm.reducers.slice(0, 3).map((d) => d.key),
   ];
 
-  const rationaleSummary = buildRationale(vm, concessionPosture.generated, confidence);
+  const rationaleSummary = buildRationale(vm, concessionPosture.generated, representationPosture.generated, confidence);
 
   return {
     engineVersion: ENGINE_VERSION,
@@ -82,9 +89,94 @@ export function generateStrategy(vm: NegotiationViewModel): GeneratedStrategy {
     concessionPosture,
     movementPlan,
     tacticalRecommendations,
+    representationPosture,
 
     keyDrivers,
     rationaleSummary,
+  };
+}
+
+// ─── Representation Posture Selection ─────────────────────
+
+function deriveRepresentationPosture(vm: NegotiationViewModel): StrategyRecommendation<RepresentationPosture> {
+  const rep = vm.representation;
+
+  // Post-retention reset: claimant was unrepresented, now has attorney
+  if (rep.transitioned && rep.status === "represented") {
+    return {
+      generated: "post_retention_strategy_reset",
+      reason: "Claimant retained counsel during the negotiation. Strategy reset to account for changed negotiation dynamics. Fact-based case value remains unchanged.",
+    };
+  }
+
+  // Transitioned away from representation
+  if (rep.transitioned && rep.status === "unrepresented") {
+    return {
+      generated: "direct_resolution_unrepresented",
+      reason: "Attorney withdrew. Switching to direct-resolution workflow with plain-language communications. Fact-based case value remains unchanged.",
+    };
+  }
+
+  // Currently unrepresented
+  if (rep.status === "unrepresented") {
+    // High retention risk
+    if (rep.retentionRisk >= 70) {
+      return {
+        generated: "counsel_retention_risk",
+        reason: "Claimant is unrepresented with high attorney-retention risk. Timely resolution is recommended to avoid delay-driven retention. The case value assessment is not affected by representation status.",
+      };
+    }
+
+    // Low-complexity direct resolution
+    if ((vm.valuationRange.confidence ?? 0) >= 0.6 && vm.risks.length <= 1) {
+      return {
+        generated: "early_resolution_unrepresented",
+        reason: "Unrepresented claimant with straightforward claim profile. Early resolution through clear, direct communication is appropriate. Value is based on the same fact-based assessment used for represented claimants.",
+      };
+    }
+
+    // Needs documentation guidance
+    if (vm.risks.some(r => r.category === "gap" || r.category === "treatment")) {
+      return {
+        generated: "documentation_guided_unrepresented",
+        reason: "Unrepresented claimant with documentation gaps. Proactive guidance on needed records can facilitate fair resolution. Value is based on documented facts, not representation status.",
+      };
+    }
+
+    return {
+      generated: "direct_resolution_unrepresented",
+      reason: "Claimant is unrepresented. Using direct-resolution workflow with clear, accessible language. Fact-based case value is unaffected by representation status.",
+    };
+  }
+
+  // Represented
+  if (rep.status === "represented") {
+    // Defensive posture for litigation-prone profile
+    if (vm.risks.length >= 3 || (vm.valuationRange.confidence ?? 0) < 0.4) {
+      return {
+        generated: "represented_defensive",
+        reason: "Represented claimant with multiple risk factors. Defensive posture with tighter concession management is appropriate.",
+      };
+    }
+
+    // Litigation prep indicator
+    if (vm.risks.some(r => r.category === "liability") && vm.reducers.length >= 2) {
+      return {
+        generated: "litigation_prep",
+        reason: "Represented claimant with significant liability risk and multiple reducers. Litigation preparation posture may be warranted.",
+      };
+    }
+
+    return {
+      generated: "represented_balanced",
+      reason: "Represented claimant with balanced claim profile. Standard attorney-facing negotiation approach.",
+    };
+  }
+
+  // Unknown — default
+  return {
+    generated: "represented_balanced",
+    reason: "Representation status unknown. Defaulting to balanced posture.",
   };
 }
 
@@ -122,7 +214,6 @@ function deriveOpeningOffer(
   strongLiability: boolean,
   confidence: number
 ): StrategyRecommendation {
-  // Opening = percentage of floor based on posture
   const pctMap: Record<ConcessionPosture, number> = {
     conservative: 0.55,
     standard: 0.65,
@@ -154,7 +245,6 @@ function deriveAuthorityCeiling(
   authority: number | null,
   confidence: number
 ): StrategyRecommendation {
-  // If evaluator set authority, respect it
   if (authority != null && authority > 0) {
     return {
       generated: authority,
@@ -162,7 +252,6 @@ function deriveAuthorityCeiling(
     };
   }
 
-  // Otherwise derive from range
   const ceiling = Math.round(likely + (stretch - likely) * 0.3);
   return {
     generated: ceiling,
@@ -246,7 +335,8 @@ function deriveMovementPlan(
 function deriveTactical(
   floor: number, likely: number, stretch: number,
   strongLiability: boolean, venueRisk: boolean, causationIssues: boolean,
-  credibilityIssues: boolean, significantReduction: boolean, confidence: number
+  credibilityIssues: boolean, significantReduction: boolean, confidence: number,
+  representationStatus: "represented" | "unrepresented" | "unknown"
 ): TacticalRecommendation[] {
   const recs: TacticalRecommendation[] = [];
 
@@ -254,10 +344,12 @@ function deriveTactical(
   const bracketUseful = stretch > likely * 1.15;
   recs.push({
     type: "bracket",
-    recommended: bracketUseful,
-    reason: bracketUseful
-      ? "Stretch value is significantly above likely. A bracket offer may anchor the claimant within a more favorable range."
-      : "Stretch-to-likely spread is narrow. Bracketing is unlikely to yield significant advantage.",
+    recommended: bracketUseful && representationStatus !== "unrepresented",
+    reason: representationStatus === "unrepresented"
+      ? "Bracket strategy is not recommended for unrepresented claimants. Direct, clear communication is more appropriate and avoids confusion."
+      : bracketUseful
+        ? "Stretch value is significantly above likely. A bracket offer may anchor the claimant within a more favorable range."
+        : "Stretch-to-likely spread is narrow. Bracketing is unlikely to yield significant advantage.",
   });
 
   // Hold
@@ -283,11 +375,30 @@ function deriveTactical(
   return recs;
 }
 
-function buildRationale(vm: NegotiationViewModel, posture: ConcessionPosture, confidence: number): string {
+function buildRationale(
+  vm: NegotiationViewModel,
+  posture: ConcessionPosture,
+  repPosture: RepresentationPosture,
+  confidence: number
+): string {
   const parts: string[] = [];
 
   parts.push(`Strategy generated from EvaluatePackage v${vm.provenance.packageVersion} (engine ${vm.provenance.engineVersion}).`);
   parts.push(`Concession posture set to "${posture}" based on ${Math.round(confidence * 100)}% valuation confidence.`);
+  parts.push(`Representation posture: "${repPosture}".`);
+
+  // Core compliance statement
+  parts.push("Representation status did not directly reduce fact-based case value.");
+
+  if (vm.representation.status === "unrepresented") {
+    parts.push("Communications will use plain, accessible language appropriate for direct claimant interaction.");
+  }
+  if (vm.representation.transitioned) {
+    parts.push("Representation changed during this claim. Strategy has been adapted to current representation context.");
+  }
+  if (vm.representation.retentionRisk >= 70 && vm.representation.status === "unrepresented") {
+    parts.push("High attorney-retention risk identified. Timely resolution is recommended.");
+  }
 
   if (vm.expanders.length > 0) {
     parts.push(`Value supported by: ${vm.expanders.slice(0, 3).map((e) => e.label).join(", ")}.`);
