@@ -704,6 +704,89 @@ export type Database = {
           },
         ]
       }
+      claimant_representation_history: {
+        Row: {
+          attorney_name: string | null
+          case_id: string
+          claimant_id: string
+          created_at: string
+          created_by_user_id: string | null
+          event_type: Database["public"]["Enums"]["representation_event_type"]
+          firm_name: string | null
+          id: string
+          notes: string | null
+          occurred_at: string
+          recorded_at: string
+          representation_status: Database["public"]["Enums"]["representation_status"]
+          source_party_id: string | null
+          tenant_id: string
+          updated_at: string
+        }
+        Insert: {
+          attorney_name?: string | null
+          case_id: string
+          claimant_id: string
+          created_at?: string
+          created_by_user_id?: string | null
+          event_type?: Database["public"]["Enums"]["representation_event_type"]
+          firm_name?: string | null
+          id?: string
+          notes?: string | null
+          occurred_at?: string
+          recorded_at?: string
+          representation_status?: Database["public"]["Enums"]["representation_status"]
+          source_party_id?: string | null
+          tenant_id: string
+          updated_at?: string
+        }
+        Update: {
+          attorney_name?: string | null
+          case_id?: string
+          claimant_id?: string
+          created_at?: string
+          created_by_user_id?: string | null
+          event_type?: Database["public"]["Enums"]["representation_event_type"]
+          firm_name?: string | null
+          id?: string
+          notes?: string | null
+          occurred_at?: string
+          recorded_at?: string
+          representation_status?: Database["public"]["Enums"]["representation_status"]
+          source_party_id?: string | null
+          tenant_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "claimant_representation_history_case_id_fkey"
+            columns: ["case_id"]
+            isOneToOne: false
+            referencedRelation: "cases"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "claimant_representation_history_claimant_id_fkey"
+            columns: ["claimant_id"]
+            isOneToOne: false
+            referencedRelation: "case_parties"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "claimant_representation_history_source_party_id_fkey"
+            columns: ["source_party_id"]
+            isOneToOne: false
+            referencedRelation: "case_parties"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "claimant_representation_history_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       document_metadata_extractions: {
         Row: {
           case_id: string
@@ -4518,6 +4601,13 @@ export type Database = {
         | "new_entity"
         | "needs_review"
         | "confirmed"
+      representation_event_type:
+        | "representation_status_recorded"
+        | "representation_confirmed_unrepresented"
+        | "attorney_retained"
+        | "attorney_substituted"
+        | "attorney_withdrew"
+      representation_status: "represented" | "unrepresented" | "unknown"
       reviewer_case_status:
         | "not_started"
         | "intake_review"
@@ -4946,6 +5036,14 @@ export const Constants = {
         "needs_review",
         "confirmed",
       ],
+      representation_event_type: [
+        "representation_status_recorded",
+        "representation_confirmed_unrepresented",
+        "attorney_retained",
+        "attorney_substituted",
+        "attorney_withdrew",
+      ],
+      representation_status: ["represented", "unrepresented", "unknown"],
       reviewer_case_status: [
         "not_started",
         "intake_review",
