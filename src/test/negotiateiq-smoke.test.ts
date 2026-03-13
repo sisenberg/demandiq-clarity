@@ -577,6 +577,7 @@ describe("NegotiateIQ — Numeric Validation & Edge Cases", () => {
       outcomeType: "settled",
       finalSettlement: -1000,
       outcomeNotes: "Negative.",
+      representationContext: DEFAULT_REP_CTX,
     });
     expect(v.valid).toBe(false);
   });
@@ -589,6 +590,7 @@ describe("NegotiateIQ — Numeric Validation & Edge Cases", () => {
       outcomeType: "settled",
       finalSettlement: 0,
       outcomeNotes: "Zero.",
+      representationContext: DEFAULT_REP_CTX,
     });
     expect(v.valid).toBe(false);
   });
@@ -603,6 +605,7 @@ describe("NegotiateIQ — Numeric Validation & Edge Cases", () => {
         outcomeType: outcome,
         finalSettlement: outcome === "settled" ? 15000 : null,
         outcomeNotes: outcome !== "settled" ? "Non-settlement outcome with notes." : "",
+        representationContext: DEFAULT_REP_CTX,
       });
       expect(v.valid).toBe(true);
     }
