@@ -1,10 +1,11 @@
 import { useState } from "react";
 
-export type EvalTab = "overview" | "drivers" | "range" | "explanation" | "evidence" | "calibration" | "governance" | "handoff";
+export type EvalTab = "overview" | "drivers" | "modifiers" | "range" | "explanation" | "evidence" | "calibration" | "governance" | "handoff";
 
 const TABS: { key: EvalTab; label: string }[] = [
   { key: "overview", label: "Overview" },
   { key: "drivers", label: "Valuation Drivers" },
+  { key: "modifiers", label: "Modifiers" },
   { key: "range", label: "Range Output" },
   { key: "explanation", label: "Explanation" },
   { key: "evidence", label: "Evidence" },
