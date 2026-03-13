@@ -251,7 +251,7 @@ const EvaluateWorkspacePage = () => {
       </div>
 
       {/* ── Body: Three-Panel Layout ──────────────── */}
-      <div className="flex-1 flex overflow-hidden">
+      <div className="flex-1 flex overflow-hidden min-w-0">
         {isWorkspaceActive && (
           <EvalLeftPanel
             snapshot={snapshot}

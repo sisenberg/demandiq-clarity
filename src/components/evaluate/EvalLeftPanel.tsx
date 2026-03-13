@@ -48,7 +48,7 @@ const EvalLeftPanel = ({
   claimProfile,
 }: Props) => {
   return (
-    <div className="w-[280px] shrink-0 border-r border-border bg-card overflow-y-auto h-full">
+    <div className="w-[280px] shrink-0 border-r border-border bg-card overflow-y-auto h-full hidden xl:block">
       <div className="p-4 space-y-4">
         {/* ── Case Identity ──────────────────────── */}
         <section>
