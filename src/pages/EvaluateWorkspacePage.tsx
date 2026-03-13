@@ -230,6 +230,7 @@ const EvaluateWorkspacePage = () => {
 
                 {activeTab === "overview" && claimProfile && <EvalClaimProfileCard profile={claimProfile} />}
                 {activeTab === "overview" && <EvalOverviewTab snapshot={snapshot} />}
+                {activeTab === "drivers" && <EvalFactorTaxonomyPanel snapshot={snapshot} />}
                 {activeTab === "drivers" && <EvalDriversTab snapshot={snapshot} />}
                 {activeTab === "range" && <EvalRangeTab snapshot={snapshot} />}
                 {activeTab === "explanation" && <EvalExplanationTab snapshot={snapshot} />}
