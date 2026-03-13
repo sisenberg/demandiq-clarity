@@ -15,6 +15,9 @@ import EvalAnalyticsOverrideReasons from "@/components/evaluate/analytics/EvalAn
 import EvalAnalyticsBenchmarkQuality from "@/components/evaluate/analytics/EvalAnalyticsBenchmarkQuality";
 import EvalAnalyticsPublishVolume from "@/components/evaluate/analytics/EvalAnalyticsPublishVolume";
 import EvalAnalyticsAuditLog from "@/components/evaluate/analytics/EvalAnalyticsAuditLog";
+import RepresentationSummaryCard from "@/components/evaluate/analytics/RepresentationSummaryCard";
+import RepresentationTransitionCard from "@/components/evaluate/analytics/RepresentationTransitionCard";
+import SeverityBandedComparisonCard from "@/components/evaluate/analytics/SeverityBandedComparisonCard";
 
 const EvaluateAnalyticsPage = () => {
   return (
