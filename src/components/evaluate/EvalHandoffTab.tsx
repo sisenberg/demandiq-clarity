@@ -1,9 +1,13 @@
+import { useMemo } from "react";
 import { useParams } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { useModuleCompletion } from "@/hooks/useModuleCompletion";
 import { isEntitlementActive } from "@/hooks/useModuleEntitlements";
 import { ModuleId, ModuleCompletionStatus } from "@/types";
 import type { EvaluateIntakeSnapshot } from "@/types/evaluate-intake";
+import type { EvalNegotiationHandoff } from "@/types/evaluate-package-v1";
+import EvalHandoffPreview from "@/components/evaluate/EvalHandoffPreview";
+import { assembleEvaluatePackageV1 } from "@/lib/evaluatePackageAssembler";
 import {
   Package,
   CheckCircle2,
