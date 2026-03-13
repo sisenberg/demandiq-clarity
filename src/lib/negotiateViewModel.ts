@@ -297,3 +297,31 @@ function inferRiskCategoryFromKey(key: string): NegotiateRisk["category"] {
   if (k.includes("liabil") || k.includes("negligence")) return "liability";
   return "other";
 }
+
+// ─── Representation View Builder ────────────────────────
+
+function buildRepresentationView(pkg: ResolvedEvalPackage): NegotiateRepresentationView {
+  if (pkg.package_v1?.representation_context) {
+    const rc = pkg.package_v1.representation_context;
+    return {
+      status: rc.representation_status_current,
+      transitioned: rc.representation_transition_flag,
+      retentionRisk: rc.attorney_retention_risk,
+      attorneyName: rc.current_attorney_name,
+      firmName: rc.current_firm_name,
+      historyCount: rc.representation_history_count,
+      attorneyRetainedDuringClaim: rc.attorney_retained_during_claim_flag,
+      attorneyRetainedAfterInitialOffer: rc.attorney_retained_after_initial_offer_flag,
+    };
+  }
+  return {
+    status: "unknown",
+    transitioned: false,
+    retentionRisk: 0,
+    attorneyName: null,
+    firmName: null,
+    historyCount: 0,
+    attorneyRetainedDuringClaim: false,
+    attorneyRetainedAfterInitialOffer: false,
+  };
+}
