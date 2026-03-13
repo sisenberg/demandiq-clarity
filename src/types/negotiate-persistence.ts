@@ -30,7 +30,39 @@ export type NegotiationEventType =
   | "note_added"
   | "session_completed"
   | "status_changed"
-  | "strategy_override";
+  | "strategy_override"
+  // Representation events
+  | "representation_status_recorded"
+  | "representation_confirmed_unrepresented"
+  | "attorney_retained"
+  | "attorney_substituted"
+  | "attorney_withdrew"
+  | "strategy_refresh_triggered";
+
+// ─── Negotiate Representation Context ───────────────────
+
+export interface NegotiateRepresentationContext {
+  representation_status_current: "represented" | "unrepresented" | "unknown";
+  representation_status_at_first_negotiation_event: "represented" | "unrepresented" | "unknown" | null;
+  representation_status_at_outcome: "represented" | "unrepresented" | "unknown" | null;
+  representation_transition_flag: boolean;
+  attorney_retained_during_negotiation_flag: boolean;
+  attorney_retained_after_initial_offer_flag: boolean;
+  current_attorney_name: string | null;
+  current_firm_name: string | null;
+  /** History of representation changes during this negotiation session */
+  representation_changes: RepresentationChangeRecord[];
+}
+
+export interface RepresentationChangeRecord {
+  event_type: string;
+  previous_status: string;
+  new_status: string;
+  attorney_name: string | null;
+  firm_name: string | null;
+  occurred_at: string;
+  recorded_at: string;
+}
 
 // ─── Session ────────────────────────────────────────────
 

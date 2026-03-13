@@ -112,6 +112,25 @@ export interface NegotiateAssumption {
   reason: string;
 }
 
+export interface NegotiateRepresentationView {
+  /** Current representation status */
+  status: "represented" | "unrepresented" | "unknown";
+  /** Whether a transition between represented/unrepresented occurred */
+  transitioned: boolean;
+  /** Attorney retention risk (0-100), from EvaluatePackage */
+  retentionRisk: number;
+  /** Current attorney name */
+  attorneyName: string | null;
+  /** Current firm name */
+  firmName: string | null;
+  /** History count */
+  historyCount: number;
+  /** Whether attorney was retained during the claim */
+  attorneyRetainedDuringClaim: boolean;
+  /** Whether attorney was retained after initial offer */
+  attorneyRetainedAfterInitialOffer: boolean;
+}
+
 export interface NegotiationViewModel {
   /** Read-only flag — UI must enforce no mutations */
   readonly: true;
@@ -145,6 +164,9 @@ export interface NegotiationViewModel {
 
   /** Completeness score at publish time */
   completenessScore: number;
+
+  /** Representation context from EvaluatePackage */
+  representation: NegotiateRepresentationView;
 }
 
 // ─── Adapter ────────────────────────────────────────────
@@ -213,6 +235,8 @@ export function buildNegotiationViewModel(
 
     rationaleNotes: p.rationale_notes ?? "",
     completenessScore: p.completeness_score ?? 0,
+
+    representation: buildRepresentationView(pkg),
   };
 }
 
@@ -272,4 +296,32 @@ function inferRiskCategoryFromKey(key: string): NegotiateRisk["category"] {
   if (k.includes("witness")) return "witness";
   if (k.includes("liabil") || k.includes("negligence")) return "liability";
   return "other";
+}
+
+// ─── Representation View Builder ────────────────────────
+
+function buildRepresentationView(pkg: ResolvedEvalPackage): NegotiateRepresentationView {
+  if (pkg.package_v1?.representation_context) {
+    const rc = pkg.package_v1.representation_context;
+    return {
+      status: rc.representation_status_current,
+      transitioned: rc.representation_transition_flag,
+      retentionRisk: rc.attorney_retention_risk,
+      attorneyName: rc.current_attorney_name,
+      firmName: rc.current_firm_name,
+      historyCount: rc.representation_history_count,
+      attorneyRetainedDuringClaim: rc.attorney_retained_during_claim_flag,
+      attorneyRetainedAfterInitialOffer: rc.attorney_retained_after_initial_offer_flag,
+    };
+  }
+  return {
+    status: "unknown",
+    transitioned: false,
+    retentionRisk: 0,
+    attorneyName: null,
+    firmName: null,
+    historyCount: 0,
+    attorneyRetainedDuringClaim: false,
+    attorneyRetainedAfterInitialOffer: false,
+  };
 }

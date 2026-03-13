@@ -13,6 +13,7 @@ import type {
   NegotiationRoundRow,
   NegotiationNoteRow,
   NegotiationSessionStatus,
+  NegotiateRepresentationContext,
 } from "@/types/negotiate-persistence";
 
 // ─── Outcome Types ──────────────────────────────────────
@@ -114,6 +115,9 @@ export interface NegotiatePackagePayload {
     high_confidence_count: number;
     jurisdiction_band: string | null;
   } | null;
+
+  // Representation context at negotiation
+  representation_context: NegotiateRepresentationContext | null;
 }
 
 // ─── Completion Validation ──────────────────────────────
@@ -187,6 +191,7 @@ export function buildNegotiatePackage(opts: {
   calibrationSignalsCount: number;
   calibrationHighConfCount: number;
   calibrationJurisdictionBand: string | null;
+  representationContext?: NegotiateRepresentationContext | null;
 }): NegotiatePackagePayload {
   const {
     vm, session, strategy, rounds, notes,
@@ -194,6 +199,7 @@ export function buildNegotiatePackage(opts: {
     unresolvedIssues, nextStepRecommendations, litigationLikely,
     attorneyName, firmName, observationsCount,
     calibrationSignalsCount, calibrationHighConfCount, calibrationJurisdictionBand,
+    representationContext,
   } = opts;
 
   const gen = strategy?.generated_strategy;
@@ -270,5 +276,7 @@ export function buildNegotiatePackage(opts: {
       high_confidence_count: calibrationHighConfCount,
       jurisdiction_band: calibrationJurisdictionBand,
     } : null,
+
+    representation_context: representationContext ?? null,
   };
 }

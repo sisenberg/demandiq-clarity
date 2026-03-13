@@ -17,6 +17,9 @@ import {
   Clock,
   AlertTriangle,
   CheckCircle2,
+  UserCheck,
+  UserX,
+  ArrowRightLeft,
 } from "lucide-react";
 
 const EVENT_ICONS: Record<string, React.ElementType> = {
@@ -31,6 +34,13 @@ const EVENT_ICONS: Record<string, React.ElementType> = {
   session_completed: CheckCircle2,
   status_changed: Clock,
   strategy_override: ArrowDownUp,
+  // Representation events
+  representation_status_recorded: UserCheck,
+  representation_confirmed_unrepresented: UserX,
+  attorney_retained: UserCheck,
+  attorney_substituted: ArrowRightLeft,
+  attorney_withdrew: UserX,
+  strategy_refresh_triggered: AlertTriangle,
 };
 
 interface NegotiateRightPanelProps {
@@ -136,13 +146,22 @@ const NegotiateRightPanel = ({ caseId, attorneyName, firmName }: NegotiateRightP
 function TimelineEvent({ event }: { event: NegotiationEventRow }) {
   const Icon = EVENT_ICONS[event.event_type] ?? MessageSquare;
   const isOffer = event.event_type === "offer_made" || event.event_type === "counteroffer_received";
+  const isRepresentation = [
+    "representation_status_recorded",
+    "representation_confirmed_unrepresented",
+    "attorney_retained",
+    "attorney_substituted",
+    "attorney_withdrew",
+  ].includes(event.event_type);
 
   return (
     <div className="flex gap-2 py-1.5 px-2 rounded-lg hover:bg-accent/30 transition-colors">
       <div className={`mt-0.5 shrink-0 h-5 w-5 rounded-md flex items-center justify-center ${
-        isOffer ? "bg-primary/10" : "bg-accent"
+        isRepresentation ? "bg-[hsl(var(--status-attention))]/10" : isOffer ? "bg-primary/10" : "bg-accent"
       }`}>
-        <Icon className={`h-2.5 w-2.5 ${isOffer ? "text-primary" : "text-muted-foreground"}`} />
+        <Icon className={`h-2.5 w-2.5 ${
+          isRepresentation ? "text-[hsl(var(--status-attention))]" : isOffer ? "text-primary" : "text-muted-foreground"
+        }`} />
       </div>
       <div className="min-w-0 flex-1">
         <p className="text-[10px] text-foreground leading-snug line-clamp-2">{event.summary}</p>

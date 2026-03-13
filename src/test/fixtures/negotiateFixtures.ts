@@ -12,7 +12,7 @@
  *  5. Near authority ceiling, escalation needed — surgery case
  */
 
-import type { NegotiationViewModel, NegotiateProvenance, NegotiateValuationRange, NegotiateSpecialsSummary, NegotiateDriverSummary, NegotiateRisk, NegotiateAssumption } from "@/lib/negotiateViewModel";
+import type { NegotiationViewModel, NegotiateProvenance, NegotiateValuationRange, NegotiateSpecialsSummary, NegotiateDriverSummary, NegotiateRisk, NegotiateAssumption, NegotiateRepresentationView } from "@/lib/negotiateViewModel";
 import type { NegotiationSessionRow, NegotiationRoundRow, NegotiationNoteRow } from "@/types/negotiate-persistence";
 import type { GeneratedStrategy, StrategyOverride } from "@/types/negotiate-strategy";
 import type { HistoricalClaimForCalibration } from "@/lib/negotiateCalibrationEngine";
@@ -52,6 +52,16 @@ function buildVM(overrides: Partial<NegotiationViewModel>): NegotiationViewModel
     assumptions: [],
     rationaleNotes: "",
     completenessScore: 78,
+    representation: {
+      status: "unknown",
+      transitioned: false,
+      retentionRisk: 0,
+      attorneyName: null,
+      firmName: null,
+      historyCount: 0,
+      attorneyRetainedDuringClaim: false,
+      attorneyRetainedAfterInitialOffer: false,
+    },
     ...overrides,
   };
 }
