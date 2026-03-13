@@ -132,6 +132,7 @@ const NegotiateDraftingWorkspace = ({
     setDraft({
       draftType: v.draft_type as DraftType,
       tone: v.tone as DraftTone,
+      audience: "attorney",
       title: v.title,
       externalContent: v.external_content,
       internalNotes: v.internal_notes,
