@@ -118,8 +118,12 @@ export interface NegotiatePackagePayload {
     jurisdiction_band: string | null;
   } | null;
 
-  // Representation context at negotiation
-  representation_context: NegotiateRepresentationContext | null;
+  // ─── Required: Representation Context ─────────────────
+  representation_context: NegotiateRepresentationContext;
+
+  // ─── Outcome-Specific Representation Fields ───────────
+  settlement_representation: SettlementRepresentationFields | null;
+  transfer_representation: TransferRepresentationFields | null;
 }
 
 // ─── Completion Validation ──────────────────────────────
