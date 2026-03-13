@@ -22,6 +22,9 @@ import {
   AlertTriangle,
   CheckCircle2,
   Package,
+  User,
+  Briefcase,
+  RefreshCw,
 } from "lucide-react";
 
 const STATUS_BADGE: Record<string, { label: string; className: string }> = {
