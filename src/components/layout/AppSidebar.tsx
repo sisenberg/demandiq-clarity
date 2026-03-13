@@ -49,7 +49,8 @@ const AppSidebar = () => {
 
   const isActive = (path: string) => {
     if (path === "/cases/new") return location.pathname === "/cases/new";
-    if (path === "/cases") return location.pathname === "/cases" || (location.pathname.startsWith("/cases/") && location.pathname !== "/cases/new");
+    if (path === "/cases") return location.pathname === "/cases" || (location.pathname.startsWith("/cases/") && location.pathname !== "/cases/new" && !location.pathname.includes("/evaluate") && !location.pathname.includes("/negotiate"));
+    if (path === "/evaluate") return location.pathname === "/evaluate" || location.pathname.includes("/evaluate");
     return location.pathname.startsWith(path);
   };
 
@@ -154,14 +155,12 @@ const AppSidebar = () => {
                   status === EntitlementStatus.Trial ? "Trial"
                   : status === EntitlementStatus.Suspended ? "Off"
                   : active ? "On" : "—";
-                return (
-                  <div
-                    key={mod.id}
-                    className={`flex items-center gap-2.5 rounded-lg text-[13px] cursor-default transition-all ${
-                      collapsed ? "justify-center px-2 py-2.5" : "px-3 py-[7px]"
-                    } ${active ? "text-sidebar-foreground/65" : "text-sidebar-muted/60"}`}
-                    title={collapsed ? `${mod.label} — ${badgeLabel}` : mod.description}
-                  >
+
+                // Module-specific routes
+                const moduleRoute = mod.id === "evaluateiq" ? "/evaluate" : undefined;
+
+                const content = (
+                  <>
                     <Icon className="h-[15px] w-[15px] shrink-0" />
                     {!collapsed && (
                       <>
@@ -178,6 +177,38 @@ const AppSidebar = () => {
                         </span>
                       </>
                     )}
+                  </>
+                );
+
+                // Render as a link if active and has a route
+                if (active && moduleRoute) {
+                  return (
+                    <NavLink
+                      key={mod.id}
+                      to={moduleRoute}
+                      title={collapsed ? `${mod.label} — ${badgeLabel}` : mod.description}
+                      className={`flex items-center gap-2.5 rounded-lg text-[13px] transition-all duration-100 ${
+                        collapsed ? "justify-center px-2 py-2.5" : "px-3 py-[7px]"
+                      } ${
+                        isActive(moduleRoute)
+                          ? "bg-sidebar-accent text-sidebar-accent-foreground font-medium shadow-sm"
+                          : "text-sidebar-foreground/65 hover:bg-sidebar-accent/50 hover:text-sidebar-accent-foreground"
+                      }`}
+                    >
+                      {content}
+                    </NavLink>
+                  );
+                }
+
+                return (
+                  <div
+                    key={mod.id}
+                    className={`flex items-center gap-2.5 rounded-lg text-[13px] cursor-default transition-all ${
+                      collapsed ? "justify-center px-2 py-2.5" : "px-3 py-[7px]"
+                    } ${active ? "text-sidebar-foreground/65" : "text-sidebar-muted/60"}`}
+                    title={collapsed ? `${mod.label} — ${badgeLabel}` : mod.description}
+                  >
+                    {content}
                   </div>
                 );
               })}
