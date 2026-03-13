@@ -129,7 +129,7 @@ const CompleteNegotiationDialog = ({
       },
       { onSuccess: () => onClose() }
     );
-  }, [outcomeType, validation, finalSettlement, unresolvedIssues, nextSteps, litigationLikely, vm, session, strategy, rounds, notes, outcomeNotes, caseId, publish, onClose, attorneyName, firmName, observationsCount, calibrationSignalsCount, calibrationHighConfCount, calibrationJurisdictionBand]);
+  }, [outcomeType, validation, finalSettlement, unresolvedIssues, nextSteps, litigationLikely, vm, session, strategy, rounds, notes, outcomeNotes, caseId, publish, onClose, attorneyName, firmName, observationsCount, calibrationSignalsCount, calibrationHighConfCount, calibrationJurisdictionBand, representationContext]);
 
   if (!open) return null;
 
