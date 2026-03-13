@@ -3,7 +3,7 @@
  *
  * Handles the "Complete Evaluate" action:
  * 1. Validates required fields
- * 2. Assembles and freezes an EvaluatePackage
+ * 2. Assembles and freezes an EvaluatePackageV1
  * 3. Updates module status to completed
  * 4. Emits audit events
  */
@@ -12,9 +12,11 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
-import type { EvaluatePackagePayload } from "@/types/evaluate-persistence";
 import type { EvaluateIntakeSnapshot } from "@/types/evaluate-intake";
 import type { ExplanationLedger } from "@/types/explanation-ledger";
+import type { EvaluatePackageV1, EvaluatePackagePublicationState } from "@/types/evaluate-package-v1";
+import { assembleEvaluatePackageV1, type PackageAssemblyInput } from "@/lib/evaluatePackageAssembler";
+import { validateEvaluatePackage, validatePublicationTransition } from "@/lib/evaluatePackageValidator";
 
 // ─── Validation ──────────────────────────────────────
 
@@ -44,73 +46,16 @@ export function validateEvaluateCompletion(
     errors.push("EvaluateIQ is already completed. Reopen to make changes.");
   }
 
-  // Check medical billing totals
   const totalBilled = snapshot.medical_billing.reduce((s, b) => s + b.billed_amount, 0);
   if (totalBilled === 0) {
     warnings.push("Total billed amount is $0. Confirm this is intentional.");
   }
 
-  // Check injury data
   if (!snapshot.injuries || snapshot.injuries.length === 0) {
     warnings.push("No injuries recorded. Range output may be limited.");
   }
 
   return { valid: errors.length === 0, errors, warnings };
-}
-
-// ─── Package Assembly ────────────────────────────────
-
-interface PackageAssemblyInput {
-  snapshot: EvaluateIntakeSnapshot;
-  sourceModule: "demandiq" | "revieweriq";
-  sourceVersion: number;
-  explanationLedger: ExplanationLedger | null;
-}
-
-function assembleEvaluatePackage(input: PackageAssemblyInput): EvaluatePackagePayload {
-  const { snapshot, sourceModule, sourceVersion, explanationLedger } = input;
-
-  // Derive expanders/reducers from ledger
-  const driverSummaries = (explanationLedger?.entries ?? [])
-    .filter((e) => (e.magnitude.value ?? 0) >= 0.3 || e.direction !== "neutral")
-    .map((e) => ({
-      key: e.driver_key ?? e.entry_key,
-      label: e.title,
-      impact: e.direction === "increase" ? "expander" as const
-        : e.direction === "decrease" ? "reducer" as const
-        : "neutral" as const,
-      description: e.narrative,
-    }));
-
-  return {
-    package_version: 1,
-    engine_version: "1.0.0",
-    source_module: sourceModule,
-    source_package_version: sourceVersion,
-
-    // Range outputs (placeholder — will come from valuation_runs when live)
-    range_floor: null,
-    range_likely: null,
-    range_stretch: null,
-    confidence: null,
-
-    // Selected working range (placeholder — will come from valuation_selections)
-    selected_floor: null,
-    selected_likely: null,
-    selected_stretch: null,
-    authority_recommendation: null,
-    rationale_notes: "",
-
-    driver_summaries: driverSummaries,
-    explanation_ledger: explanationLedger,
-
-    assumptions: [],
-
-    total_billed: snapshot.medical_billing.reduce((s, b) => s + b.billed_amount, 0),
-    total_reviewed: snapshot.medical_billing.reduce((s, b) => s + (b.reviewer_recommended_amount ?? b.billed_amount), 0),
-
-    completeness_score: snapshot.overall_completeness_score ?? 0,
-  };
 }
 
 // ─── Mutations ───────────────────────────────────────
@@ -122,28 +67,30 @@ export function useCompleteEvaluate() {
   return useMutation({
     mutationFn: async ({
       caseId,
+      claimId,
+      evaluationId,
       snapshot,
       sourceModule,
       sourceVersion,
       explanationLedger,
+      snapshotId,
+      valuationRunId,
+      selectionId,
     }: {
       caseId: string;
+      claimId?: string;
+      evaluationId?: string;
       snapshot: EvaluateIntakeSnapshot;
       sourceModule: "demandiq" | "revieweriq";
       sourceVersion: number;
       explanationLedger: ExplanationLedger | null;
+      snapshotId?: string | null;
+      valuationRunId?: string | null;
+      selectionId?: string | null;
     }) => {
       if (!user || !tenantId) throw new Error("Not authenticated");
 
-      // 1. Assemble package payload
-      const payload = assembleEvaluatePackage({
-        snapshot,
-        sourceModule,
-        sourceVersion,
-        explanationLedger,
-      });
-
-      // 2. Determine version from existing packages
+      // 1. Determine version from existing packages
       const { data: existingPkgs } = await (supabase.from("evaluation_packages") as any)
         .select("version")
         .eq("case_id", caseId)
@@ -153,15 +100,63 @@ export function useCompleteEvaluate() {
         ? existingPkgs[0].version + 1
         : 1;
 
-      payload.package_version = newVersion;
+      // 2. Assemble EvaluatePackageV1
+      const assemblyInput: PackageAssemblyInput = {
+        evaluationId: evaluationId ?? caseId,
+        caseId,
+        claimId: claimId ?? caseId,
+        tenantId,
+        snapshot,
+        sourceModule,
+        sourceVersion,
+        snapshotId: snapshotId ?? null,
+        valuationRunId: valuationRunId ?? null,
+        selectionId: selectionId ?? null,
+        explanationLedger,
+        rangeFloor: null,
+        rangeLikely: null,
+        rangeStretch: null,
+        confidence: null,
+        selectedFloor: null,
+        selectedLikely: null,
+        selectedStretch: null,
+        authorityRecommendation: null,
+        rationaleNotes: "",
+        packageVersion: newVersion,
+        engineVersion: "1.0.0",
+        scoringLogicVersion: "1.0.0",
+        benchmarkLogicVersion: "1.0.0",
+        userId: user.id,
+      };
 
-      // 3. Insert evaluation_packages record
+      const pkg = assembleEvaluatePackageV1(assemblyInput);
+
+      // 3. Transition to accepted → published
+      pkg.evaluation_status = "published";
+      pkg.audit.accepted_by = user.id;
+      pkg.audit.accepted_at = new Date().toISOString();
+      pkg.audit.published_by = user.id;
+      pkg.audit.published_at = new Date().toISOString();
+
+      // 4. Validate before persisting
+      const validation = validateEvaluatePackage(pkg);
+      if (!validation.valid) {
+        const errorMsgs = validation.findings
+          .filter(f => f.severity === "error")
+          .map(f => f.message);
+        throw new Error(`Package validation failed: ${errorMsgs.join("; ")}`);
+      }
+
+      // 5. Insert evaluation_packages record (preserves prior versions)
       const { data: pkgData, error: pkgError } = await (supabase.from("evaluation_packages") as any)
         .insert({
           case_id: caseId,
           tenant_id: tenantId,
           version: newVersion,
-          package_payload: payload,
+          package_payload: pkg,
+          snapshot_id: snapshotId ?? null,
+          valuation_run_id: valuationRunId ?? null,
+          selection_id: selectionId ?? null,
           completed_by: user.id,
           completed_at: new Date().toISOString(),
         })
@@ -169,7 +164,7 @@ export function useCompleteEvaluate() {
         .single();
       if (pkgError) throw pkgError;
 
-      // 4. Update module_completions to completed
+      // 6. Update module_completions to completed
       const { data: existing } = await supabase
         .from("module_completions")
         .select("id, version, status")
@@ -193,7 +188,7 @@ export function useCompleteEvaluate() {
           .eq("id", existing.id);
       }
 
-      // 5. Update evaluation_cases status
+      // 7. Update evaluation_cases status
       await (supabase.from("evaluation_cases") as any)
         .update({
           module_status: "completed",
@@ -202,7 +197,7 @@ export function useCompleteEvaluate() {
         })
         .eq("case_id", caseId);
 
-      // 6. Audit event
+      // 8. Audit event
       await (supabase.from("audit_events") as any).insert({
         actor_user_id: user.id,
         tenant_id: tenantId,
@@ -213,8 +208,10 @@ export function useCompleteEvaluate() {
         after_value: {
           module_id: "evaluateiq",
           version: newVersion,
+          contract_version: pkg.contract_version,
           source_module: sourceModule,
           source_version: sourceVersion,
+          evaluation_status: pkg.evaluation_status,
         },
       });
 
