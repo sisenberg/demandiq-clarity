@@ -40,6 +40,7 @@ import EvalScoringRankedSummary from "@/components/evaluate/EvalScoringRankedSum
 import EvalMeritsScoreCard from "@/components/evaluate/EvalMeritsScoreCard";
 import EvalMeritsCorridorCard from "@/components/evaluate/EvalMeritsCorridorCard";
 import EvalPostMeritAdjustmentCard from "@/components/evaluate/EvalPostMeritAdjustmentCard";
+import EvalDocSufficiencyCard from "@/components/evaluate/EvalDocSufficiencyCard";
 import {
   ArrowLeft,
   Calculator,
@@ -236,6 +237,7 @@ const EvaluateWorkspacePage = () => {
                 {activeTab === "overview" && <EvalMeritsScoreCard snapshot={snapshot} />}
                 {activeTab === "overview" && <EvalMeritsCorridorCard snapshot={snapshot} />}
                 {activeTab === "overview" && <EvalPostMeritAdjustmentCard snapshot={snapshot} />}
+                {activeTab === "overview" && <EvalDocSufficiencyCard snapshot={snapshot} />}
                 {activeTab === "overview" && <EvalOverviewTab snapshot={snapshot} />}
                 {activeTab === "drivers" && <EvalScoringRankedSummary snapshot={snapshot} />}
                 {activeTab === "drivers" && <EvalFactorTaxonomyPanel snapshot={snapshot} />}
