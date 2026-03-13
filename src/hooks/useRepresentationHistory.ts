@@ -62,7 +62,7 @@ interface AppendRepresentationEventInput {
 
 export function useAppendRepresentationEvent() {
   const queryClient = useQueryClient();
-  const { profile } = useAuth();
+  const { profile, user } = useAuth();
 
   return useMutation({
     mutationFn: async (input: AppendRepresentationEventInput) => {
