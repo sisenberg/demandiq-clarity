@@ -5,7 +5,7 @@
  * Used by the completion hook and package publication flow.
  */
 
-import type { EvaluatePackageV1, EvalClaimProfile, EvalMeritsAssessment, EvalSettlementCorridor, EvalDocumentationSufficiency, EvalFactorSummary, EvalBenchmarkSummary, EvalNegotiationHandoff, EvalHandoffPoint, EvalAdoptedAssumption, EvalOverrideRecord, EvalPostMeritAdjustment } from "@/types/evaluate-package-v1";
+import type { EvaluatePackageV1, EvalClaimProfile, EvalMeritsAssessment, EvalSettlementCorridor, EvalDocumentationSufficiency, EvalFactorSummary, EvalBenchmarkSummary, EvalNegotiationHandoff, EvalHandoffPoint, EvalHandoffGap, EvalHandoffIssue, EvalAdoptedAssumption, EvalOverrideRecord, EvalPostMeritAdjustment, EvalConfidenceLevel } from "@/types/evaluate-package-v1";
 import { EVALUATE_PACKAGE_CONTRACT_VERSION } from "@/types/evaluate-package-v1";
 import type { EvaluateIntakeSnapshot } from "@/types/evaluate-intake";
 import type { ExplanationLedger, LedgerEntry } from "@/types/explanation-ledger";
