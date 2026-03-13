@@ -56,10 +56,14 @@ export function captureFirstEventStatus(
 
 export function captureOutcomeStatus(
   ctx: NegotiateRepresentationContext,
+  outcomeType?: string,
 ): NegotiateRepresentationContext {
+  const isResolved = outcomeType === "settled" || outcomeType === "closed_without_settlement";
   return {
     ...ctx,
     representation_status_at_outcome: ctx.representation_status_current,
+    unrepresented_resolved_flag:
+      ctx.unrepresented_resolved_flag || (isResolved && ctx.representation_status_current === "unrepresented"),
   };
 }
 

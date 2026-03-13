@@ -233,9 +233,42 @@ export function buildNegotiatePackage(opts: {
 
   const gen = strategy?.generated_strategy;
 
+  // Build outcome-specific representation sections
+  const repCtx = representationContext ?? null;
+  if (!repCtx) {
+    throw new Error("representation_context is required to build NegotiatePackage");
+  }
+
+  // Finalize representation_status_at_publication
+  const finalizedRepCtx: NegotiateRepresentationContext = {
+    ...repCtx,
+    representation_status_at_publication: repCtx.representation_status_current,
+    representation_status_at_outcome: repCtx.representation_status_at_outcome ?? repCtx.representation_status_current,
+  };
+
+  // Build settlement representation fields
+  const settlementRep: SettlementRepresentationFields | null = outcomeType === "settled" ? {
+    representation_status_at_settlement: finalizedRepCtx.representation_status_current,
+    representation_transition_flag: finalizedRepCtx.representation_transition_flag,
+    attorney_retained_during_claim_flag: finalizedRepCtx.attorney_retained_during_negotiation_flag,
+    attorney_retained_after_initial_offer_flag: finalizedRepCtx.attorney_retained_after_initial_offer_flag,
+    unrepresented_resolved_flag: finalizedRepCtx.representation_status_current === "unrepresented",
+  } : null;
+
+  // Build transfer representation fields
+  const transferRep: TransferRepresentationFields | null = outcomeType === "transferred_forward" ? {
+    representation_status_at_transfer: finalizedRepCtx.representation_status_current,
+    representation_transition_flag: finalizedRepCtx.representation_transition_flag,
+  } : null;
+
+  // Build representation_history_summary if not already set
+  if (!finalizedRepCtx.representation_history_summary) {
+    finalizedRepCtx.representation_history_summary = buildRepresentationHistorySummary(finalizedRepCtx, outcomeType);
+  }
+
   return {
     package_version: 1, // Will be overridden by DB version
-    engine_version: "negotiate-v1.0.0",
+    engine_version: "negotiate-v1.1.0",
     generated_at: new Date().toISOString(),
 
     source_eval_package_id: vm.provenance.packageId,
@@ -306,6 +339,38 @@ export function buildNegotiatePackage(opts: {
       jurisdiction_band: calibrationJurisdictionBand,
     } : null,
 
-    representation_context: representationContext ?? null,
+    representation_context: finalizedRepCtx,
+    settlement_representation: settlementRep,
+    transfer_representation: transferRep,
   };
+}
+
+// ─── Representation History Summary Builder ─────────────
+
+function buildRepresentationHistorySummary(
+  ctx: NegotiateRepresentationContext,
+  outcomeType: NegotiateOutcomeType,
+): string {
+  const parts: string[] = [];
+  parts.push(`Current: ${ctx.representation_status_current}.`);
+
+  if (ctx.representation_transition_flag) {
+    parts.push(`Representation changed during claim (${ctx.representation_changes.length} transition(s)).`);
+  }
+
+  if (ctx.attorney_retained_during_negotiation_flag) {
+    parts.push("Attorney retained during negotiation.");
+  }
+
+  if (ctx.unrepresented_resolved_flag) {
+    parts.push("Claim resolved while claimant was unrepresented.");
+  }
+
+  if (outcomeType === "settled") {
+    parts.push(`Status at settlement: ${ctx.representation_status_current}.`);
+  } else if (outcomeType === "transferred_forward") {
+    parts.push(`Status at transfer: ${ctx.representation_status_current}.`);
+  }
+
+  return parts.join(" ");
 }
