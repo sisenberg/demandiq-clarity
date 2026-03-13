@@ -276,5 +276,7 @@ export function buildNegotiatePackage(opts: {
       high_confidence_count: calibrationHighConfCount,
       jurisdiction_band: calibrationJurisdictionBand,
     } : null,
+
+    representation_context: representationContext ?? null,
   };
 }
