@@ -98,7 +98,7 @@ export interface DemoValuationRun {
   computed_at: string;
   floor: number;
   likely: number;
-  stretch: number;
+  high: number;
   confidence: number;
   confidence_label: "high" | "moderate" | "low" | "very_low";
   factor_count: number;
