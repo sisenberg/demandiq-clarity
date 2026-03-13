@@ -15,6 +15,9 @@ import EvalAnalyticsOverrideReasons from "@/components/evaluate/analytics/EvalAn
 import EvalAnalyticsBenchmarkQuality from "@/components/evaluate/analytics/EvalAnalyticsBenchmarkQuality";
 import EvalAnalyticsPublishVolume from "@/components/evaluate/analytics/EvalAnalyticsPublishVolume";
 import EvalAnalyticsAuditLog from "@/components/evaluate/analytics/EvalAnalyticsAuditLog";
+import RepresentationSummaryCard from "@/components/evaluate/analytics/RepresentationSummaryCard";
+import RepresentationTransitionCard from "@/components/evaluate/analytics/RepresentationTransitionCard";
+import SeverityBandedComparisonCard from "@/components/evaluate/analytics/SeverityBandedComparisonCard";
 
 const EvaluateAnalyticsPage = () => {
   return (
@@ -74,6 +77,23 @@ const EvaluateAnalyticsPage = () => {
 
           {/* Benchmark quality */}
           <EvalAnalyticsBenchmarkQuality />
+
+          {/* ─── Representation Analytics ────────────────── */}
+          <div className="pt-2">
+            <h2 className="text-xs font-semibold text-foreground mb-3 flex items-center gap-2">
+              <span className="h-1 w-1 rounded-full bg-primary" />
+              Representation Analytics
+            </h2>
+          </div>
+
+          {/* Summary + Transitions */}
+          <RepresentationSummaryCard />
+          <div className="grid grid-cols-1 xl:grid-cols-1 gap-4">
+            <RepresentationTransitionCard />
+          </div>
+
+          {/* Severity-banded comparison */}
+          <SeverityBandedComparisonCard />
 
           {/* Audit / QA review log */}
           <EvalAnalyticsAuditLog />

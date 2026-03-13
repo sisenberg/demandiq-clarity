@@ -3203,6 +3203,114 @@ export type Database = {
           },
         ]
       }
+      representation_analytics_facts: {
+        Row: {
+          attorney_retained_after_initial_offer_flag: boolean
+          attorney_retained_during_claim_flag: boolean
+          case_id: string
+          created_at: string
+          expected_resolution_mid: number | null
+          fact_based_value_mid: number | null
+          final_settlement_amount: number | null
+          id: string
+          liability_band: string | null
+          litigation_transfer_flag: boolean
+          representation_status_at_close: string | null
+          representation_status_at_first_evaluation: string | null
+          representation_status_at_first_offer: string | null
+          representation_status_at_latest_evaluation: string | null
+          representation_status_at_settlement: string | null
+          representation_status_at_transfer: string | null
+          representation_transition_flag: boolean
+          settlement_to_expected_resolution_ratio: number | null
+          settlement_to_fact_based_value_ratio: number | null
+          severity_band: string | null
+          specials_band: string | null
+          surgery_flag: boolean | null
+          tenant_id: string
+          time_to_retention_days: number | null
+          time_to_settlement_days: number | null
+          unrepresented_resolved_flag: boolean
+          updated_at: string
+          venue: string | null
+        }
+        Insert: {
+          attorney_retained_after_initial_offer_flag?: boolean
+          attorney_retained_during_claim_flag?: boolean
+          case_id: string
+          created_at?: string
+          expected_resolution_mid?: number | null
+          fact_based_value_mid?: number | null
+          final_settlement_amount?: number | null
+          id?: string
+          liability_band?: string | null
+          litigation_transfer_flag?: boolean
+          representation_status_at_close?: string | null
+          representation_status_at_first_evaluation?: string | null
+          representation_status_at_first_offer?: string | null
+          representation_status_at_latest_evaluation?: string | null
+          representation_status_at_settlement?: string | null
+          representation_status_at_transfer?: string | null
+          representation_transition_flag?: boolean
+          settlement_to_expected_resolution_ratio?: number | null
+          settlement_to_fact_based_value_ratio?: number | null
+          severity_band?: string | null
+          specials_band?: string | null
+          surgery_flag?: boolean | null
+          tenant_id: string
+          time_to_retention_days?: number | null
+          time_to_settlement_days?: number | null
+          unrepresented_resolved_flag?: boolean
+          updated_at?: string
+          venue?: string | null
+        }
+        Update: {
+          attorney_retained_after_initial_offer_flag?: boolean
+          attorney_retained_during_claim_flag?: boolean
+          case_id?: string
+          created_at?: string
+          expected_resolution_mid?: number | null
+          fact_based_value_mid?: number | null
+          final_settlement_amount?: number | null
+          id?: string
+          liability_band?: string | null
+          litigation_transfer_flag?: boolean
+          representation_status_at_close?: string | null
+          representation_status_at_first_evaluation?: string | null
+          representation_status_at_first_offer?: string | null
+          representation_status_at_latest_evaluation?: string | null
+          representation_status_at_settlement?: string | null
+          representation_status_at_transfer?: string | null
+          representation_transition_flag?: boolean
+          settlement_to_expected_resolution_ratio?: number | null
+          settlement_to_fact_based_value_ratio?: number | null
+          severity_band?: string | null
+          specials_band?: string | null
+          surgery_flag?: boolean | null
+          tenant_id?: string
+          time_to_retention_days?: number | null
+          time_to_settlement_days?: number | null
+          unrepresented_resolved_flag?: boolean
+          updated_at?: string
+          venue?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "representation_analytics_facts_case_id_fkey"
+            columns: ["case_id"]
+            isOneToOne: false
+            referencedRelation: "cases"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "representation_analytics_facts_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       reviewer_bill_links: {
         Row: {
           ai_confidence: number | null
@@ -4337,7 +4445,69 @@ export type Database = {
       }
     }
     Views: {
-      [_ in never]: never
+      representation_transition_analytics_v: {
+        Row: {
+          avg_days_to_retention: number | null
+          avg_settlement_if_never_retained: number | null
+          avg_settlement_if_retained_later: number | null
+          retained_after_initial_offer_count: number | null
+          retained_counsel_later_count: number | null
+          tenant_id: string | null
+          unrepresented_at_open_count: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "representation_analytics_facts_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      represented_vs_unrepresented_summary_v: {
+        Row: {
+          avg_expected_resolution_mid_represented: number | null
+          avg_expected_resolution_mid_unrepresented: number | null
+          avg_fact_based_value_mid_represented: number | null
+          avg_fact_based_value_mid_unrepresented: number | null
+          avg_final_settlement_represented: number | null
+          avg_final_settlement_unrepresented: number | null
+          represented_case_count: number | null
+          tenant_id: string | null
+          transitioned_case_count: number | null
+          unrepresented_case_count: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "representation_analytics_facts_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      severity_banded_representation_comparison_v: {
+        Row: {
+          avg_fact_based_value_mid: number | null
+          avg_final_settlement: number | null
+          avg_settlement_to_fact_based_ratio: number | null
+          claim_count: number | null
+          representation_status_at_close: string | null
+          severity_band: string | null
+          tenant_id: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "representation_analytics_facts_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Functions: {
       admin_update_user_role: {
