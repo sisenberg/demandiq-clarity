@@ -96,24 +96,19 @@ const EvaluateWorkspacePage = () => {
   // Override & audit state
   const assumptions = useAssumptionOverrides();
   const audit = useEvaluateAudit();
-  const valuationInput = useValuationInput();
-  const [overrideDialogOpen, setOverrideDialogOpen] = useState(false);
-  const [publishDialogOpen, setPublishDialogOpen] = useState(false);
-  const [isAccepted, setIsAccepted] = useState(false);
-
-  const { tenantId, user } = useAuth();
   const hasModule = isEntitlementActive(entitlements, ModuleId.EvaluateIQ);
   const moduleState = deriveEvaluateState(evalCompletion?.status);
   const cta = getEvaluateCTA(moduleState);
   const isWorkspaceActive = eligibility.eligible && moduleState !== EvaluateModuleState.NotStarted;
   const isProvisional = moduleState === EvaluateModuleState.ProvisionalEvaluation;
-
-  // Hydrate valuation inputs from snapshot when workspace becomes active
-  useEffect(() => {
-    if (snapshot && isWorkspaceActive && !valuationInput.input) {
-      valuationInput.hydrate(snapshot, tenantId ?? "", user?.id ?? null);
-    }
-  }, [snapshot, isWorkspaceActive, valuationInput.input]);
+  const valuationInput = useValuationInput({
+    caseId,
+    intakeSnapshot: snapshot,
+    enabled: isWorkspaceActive,
+  });
+  const [overrideDialogOpen, setOverrideDialogOpen] = useState(false);
+  const [publishDialogOpen, setPublishDialogOpen] = useState(false);
+  const [isAccepted, setIsAccepted] = useState(false);
 
   const claimProfile = useMemo(() => snapshot ? classifyClaimProfile(snapshot) : null, [snapshot]);
 
