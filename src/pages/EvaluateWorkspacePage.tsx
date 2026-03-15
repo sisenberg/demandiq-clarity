@@ -281,7 +281,7 @@ const EvaluateWorkspacePage = () => {
 
         {isWorkspaceActive && (
           <div className="px-6 border-t border-border pt-1 pb-0">
-            <EvaluateWorkspaceTabs active={activeTab} onChange={setActiveTab} />
+            <EvaluateWorkspaceTabs active={activeTab} onChange={setActiveTab} isDirty={valuationInput.isDirty} />
           </div>
         )}
       </div>
