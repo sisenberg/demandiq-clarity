@@ -234,7 +234,7 @@ export function useValuationInput({ caseId, intakeSnapshot, enabled }: UseValuat
 
       const { data, error } = await (supabase.rpc("bootstrap_valuation_input_snapshot", {
         _case_id: caseId,
-        _snapshot_payload: initialPayload,
+        _snapshot_payload: initialPayload as unknown as Record<string, unknown>,
         _source_module: intakeSnapshot.source_module,
         _source_package_version: intakeSnapshot.source_package_version,
         _upstream_snapshot_id: intakeSnapshot.snapshot_id,
