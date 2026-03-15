@@ -33,19 +33,9 @@ export function useEvaluateEligibility(caseId: string | undefined): EvaluateElig
       return { eligible: true, inputSource: "revieweriq", sourceVersion: reviewerCompletion.version, blockerReason: null };
     }
 
-    // Fallback: DemandIQ completed (when ReviewerIQ is not entitled or not completed)
+    // EvaluateIQ must still work from DemandIQ alone when ReviewerIQ is absent or incomplete.
     if (demandCompletion?.status === ModuleCompletionStatus.Completed) {
       return { eligible: true, inputSource: "demandiq", sourceVersion: demandCompletion.version, blockerReason: null };
-    }
-
-    // Blocked
-    if (hasReviewerIQ) {
-      return {
-        eligible: false,
-        inputSource: null,
-        sourceVersion: null,
-        blockerReason: "ReviewerIQ must be completed before starting evaluation. Alternatively, complete DemandIQ if ReviewerIQ is not applicable.",
-      };
     }
 
     return {

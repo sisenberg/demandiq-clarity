@@ -80,6 +80,11 @@ export function useStartEvaluate() {
         if (error) throw error;
       }
 
+      const { error: evaluationCaseError } = await (supabase.rpc("ensure_evaluation_case", {
+        _case_id: caseId,
+      }) as any);
+      if (evaluationCaseError) throw evaluationCaseError;
+
       // Audit event
       await (supabase.from("audit_events") as any).insert({
         actor_user_id: user.id,

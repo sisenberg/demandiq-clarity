@@ -213,7 +213,7 @@ const EvaluateWorkspacePage = () => {
     });
   };
 
-  const isPending = startEvaluate.isPending || publishEvaluate.isPending;
+  const isPending = startEvaluate.isPending || publishEvaluate.isPending || valuationInput.isSaving;
   const claimVsInsured = caseData.title || `${caseData.claimant} v. ${caseData.insured}`;
 
   return (
