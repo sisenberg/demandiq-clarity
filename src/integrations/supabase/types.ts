@@ -1182,6 +1182,7 @@ export type Database = {
         Row: {
           active_snapshot_id: string | null
           active_valuation_id: string | null
+          active_valuation_input_id: string | null
           case_id: string
           completed_at: string | null
           completed_by: string | null
@@ -1196,6 +1197,7 @@ export type Database = {
         Insert: {
           active_snapshot_id?: string | null
           active_valuation_id?: string | null
+          active_valuation_input_id?: string | null
           case_id: string
           completed_at?: string | null
           completed_by?: string | null
@@ -1210,6 +1212,7 @@ export type Database = {
         Update: {
           active_snapshot_id?: string | null
           active_valuation_id?: string | null
+          active_valuation_input_id?: string | null
           case_id?: string
           completed_at?: string | null
           completed_by?: string | null
@@ -1234,6 +1237,13 @@ export type Database = {
             columns: ["active_valuation_id"]
             isOneToOne: false
             referencedRelation: "valuation_runs"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "evaluation_cases_active_valuation_input_id_fkey"
+            columns: ["active_valuation_input_id"]
+            isOneToOne: false
+            referencedRelation: "valuation_input_snapshots"
             referencedColumns: ["id"]
           },
           {
@@ -4300,6 +4310,70 @@ export type Database = {
           },
         ]
       }
+      valuation_input_snapshots: {
+        Row: {
+          case_id: string
+          created_at: string
+          created_by: string | null
+          evaluation_case_id: string
+          id: string
+          snapshot_payload: Json
+          source_module: string
+          source_package_version: number
+          tenant_id: string
+          upstream_snapshot_id: string | null
+          version: number
+        }
+        Insert: {
+          case_id: string
+          created_at?: string
+          created_by?: string | null
+          evaluation_case_id: string
+          id?: string
+          snapshot_payload?: Json
+          source_module: string
+          source_package_version?: number
+          tenant_id: string
+          upstream_snapshot_id?: string | null
+          version: number
+        }
+        Update: {
+          case_id?: string
+          created_at?: string
+          created_by?: string | null
+          evaluation_case_id?: string
+          id?: string
+          snapshot_payload?: Json
+          source_module?: string
+          source_package_version?: number
+          tenant_id?: string
+          upstream_snapshot_id?: string | null
+          version?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "valuation_input_snapshots_case_id_fkey"
+            columns: ["case_id"]
+            isOneToOne: false
+            referencedRelation: "cases"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "valuation_input_snapshots_evaluation_case_id_fkey"
+            columns: ["evaluation_case_id"]
+            isOneToOne: false
+            referencedRelation: "evaluation_cases"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "valuation_input_snapshots_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       valuation_runs: {
         Row: {
           case_id: string
@@ -4517,10 +4591,44 @@ export type Database = {
         }
         Returns: undefined
       }
+      append_valuation_input_snapshot: {
+        Args: {
+          _case_id: string
+          _snapshot_payload: Json
+          _source_module: string
+          _source_package_version: number
+          _upstream_snapshot_id?: string
+        }
+        Returns: {
+          created_at: string
+          evaluation_case_id: string
+          snapshot_id: string
+          snapshot_payload: Json
+          version: number
+        }[]
+      }
+      bootstrap_valuation_input_snapshot: {
+        Args: {
+          _case_id: string
+          _snapshot_payload: Json
+          _source_module: string
+          _source_package_version: number
+          _upstream_snapshot_id?: string
+        }
+        Returns: {
+          created: boolean
+          created_at: string
+          evaluation_case_id: string
+          snapshot_id: string
+          snapshot_payload: Json
+          version: number
+        }[]
+      }
       complete_signup: {
         Args: { _display_name?: string; _org_code?: string; _org_name?: string }
         Returns: Json
       }
+      ensure_evaluation_case: { Args: { _case_id: string }; Returns: string }
       get_user_role: {
         Args: { _user_id: string }
         Returns: Database["public"]["Enums"]["app_role"]
