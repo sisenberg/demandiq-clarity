@@ -140,7 +140,7 @@ const EvaluateWorkspacePage = () => {
   const { data: upstreamFreshness } = useIsUpstreamCurrent(caseId, "evaluateiq", upstreamModuleId);
   const isStale = isWorkspaceActive && upstreamFreshness ? !upstreamFreshness.isCurrent : false;
 
-  const [activeTab, setActiveTab] = useState<EvalTab>("overview");
+  const [activeTab, setActiveTab] = useState<EvalTab>("inputs_overview");
 
   if (caseLoading) return <PageLoading message="Loading case…" />;
 
