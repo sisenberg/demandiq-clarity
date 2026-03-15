@@ -341,6 +341,74 @@ const EvaluateWorkspacePage = () => {
                   onRefresh={() => toast.info("Refreshing inputs from upstream package…")}
                 />
 
+                {/* ── Save bar for input tabs ── */}
+                {activeTab.startsWith("inputs_") && valuationInput.input && (
+                  <div className="flex items-center justify-between rounded-lg border border-border bg-card p-3">
+                    <div className="flex items-center gap-2 text-[10px] text-muted-foreground">
+                      {valuationInput.isDirty ? (
+                        <span className="flex items-center gap-1 text-[hsl(var(--status-attention))] font-medium">
+                          <span className="h-1.5 w-1.5 rounded-full bg-[hsl(var(--status-attention))]" /> Unsaved changes
+                        </span>
+                      ) : valuationInput.input.last_saved_at ? (
+                        <span>Last saved: {new Date(valuationInput.input.last_saved_at).toLocaleTimeString()}</span>
+                      ) : (
+                        <span>Not yet saved</span>
+                      )}
+                      <span className="text-muted-foreground/50">·</span>
+                      <span className="font-mono">v{valuationInput.input.version}</span>
+                      {valuationInput.versions.length > 0 && (
+                        <span className="text-muted-foreground/50">({valuationInput.versions.length} prior)</span>
+                      )}
+                    </div>
+                    <button
+                      onClick={valuationInput.save}
+                      disabled={!valuationInput.isDirty}
+                      className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-[11px] font-semibold transition-all ${
+                        valuationInput.isDirty
+                          ? "bg-primary text-primary-foreground hover:bg-primary/90"
+                          : "bg-accent text-muted-foreground cursor-not-allowed"
+                      }`}
+                    >
+                      <Save className="h-3 w-3" /> Save Inputs
+                    </button>
+                  </div>
+                )}
+
+                {/* ── Editable Input Sections ── */}
+                {activeTab === "inputs_overview" && valuationInput.input && (
+                  <DemandOverviewSection
+                    data={valuationInput.input.demand_overview}
+                    onChange={valuationInput.updateDemandOverview}
+                    sourceModule={eligibility.inputSource ?? "demandiq"}
+                    sourceVersion={eligibility.sourceVersion}
+                  />
+                )}
+                {activeTab === "inputs_liability" && valuationInput.input && (
+                  <LiabilitySection
+                    data={valuationInput.input.liability}
+                    onChange={valuationInput.updateLiability}
+                  />
+                )}
+                {activeTab === "inputs_injury" && valuationInput.input && (
+                  <InjuryTreatmentSection
+                    data={valuationInput.input.injury_treatment}
+                    onChange={valuationInput.updateInjuryTreatment}
+                  />
+                )}
+                {activeTab === "inputs_damages" && valuationInput.input && (
+                  <EconomicDamagesSection
+                    data={valuationInput.input.economic_damages}
+                    onChange={valuationInput.updateEconomicDamages}
+                  />
+                )}
+                {activeTab === "inputs_context" && valuationInput.input && (
+                  <EvaluationContextSection
+                    data={valuationInput.input.evaluation_context}
+                    onChange={valuationInput.updateEvaluationContext}
+                  />
+                )}
+
+                {/* ── Analysis Tabs ── */}
                 {activeTab === "overview" && (
                   <div className="space-y-4">
                     <EvalCorridorSummary snapshot={snapshot} isProvisional={isProvisional} />
