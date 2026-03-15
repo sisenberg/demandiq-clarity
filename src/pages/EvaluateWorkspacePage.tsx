@@ -340,14 +340,20 @@ const EvaluateWorkspacePage = () => {
                 {activeTab.startsWith("inputs_") && valuationInput.input && (
                   <div className="flex items-center justify-between rounded-lg border border-border bg-card p-3">
                     <div className="flex items-center gap-2 text-[10px] text-muted-foreground">
-                      {valuationInput.isDirty ? (
+                      {valuationInput.isSaving ? (
+                        <span className="flex items-center gap-1 text-primary font-medium">
+                          <span className="h-1.5 w-1.5 rounded-full bg-primary animate-pulse" /> Saving…
+                        </span>
+                      ) : valuationInput.saveError ? (
+                        <span className="text-destructive font-medium">Save failed: {valuationInput.saveError}</span>
+                      ) : valuationInput.isDirty ? (
                         <span className="flex items-center gap-1 text-[hsl(var(--status-attention))] font-medium">
                           <span className="h-1.5 w-1.5 rounded-full bg-[hsl(var(--status-attention))]" /> Unsaved changes
                         </span>
                       ) : valuationInput.input.last_saved_at ? (
                         <span>Last saved: {new Date(valuationInput.input.last_saved_at).toLocaleTimeString()}</span>
                       ) : (
-                        <span>Not yet saved</span>
+                        <span>Snapshot initialized from the linked demand record</span>
                       )}
                       <span className="text-muted-foreground/50">·</span>
                       <span className="font-mono">v{valuationInput.input.version}</span>
@@ -356,16 +362,39 @@ const EvaluateWorkspacePage = () => {
                       )}
                     </div>
                     <button
-                      onClick={valuationInput.save}
-                      disabled={!valuationInput.isDirty}
+                      onClick={() => void valuationInput.save()}
+                      disabled={!valuationInput.isDirty || valuationInput.isSaving}
                       className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-[11px] font-semibold transition-all ${
-                        valuationInput.isDirty
+                        valuationInput.isDirty && !valuationInput.isSaving
                           ? "bg-primary text-primary-foreground hover:bg-primary/90"
                           : "bg-accent text-muted-foreground cursor-not-allowed"
                       }`}
                     >
-                      <Save className="h-3 w-3" /> Save Inputs
+                      <Save className="h-3 w-3" /> {valuationInput.isSaving ? "Saving…" : "Save Inputs"}
                     </button>
+                  </div>
+                )}
+
+                {activeTab.startsWith("inputs_") && valuationInput.isLoading && !valuationInput.input && (
+                  <div className="rounded-lg border border-border bg-card px-4 py-6 text-center text-sm text-muted-foreground">
+                    Loading saved evaluation inputs…
+                  </div>
+                )}
+
+                {activeTab.startsWith("inputs_") && valuationInput.loadError && !valuationInput.input && (
+                  <div className="rounded-lg border border-destructive/20 bg-destructive/5 p-4">
+                    <div className="flex items-center justify-between gap-3">
+                      <div>
+                        <p className="text-sm font-semibold text-foreground">Unable to load the saved evaluation</p>
+                        <p className="text-xs text-muted-foreground mt-1">{valuationInput.loadError}. Check your connection and retry.</p>
+                      </div>
+                      <button
+                        onClick={() => void valuationInput.reload()}
+                        className="rounded-md bg-card px-3 py-1.5 text-[11px] font-semibold text-foreground border border-border hover:bg-accent transition-colors"
+                      >
+                        Retry load
+                      </button>
+                    </div>
                   </div>
                 )}
 
