@@ -1,4 +1,4 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { useParams, Link } from "react-router-dom";
 import { toast } from "sonner";
 import { useCase } from "@/hooks/useCases";
@@ -14,6 +14,7 @@ import { useRepresentationSummary } from "@/hooks/useRepresentationHistory";
 import { isEntitlementActive } from "@/hooks/useModuleEntitlements";
 import { useAssumptionOverrides } from "@/hooks/useAssumptionOverrides";
 import { useEvaluateAudit } from "@/hooks/useEvaluateAudit";
+import { useValuationInput } from "@/hooks/useValuationInput";
 import { ModuleId } from "@/types";
 import {
   EvaluateModuleState,
@@ -52,6 +53,11 @@ import EvalScenarioCard from "@/components/evaluate/EvalScenarioCard";
 import EvalOverrideDialog from "@/components/evaluate/EvalOverrideDialog";
 import EvalPublishDialog from "@/components/evaluate/EvalPublishDialog";
 import EvalGovernanceCard from "@/components/evaluate/EvalGovernanceCard";
+import DemandOverviewSection from "@/components/evaluate/sections/DemandOverviewSection";
+import LiabilitySection from "@/components/evaluate/sections/LiabilitySection";
+import InjuryTreatmentSection from "@/components/evaluate/sections/InjuryTreatmentSection";
+import EconomicDamagesSection from "@/components/evaluate/sections/EconomicDamagesSection";
+import EvaluationContextSection from "@/components/evaluate/sections/EvaluationContextSection";
 import { computeRepresentationAwareValuation } from "@/lib/representationValuationEngine";
 import { computeSettlementRange } from "@/lib/settlementRangeEngine";
 import { extractValuationDrivers } from "@/lib/valuationDriverEngine";
@@ -68,6 +74,7 @@ import {
   Play,
   Tag,
   Cpu,
+  Save,
 } from "lucide-react";
 
 const EvaluateWorkspacePage = () => {
