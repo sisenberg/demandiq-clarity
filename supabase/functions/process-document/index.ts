@@ -335,6 +335,7 @@ Deno.serve(async (req: Request) => {
       // send it to the AI for cleanup and structuring.
       if (pages.length === 0) {
         extractionMethod = isBornDigital ? "ocr-fallback" : "ocr";
+        ocrProviderName = "lovable-ai-gemini";
 
         if (!lovableApiKey) {
           throw new Error(
