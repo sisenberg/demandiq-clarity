@@ -83,7 +83,7 @@ const DocumentReviewWorkspace = ({ documentId, caseId, onBack }: DocumentReviewW
   const auditLog = useAuditLog();
 
   const [activePage, setActivePage] = useState(1);
-  const [rightTab, setRightTab] = useState<"text" | "metadata" | "facts" | "chronology">("text");
+  const [rightTab, setRightTab] = useState<"text" | "metadata" | "facts" | "evidence" | "chronology">("text");
   const [pdfUrl, setPdfUrl] = useState<string | null>(null);
   const textPanelRef = useRef<HTMLDivElement>(null);
   const pdfRefreshTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
