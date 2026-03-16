@@ -872,9 +872,12 @@ export type Database = {
           is_active: boolean
           law_firm_name: string
           loss_date: string
+          number_of_bills: number | null
+          number_of_providers: number | null
           represented_status: string
           source_document_id: string | null
           tenant_id: string
+          total_billed_specials: number | null
           updated_at: string
         }
         Insert: {
@@ -894,9 +897,12 @@ export type Database = {
           is_active?: boolean
           law_firm_name?: string
           loss_date?: string
+          number_of_bills?: number | null
+          number_of_providers?: number | null
           represented_status?: string
           source_document_id?: string | null
           tenant_id: string
+          total_billed_specials?: number | null
           updated_at?: string
         }
         Update: {
@@ -916,9 +922,12 @@ export type Database = {
           is_active?: boolean
           law_firm_name?: string
           loss_date?: string
+          number_of_bills?: number | null
+          number_of_providers?: number | null
           represented_status?: string
           source_document_id?: string | null
           tenant_id?: string
+          total_billed_specials?: number | null
           updated_at?: string
         }
         Relationships: [
@@ -4210,6 +4219,114 @@ export type Database = {
           },
           {
             foreignKeyName: "reviewer_treatment_reviews_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      specials_records: {
+        Row: {
+          adjustments: number | null
+          balance_due: number | null
+          billed_amount: number
+          case_id: string
+          cpt_or_hcpcs_code: string | null
+          created_at: string
+          date_of_service: string
+          description: string
+          extraction_confidence: number | null
+          id: string
+          linked_demand_id: string | null
+          provider_name: string
+          provider_party_id: string | null
+          source_document_id: string | null
+          source_page: number | null
+          source_snippet: string
+          tenant_id: string
+          updated_at: string
+          verification_status: string
+          verified_at: string | null
+          verified_by: string | null
+        }
+        Insert: {
+          adjustments?: number | null
+          balance_due?: number | null
+          billed_amount?: number
+          case_id: string
+          cpt_or_hcpcs_code?: string | null
+          created_at?: string
+          date_of_service?: string
+          description?: string
+          extraction_confidence?: number | null
+          id?: string
+          linked_demand_id?: string | null
+          provider_name?: string
+          provider_party_id?: string | null
+          source_document_id?: string | null
+          source_page?: number | null
+          source_snippet?: string
+          tenant_id: string
+          updated_at?: string
+          verification_status?: string
+          verified_at?: string | null
+          verified_by?: string | null
+        }
+        Update: {
+          adjustments?: number | null
+          balance_due?: number | null
+          billed_amount?: number
+          case_id?: string
+          cpt_or_hcpcs_code?: string | null
+          created_at?: string
+          date_of_service?: string
+          description?: string
+          extraction_confidence?: number | null
+          id?: string
+          linked_demand_id?: string | null
+          provider_name?: string
+          provider_party_id?: string | null
+          source_document_id?: string | null
+          source_page?: number | null
+          source_snippet?: string
+          tenant_id?: string
+          updated_at?: string
+          verification_status?: string
+          verified_at?: string | null
+          verified_by?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "specials_records_case_id_fkey"
+            columns: ["case_id"]
+            isOneToOne: false
+            referencedRelation: "cases"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "specials_records_linked_demand_id_fkey"
+            columns: ["linked_demand_id"]
+            isOneToOne: false
+            referencedRelation: "demands"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "specials_records_provider_party_id_fkey"
+            columns: ["provider_party_id"]
+            isOneToOne: false
+            referencedRelation: "case_parties"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "specials_records_source_document_id_fkey"
+            columns: ["source_document_id"]
+            isOneToOne: false
+            referencedRelation: "case_documents"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "specials_records_tenant_id_fkey"
             columns: ["tenant_id"]
             isOneToOne: false
             referencedRelation: "tenants"
