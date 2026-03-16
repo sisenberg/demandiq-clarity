@@ -173,7 +173,33 @@ function extractBornDigitalPages(pdfBytes: Uint8Array): string[] {
     return textBlocks;
   }
 
-  return []; // Couldn't extract → fall through to OCR
+  return []; // Couldn't extract → fall through to AI cleanup
+}
+
+// Broader text extraction: captures Tj, TJ array strings, and hex strings
+function extractAllPdfText(pdfBytes: Uint8Array): string {
+  const fullText = new TextDecoder("latin1").decode(pdfBytes);
+  const parts: string[] = [];
+
+  // Tj strings: (text) Tj
+  const tjRegex = /\(([^)]+)\)\s*Tj/g;
+  let m: RegExpExecArray | null;
+  while ((m = tjRegex.exec(fullText)) !== null) {
+    parts.push(m[1]);
+  }
+
+  // TJ arrays: [(text) num (text)] TJ
+  const tjArrayRegex = /\[([^\]]+)\]\s*TJ/g;
+  while ((m = tjArrayRegex.exec(fullText)) !== null) {
+    const inner = m[1];
+    const strRegex = /\(([^)]+)\)/g;
+    let sm: RegExpExecArray | null;
+    while ((sm = strRegex.exec(inner)) !== null) {
+      parts.push(sm[1]);
+    }
+  }
+
+  return parts.join(" ").replace(/\\n/g, "\n").replace(/\s+/g, " ").trim();
 }
 
 // ─── Main Handler ───────────────────────────────────────
