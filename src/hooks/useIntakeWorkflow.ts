@@ -7,14 +7,17 @@ import type { DocumentRow } from "./useDocuments";
 import {
   computeIntakeWorkflowState,
   computePipelineSteps,
+  computeSimplifiedPipeline,
   type CaseIntakeState,
   type PipelineStepStatus,
+  type SimplifiedStepStatus,
   type IntakeWorkflowInput,
 } from "@/lib/intakeWorkflowEngine";
 
 export interface IntakeWorkflowResult {
   state: CaseIntakeState;
   steps: PipelineStepStatus[];
+  simplifiedSteps: SimplifiedStepStatus[];
   input: IntakeWorkflowInput;
   isLoading: boolean;
 }
@@ -89,7 +92,8 @@ export function useIntakeWorkflow(
 
     const state = computeIntakeWorkflowState(input);
     const steps = computePipelineSteps(input);
+    const simplifiedSteps = computeSimplifiedPipeline(input);
 
-    return { state, steps, input, isLoading };
+    return { state, steps, simplifiedSteps, input, isLoading };
   }, [documents, pkg, pkgLoading, validation, valLoading, counts, countsLoading]);
 }
