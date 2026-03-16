@@ -303,12 +303,9 @@ Deno.serve(async (req: Request) => {
 
         // For PDFs, we send the entire document as base64 to the AI
         // The AI will extract text from the visible content
-        const cappedBytes = fileBytes.subarray(0, Math.min(fileBytes.length, 10_000_000));
-        let binaryStr = "";
-        for (let j = 0; j < cappedBytes.length; j++) {
-          binaryStr += String.fromCharCode(cappedBytes[j]);
-        }
-        const base64 = btoa(binaryStr);
+        // Cap at 5MB to stay within edge function memory limits
+        const cappedBytes = fileBytes.subarray(0, Math.min(fileBytes.length, 5_000_000));
+        const base64 = uint8ArrayToBase64(cappedBytes);
 
         // Process as single document (AI handles multi-page)
         const result = await ocrProvider.extractPageText(
