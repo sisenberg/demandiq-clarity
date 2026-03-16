@@ -983,6 +983,85 @@ export type Database = {
           },
         ]
       }
+      document_chunks: {
+        Row: {
+          case_id: string
+          chunk_index: number
+          chunk_text: string
+          chunk_type: string
+          content_hash: string | null
+          created_at: string
+          document_id: string
+          extraction_pass: string | null
+          extraction_status: string
+          extraction_timestamp: string | null
+          extraction_version: number | null
+          id: string
+          page_end: number
+          page_start: number
+          tenant_id: string
+          updated_at: string
+        }
+        Insert: {
+          case_id: string
+          chunk_index?: number
+          chunk_text?: string
+          chunk_type?: string
+          content_hash?: string | null
+          created_at?: string
+          document_id: string
+          extraction_pass?: string | null
+          extraction_status?: string
+          extraction_timestamp?: string | null
+          extraction_version?: number | null
+          id?: string
+          page_end: number
+          page_start: number
+          tenant_id: string
+          updated_at?: string
+        }
+        Update: {
+          case_id?: string
+          chunk_index?: number
+          chunk_text?: string
+          chunk_type?: string
+          content_hash?: string | null
+          created_at?: string
+          document_id?: string
+          extraction_pass?: string | null
+          extraction_status?: string
+          extraction_timestamp?: string | null
+          extraction_version?: number | null
+          id?: string
+          page_end?: number
+          page_start?: number
+          tenant_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "document_chunks_case_id_fkey"
+            columns: ["case_id"]
+            isOneToOne: false
+            referencedRelation: "cases"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "document_chunks_document_id_fkey"
+            columns: ["document_id"]
+            isOneToOne: false
+            referencedRelation: "case_documents"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "document_chunks_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       document_metadata_extractions: {
         Row: {
           case_id: string
@@ -2073,6 +2152,9 @@ export type Database = {
           created_at: string
           diagnosis_description: string
           extraction_confidence: number | null
+          extraction_pass: string | null
+          extraction_timestamp: string | null
+          extraction_version: number | null
           functional_impact_flag: boolean
           functional_limitations: string
           icd_codes: string[]
@@ -2085,6 +2167,7 @@ export type Database = {
           objective_support_flag: boolean
           residual_symptom_flag: boolean
           residual_symptom_language: string
+          source_chunk_id: string | null
           source_document_id: string | null
           source_page: number | null
           source_snippet: string
@@ -2103,6 +2186,9 @@ export type Database = {
           created_at?: string
           diagnosis_description?: string
           extraction_confidence?: number | null
+          extraction_pass?: string | null
+          extraction_timestamp?: string | null
+          extraction_version?: number | null
           functional_impact_flag?: boolean
           functional_limitations?: string
           icd_codes?: string[]
@@ -2115,6 +2201,7 @@ export type Database = {
           objective_support_flag?: boolean
           residual_symptom_flag?: boolean
           residual_symptom_language?: string
+          source_chunk_id?: string | null
           source_document_id?: string | null
           source_page?: number | null
           source_snippet?: string
@@ -2133,6 +2220,9 @@ export type Database = {
           created_at?: string
           diagnosis_description?: string
           extraction_confidence?: number | null
+          extraction_pass?: string | null
+          extraction_timestamp?: string | null
+          extraction_version?: number | null
           functional_impact_flag?: boolean
           functional_limitations?: string
           icd_codes?: string[]
@@ -2145,6 +2235,7 @@ export type Database = {
           objective_support_flag?: boolean
           residual_symptom_flag?: boolean
           residual_symptom_language?: string
+          source_chunk_id?: string | null
           source_document_id?: string | null
           source_page?: number | null
           source_snippet?: string
@@ -2170,6 +2261,13 @@ export type Database = {
             columns: ["linked_demand_id"]
             isOneToOne: false
             referencedRelation: "demands"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "injury_records_source_chunk_id_fkey"
+            columns: ["source_chunk_id"]
+            isOneToOne: false
+            referencedRelation: "document_chunks"
             referencedColumns: ["id"]
           },
           {
@@ -4374,10 +4472,14 @@ export type Database = {
           date_of_service: string
           description: string
           extraction_confidence: number | null
+          extraction_pass: string | null
+          extraction_timestamp: string | null
+          extraction_version: number | null
           id: string
           linked_demand_id: string | null
           provider_name: string
           provider_party_id: string | null
+          source_chunk_id: string | null
           source_document_id: string | null
           source_page: number | null
           source_snippet: string
@@ -4397,10 +4499,14 @@ export type Database = {
           date_of_service?: string
           description?: string
           extraction_confidence?: number | null
+          extraction_pass?: string | null
+          extraction_timestamp?: string | null
+          extraction_version?: number | null
           id?: string
           linked_demand_id?: string | null
           provider_name?: string
           provider_party_id?: string | null
+          source_chunk_id?: string | null
           source_document_id?: string | null
           source_page?: number | null
           source_snippet?: string
@@ -4420,10 +4526,14 @@ export type Database = {
           date_of_service?: string
           description?: string
           extraction_confidence?: number | null
+          extraction_pass?: string | null
+          extraction_timestamp?: string | null
+          extraction_version?: number | null
           id?: string
           linked_demand_id?: string | null
           provider_name?: string
           provider_party_id?: string | null
+          source_chunk_id?: string | null
           source_document_id?: string | null
           source_page?: number | null
           source_snippet?: string
@@ -4453,6 +4563,13 @@ export type Database = {
             columns: ["provider_party_id"]
             isOneToOne: false
             referencedRelation: "case_parties"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "specials_records_source_chunk_id_fkey"
+            columns: ["source_chunk_id"]
+            isOneToOne: false
+            referencedRelation: "document_chunks"
             referencedColumns: ["id"]
           },
           {
@@ -4547,10 +4664,14 @@ export type Database = {
           event_summary: string
           event_type: string
           extraction_confidence: number | null
+          extraction_pass: string | null
+          extraction_timestamp: string | null
+          extraction_version: number | null
           id: string
           linked_demand_id: string | null
           provider_name: string
           provider_party_id: string | null
+          source_chunk_id: string | null
           source_document_id: string | null
           source_page: number | null
           source_snippet: string
@@ -4571,10 +4692,14 @@ export type Database = {
           event_summary?: string
           event_type?: string
           extraction_confidence?: number | null
+          extraction_pass?: string | null
+          extraction_timestamp?: string | null
+          extraction_version?: number | null
           id?: string
           linked_demand_id?: string | null
           provider_name?: string
           provider_party_id?: string | null
+          source_chunk_id?: string | null
           source_document_id?: string | null
           source_page?: number | null
           source_snippet?: string
@@ -4595,10 +4720,14 @@ export type Database = {
           event_summary?: string
           event_type?: string
           extraction_confidence?: number | null
+          extraction_pass?: string | null
+          extraction_timestamp?: string | null
+          extraction_version?: number | null
           id?: string
           linked_demand_id?: string | null
           provider_name?: string
           provider_party_id?: string | null
+          source_chunk_id?: string | null
           source_document_id?: string | null
           source_page?: number | null
           source_snippet?: string
@@ -4632,6 +4761,13 @@ export type Database = {
             columns: ["provider_party_id"]
             isOneToOne: false
             referencedRelation: "case_parties"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "treatment_events_source_chunk_id_fkey"
+            columns: ["source_chunk_id"]
+            isOneToOne: false
+            referencedRelation: "document_chunks"
             referencedColumns: ["id"]
           },
           {
