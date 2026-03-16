@@ -1403,6 +1403,70 @@ export type Database = {
           },
         ]
       }
+      evidence_references: {
+        Row: {
+          case_id: string
+          character_end: number | null
+          character_start: number | null
+          created_at: string
+          created_by: string | null
+          document_id: string
+          evidence_type: string
+          id: string
+          page_number: number
+          quoted_text: string
+          tenant_id: string
+        }
+        Insert: {
+          case_id: string
+          character_end?: number | null
+          character_start?: number | null
+          created_at?: string
+          created_by?: string | null
+          document_id: string
+          evidence_type?: string
+          id?: string
+          page_number: number
+          quoted_text?: string
+          tenant_id: string
+        }
+        Update: {
+          case_id?: string
+          character_end?: number | null
+          character_start?: number | null
+          created_at?: string
+          created_by?: string | null
+          document_id?: string
+          evidence_type?: string
+          id?: string
+          page_number?: number
+          quoted_text?: string
+          tenant_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "evidence_references_case_id_fkey"
+            columns: ["case_id"]
+            isOneToOne: false
+            referencedRelation: "cases"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "evidence_references_document_id_fkey"
+            columns: ["document_id"]
+            isOneToOne: false
+            referencedRelation: "case_documents"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "evidence_references_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       extracted_facts: {
         Row: {
           case_id: string
