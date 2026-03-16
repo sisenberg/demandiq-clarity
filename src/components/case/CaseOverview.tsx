@@ -102,6 +102,13 @@ const CaseOverview = ({ caseData, documents, onNavigate }: CaseOverviewProps) =>
         {/* ── Row 0: Intake Readiness ── */}
         <IntakeReadinessPanel documents={documents} caseId={caseData.id} onNavigate={onNavigate} />
 
+        {/* ── Demand Summary ── */}
+        <DemandSummaryPanel
+          caseId={caseData.id}
+          tenantId={caseData.tenant_id}
+          demandDocumentId={documents.find((d) => d.document_type === "demand_letter")?.id}
+        />
+
         {/* ── Row 1: Case Snapshot + Key Metrics ── */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
           {/* Case / Claimant Summary */}
