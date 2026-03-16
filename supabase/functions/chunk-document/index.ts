@@ -495,6 +495,7 @@ serve(async (req) => {
         document_type: doc.document_type,
         chunk_strategy: strategy,
         chunks_created: chunks.length,
+        labels_created: labelsCreated,
         extraction_passes: extractionPasses,
         jobs_created: jobsCreated,
       }),

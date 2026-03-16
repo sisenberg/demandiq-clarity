@@ -23,3 +23,6 @@ verify_jwt = false
 
 [functions.publish-intake-package]
 verify_jwt = false
+
+[functions.search-chunks]
+verify_jwt = false

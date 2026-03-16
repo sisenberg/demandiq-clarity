@@ -19,6 +19,8 @@ export interface DocumentChunkRow {
   extraction_status: string;
   created_at: string;
   updated_at: string;
+  /** Attached labels (populated when fetched with labels) */
+  labels?: import("@/types/chunk-retrieval").ChunkLabelRow[];
 }
 
 export const CHUNK_TYPE_LABEL: Record<string, string> = {
