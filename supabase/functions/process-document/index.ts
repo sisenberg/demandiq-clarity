@@ -7,6 +7,78 @@ const corsHeaders = {
     "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
 };
 
+// ─── Inline Content Block Detection (mirrors src/lib/parseNormalizer.ts) ──
+// Edge functions can't import from src/, so we inline the heuristic here.
+
+const HEADING_PATTERNS_EDGE = [
+  /^#{1,6}\s+.+/,
+  /^[A-Z][A-Z\s,.\-:]{4,80}$/,
+  /^\d{1,3}\.\s+[A-Z]/,
+  /^[IVXLC]+\.\s+/,
+  /^(?:Section|Article|Part|Chapter)\s+/i,
+];
+const TABLE_LINE_EDGE = /^[|┃┆│].*[|┃┆│]$/;
+const TAB_DELIM_EDGE = /\t.*\t/;
+const LIST_BULLET_EDGE = /^[\s]*[-•●○◦▪▸►]\s+/;
+const LIST_ORDERED_EDGE = /^[\s]*(?:\d+[.)]\s+|[a-z][.)]\s+)/i;
+
+function detectContentBlocksEdge(pageText: string): any[] {
+  const lines = pageText.split("\n");
+  const blocks: any[] = [];
+  let charOffset = 0;
+  let blockIndex = 0;
+  let bufferLines: string[] = [];
+  let bufferStart = 0;
+  let currentType: string | null = null;
+
+  const flush = () => {
+    if (bufferLines.length === 0) return;
+    const text = bufferLines.join("\n");
+    const charEnd = bufferStart + text.length;
+    if (currentType === "table") {
+      const cols = bufferLines[0].includes("|")
+        ? bufferLines[0].split("|").filter(Boolean).length
+        : bufferLines[0].includes("\t") ? bufferLines[0].split("\t").length : 1;
+      blocks.push({ block_index: blockIndex++, block_type: "table", text, char_start: bufferStart, char_end: charEnd, rows: bufferLines.length, cols });
+    } else if (currentType === "list") {
+      blocks.push({ block_index: blockIndex++, block_type: "list", text, char_start: bufferStart, char_end: charEnd, ordered: LIST_ORDERED_EDGE.test(bufferLines[0]), items: bufferLines.length });
+    } else {
+      blocks.push({ block_index: blockIndex++, block_type: "paragraph", text, char_start: bufferStart, char_end: charEnd });
+    }
+    bufferLines = [];
+    currentType = null;
+  };
+
+  for (let i = 0; i < lines.length; i++) {
+    const line = lines[i];
+    const lineStart = charOffset;
+    charOffset += line.length + (i < lines.length - 1 ? 1 : 0);
+    const trimmed = line.trim();
+    if (!trimmed) { flush(); continue; }
+
+    if (trimmed.length <= 120 && HEADING_PATTERNS_EDGE.some((p) => p.test(trimmed))) {
+      flush();
+      const mdMatch = trimmed.match(/^(#{1,6})\s/);
+      const level = mdMatch ? mdMatch[1].length : /^[A-Z][A-Z\s,.\-:]+$/.test(trimmed) ? 1 : 2;
+      blocks.push({ block_index: blockIndex++, block_type: "heading", text: trimmed, char_start: lineStart, char_end: lineStart + line.length, level });
+      continue;
+    }
+    if (TABLE_LINE_EDGE.test(trimmed) || TAB_DELIM_EDGE.test(line)) {
+      if (currentType !== "table") { flush(); currentType = "table"; bufferStart = lineStart; }
+      bufferLines.push(line); continue;
+    }
+    if (LIST_BULLET_EDGE.test(line) || LIST_ORDERED_EDGE.test(line)) {
+      if (currentType !== "list") { flush(); currentType = "list"; bufferStart = lineStart; }
+      bufferLines.push(trimmed); continue;
+    }
+    if (currentType && currentType !== "paragraph") flush();
+    if (!bufferLines.length) { bufferStart = lineStart; currentType = "paragraph"; }
+    bufferLines.push(line);
+  }
+  flush();
+  return blocks;
+}
+
 // ─── OCR Provider Interface ─────────────────────────────
 interface OcrResult {
   text: string;

@@ -268,18 +268,39 @@ serve(async (req) => {
       });
     }
 
-    // 2. Fetch extracted pages
-    const { data: pages, error: pageErr } = await supabase
-      .from("document_pages")
-      .select("page_number, extracted_text")
+    // 2. Fetch canonical parsed pages (current version) if available,
+    //    falling back to raw document_pages for backward compatibility.
+    let validPages: { page_number: number; text: string }[] = [];
+    let usingCanonical = false;
+
+    const { data: canonicalPages, error: canonErr } = await supabase
+      .from("parsed_document_pages")
+      .select("page_number, page_text")
       .eq("document_id", document_id)
+      .eq("is_current", true)
       .order("page_number", { ascending: true });
 
-    if (pageErr) throw pageErr;
+    if (!canonErr && canonicalPages && canonicalPages.length > 0) {
+      validPages = canonicalPages
+        .filter((p: any) => p.page_text && p.page_text.trim().length > 0)
+        .map((p: any) => ({ page_number: p.page_number, text: p.page_text }));
+      usingCanonical = true;
+    }
 
-    const validPages = (pages ?? [])
-      .filter((p: any) => p.extracted_text && p.extracted_text.trim().length > 0)
-      .map((p: any) => ({ page_number: p.page_number, text: p.extracted_text }));
+    // Fallback to raw document_pages
+    if (validPages.length === 0) {
+      const { data: pages, error: pageErr } = await supabase
+        .from("document_pages")
+        .select("page_number, extracted_text")
+        .eq("document_id", document_id)
+        .order("page_number", { ascending: true });
+
+      if (pageErr) throw pageErr;
+
+      validPages = (pages ?? [])
+        .filter((p: any) => p.extracted_text && p.extracted_text.trim().length > 0)
+        .map((p: any) => ({ page_number: p.page_number, text: p.extracted_text }));
+    }
 
     if (validPages.length === 0) {
       return new Response(
