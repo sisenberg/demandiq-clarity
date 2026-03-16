@@ -303,9 +303,12 @@ Deno.serve(async (req: Request) => {
 
         // For PDFs, we send the entire document as base64 to the AI
         // The AI will extract text from the visible content
-        const base64 = btoa(
-          String.fromCharCode(...fileBytes.subarray(0, Math.min(fileBytes.length, 10_000_000)))
-        );
+        const cappedBytes = fileBytes.subarray(0, Math.min(fileBytes.length, 10_000_000));
+        let binaryStr = "";
+        for (let j = 0; j < cappedBytes.length; j++) {
+          binaryStr += String.fromCharCode(cappedBytes[j]);
+        }
+        const base64 = btoa(binaryStr);
 
         // Process as single document (AI handles multi-page)
         const result = await ocrProvider.extractPageText(
