@@ -793,6 +793,152 @@ export type Database = {
           },
         ]
       }
+      demand_field_extractions: {
+        Row: {
+          confidence: number | null
+          created_at: string
+          demand_id: string
+          evidence_reference_id: string | null
+          extracted_value: string
+          field_name: string
+          id: string
+          source_page: number | null
+          source_snippet: string
+          tenant_id: string
+        }
+        Insert: {
+          confidence?: number | null
+          created_at?: string
+          demand_id: string
+          evidence_reference_id?: string | null
+          extracted_value?: string
+          field_name: string
+          id?: string
+          source_page?: number | null
+          source_snippet?: string
+          tenant_id: string
+        }
+        Update: {
+          confidence?: number | null
+          created_at?: string
+          demand_id?: string
+          evidence_reference_id?: string | null
+          extracted_value?: string
+          field_name?: string
+          id?: string
+          source_page?: number | null
+          source_snippet?: string
+          tenant_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "demand_field_extractions_demand_id_fkey"
+            columns: ["demand_id"]
+            isOneToOne: false
+            referencedRelation: "demands"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "demand_field_extractions_evidence_reference_id_fkey"
+            columns: ["evidence_reference_id"]
+            isOneToOne: false
+            referencedRelation: "evidence_references"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "demand_field_extractions_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      demands: {
+        Row: {
+          attorney_name: string
+          case_id: string
+          claim_number: string
+          claimant_name: string
+          created_at: string
+          demand_amount: number | null
+          demand_date: string
+          demand_deadline: string | null
+          demand_summary_text: string
+          id: string
+          insured_name: string
+          is_active: boolean
+          law_firm_name: string
+          loss_date: string
+          represented_status: string
+          source_document_id: string | null
+          tenant_id: string
+          updated_at: string
+        }
+        Insert: {
+          attorney_name?: string
+          case_id: string
+          claim_number?: string
+          claimant_name?: string
+          created_at?: string
+          demand_amount?: number | null
+          demand_date?: string
+          demand_deadline?: string | null
+          demand_summary_text?: string
+          id?: string
+          insured_name?: string
+          is_active?: boolean
+          law_firm_name?: string
+          loss_date?: string
+          represented_status?: string
+          source_document_id?: string | null
+          tenant_id: string
+          updated_at?: string
+        }
+        Update: {
+          attorney_name?: string
+          case_id?: string
+          claim_number?: string
+          claimant_name?: string
+          created_at?: string
+          demand_amount?: number | null
+          demand_date?: string
+          demand_deadline?: string | null
+          demand_summary_text?: string
+          id?: string
+          insured_name?: string
+          is_active?: boolean
+          law_firm_name?: string
+          loss_date?: string
+          represented_status?: string
+          source_document_id?: string | null
+          tenant_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "demands_case_id_fkey"
+            columns: ["case_id"]
+            isOneToOne: false
+            referencedRelation: "cases"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "demands_source_document_id_fkey"
+            columns: ["source_document_id"]
+            isOneToOne: false
+            referencedRelation: "case_documents"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "demands_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       document_metadata_extractions: {
         Row: {
           case_id: string
