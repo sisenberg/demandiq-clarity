@@ -114,7 +114,15 @@ const CaseOverview = ({ caseData, documents, onNavigate }: CaseOverviewProps) =>
         {/* ── Party Normalization ── */}
         <PartyNormalizationPanel caseId={caseData.id} />
 
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+        {/* ── Medical Specials ── */}
+        <SpecialsReviewTable
+          caseId={caseData.id}
+          tenantId={caseData.tenant_id}
+          billDocumentIds={documents
+            .filter((d) => ["medical_bill", "itemized_statement", "billing_record"].includes(d.document_type))
+            .map((d) => d.id)}
+        />
+
           {/* Case / Claimant Summary */}
           <div className="lg:col-span-2 card-elevated p-4">
             <div className="flex items-start gap-3 mb-3">
