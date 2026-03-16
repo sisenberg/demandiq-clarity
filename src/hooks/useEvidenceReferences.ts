@@ -20,6 +20,7 @@ export interface EvidenceReferenceRow {
   anchor_entity_type: string | null;
   anchor_entity_id: string | null;
   anchor_module: string | null;
+  confidence: number | null;
   created_by: string | null;
   created_at: string;
 }

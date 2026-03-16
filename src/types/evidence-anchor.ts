@@ -103,4 +103,5 @@ export interface CreateEvidenceAnchorParams {
   anchorEntityType?: AnchorEntityType;
   anchorEntityId?: string;
   anchorModule?: AnchorModule;
+  confidence?: number;
 }
