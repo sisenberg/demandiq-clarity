@@ -344,8 +344,13 @@ const AdminPage = () => {
           {[
             { label: "Tenant Settings", description: "Organization name, slug, and configuration", icon: Building2 },
             { label: "System Settings", description: "Extraction defaults, export formats, integrations", icon: Settings },
+            { label: "Pipeline Benchmarks", description: "Golden test harness for OCR, chunking & extraction validation", icon: FlaskConical, href: "/admin/benchmarks" },
           ].map((section) => (
-            <div key={section.label} className="card-elevated-hover px-5 py-5 cursor-pointer">
+            <div
+              key={section.label}
+              className="card-elevated-hover px-5 py-5 cursor-pointer"
+              onClick={() => "href" in section && section.href && navigate(section.href)}
+            >
               <div className="flex items-start gap-3.5">
                 <div className="h-9 w-9 rounded-lg bg-accent flex items-center justify-center shrink-0">
                   <section.icon className="h-4 w-4 text-primary" />

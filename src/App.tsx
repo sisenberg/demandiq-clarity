@@ -135,7 +135,15 @@ const App = () => (
                   </RoleGuard>
                 }
               />
-            </Route>
+              </Route>
+              <Route
+                path="/admin/benchmarks"
+                element={
+                  <RoleGuard permission="view_admin">
+                    <BenchmarkDashboardPage />
+                  </RoleGuard>
+                }
+              />
             <Route path="*" element={<NotFound />} />
           </Routes>
         </BrowserRouter>
