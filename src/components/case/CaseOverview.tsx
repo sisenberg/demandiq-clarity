@@ -10,6 +10,7 @@ import type { EvidenceReference, TimelineEvent } from "@/types";
 import { maskClaimNumber } from "@/lib/phi-utils";
 import IntakeReadinessPanel from "./IntakeReadinessPanel";
 import DemandSummaryPanel from "./DemandSummaryPanel";
+import DemandChronologyPanel from "./DemandChronologyPanel";
 import PartyNormalizationPanel from "./PartyNormalizationPanel";
 import SpecialsReviewTable from "./SpecialsReviewTable";
 import TreatmentTimelineView from "./TreatmentTimelineView";
@@ -116,7 +117,9 @@ const CaseOverview = ({ caseData, documents, onNavigate }: CaseOverviewProps) =>
           demandDocumentId={documents.find((d) => d.document_type === "demand_letter")?.id}
         />
 
-        {/* ── Party Normalization ── */}
+        {/* ── Demand Chronology ── */}
+        <DemandChronologyPanel caseId={caseData.id} />
+
         <PartyNormalizationPanel caseId={caseData.id} />
 
         {/* ── Medical Specials ── */}

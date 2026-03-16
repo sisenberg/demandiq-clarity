@@ -1,6 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import { useAuth } from "@/contexts/AuthContext";
 
 export interface DemandRow {
   id: string;
@@ -94,9 +95,10 @@ export function useUpdateDemand() {
   });
 }
 
-/** Mark a demand as active (deactivates others for the case) */
+/** Mark a demand as active (deactivates others for the case) and auto-reassemble intake package */
 export function useActivateDemand() {
   const qc = useQueryClient();
+  const { user, tenantId } = useAuth();
   return useMutation({
     mutationFn: async ({ demandId, caseId }: { demandId: string; caseId: string }) => {
       // Deactivate all
@@ -108,10 +110,25 @@ export function useActivateDemand() {
         .update({ is_active: true })
         .eq("id", demandId);
       if (error) throw error;
+
+      // Auto-reassemble intake package with new active demand
+      if (tenantId) {
+        await supabase.functions.invoke("publish-intake-package", {
+          body: {
+            case_id: caseId,
+            tenant_id: tenantId,
+            user_id: user?.id ?? "",
+            action: "assemble",
+          },
+        });
+      }
     },
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["demands"] });
-      toast.success("Demand marked as active");
+      qc.invalidateQueries({ queryKey: ["intake-evaluation-package"] });
+      qc.invalidateQueries({ queryKey: ["intake-evaluation-package-history"] });
+      qc.invalidateQueries({ queryKey: ["intake-field-provenance"] });
+      toast.success("Active demand switched — intake package reassembled");
     },
     onError: (e) => toast.error(`Activation failed: ${(e as Error).message}`),
   });
