@@ -17,3 +17,6 @@ verify_jwt = false
 
 [functions.extract-injuries]
 verify_jwt = false
+
+[functions.chunk-document]
+verify_jwt = false

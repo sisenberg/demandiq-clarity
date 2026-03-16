@@ -448,14 +448,61 @@ Deno.serve(async (req: Request) => {
       })
       .eq("id", job_id);
 
-    // 12. Auto-enqueue next pipeline step (fact extraction)
+    // 12. Auto-enqueue chunking step (replaces raw document_parsing job)
     await supabase.from("intake_jobs").insert({
       tenant_id: doc.tenant_id,
       case_id: doc.case_id,
       document_id: doc.id,
-      job_type: "document_parsing",
+      job_type: "document_chunking",
       status: "queued",
     });
+
+    // 12b. Auto-trigger chunk-document to segment text by document type
+    try {
+      console.log("[process-document] Triggering chunk-document for", doc.id);
+      const chunkUrl = `${supabaseUrl}/functions/v1/chunk-document`;
+      const chunkResp = await fetch(chunkUrl, {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${serviceRoleKey}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ document_id: doc.id }),
+      });
+      if (!chunkResp.ok) {
+        const errText = await chunkResp.text();
+        console.error("[process-document] Auto-chunking failed:", chunkResp.status, errText);
+        await supabase.from("intake_jobs").insert({
+          tenant_id: doc.tenant_id,
+          case_id: doc.case_id,
+          document_id: doc.id,
+          job_type: "document_chunking",
+          status: "failed",
+          error_message: `Auto-chunking failed [${chunkResp.status}]: ${errText.substring(0, 500)}`,
+        });
+      } else {
+        const chunkResult = await chunkResp.json();
+        console.log("[process-document] Chunking completed:", chunkResult?.chunks_created ?? 0, "chunks");
+        // Mark chunking job as completed
+        await supabase
+          .from("intake_jobs")
+          .update({ status: "completed", completed_at: new Date().toISOString() })
+          .eq("document_id", doc.id)
+          .eq("job_type", "document_chunking")
+          .eq("status", "queued");
+      }
+    } catch (chunkErr) {
+      const errMsg = chunkErr instanceof Error ? chunkErr.message : String(chunkErr);
+      console.error("[process-document] Auto-chunking error:", errMsg);
+      await supabase.from("intake_jobs").insert({
+        tenant_id: doc.tenant_id,
+        case_id: doc.case_id,
+        document_id: doc.id,
+        job_type: "document_chunking",
+        status: "failed",
+        error_message: `Auto-chunking exception: ${errMsg}`,
+      });
+    }
 
     // 13. Auto-trigger document classification
     // Fire-and-forget but log failures durably to intake_jobs
