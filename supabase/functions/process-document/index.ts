@@ -110,6 +110,18 @@ function getOcrProvider(lovableApiKey: string): OcrProvider {
   return new LovableAiOcrProvider(lovableApiKey);
 }
 
+// ─── Efficient Base64 Encoding ──────────────────────────
+// Converts Uint8Array to base64 using chunked processing to avoid stack overflow
+function uint8ArrayToBase64(bytes: Uint8Array): string {
+  const CHUNK_SIZE = 32768; // 32KB chunks
+  const parts: string[] = [];
+  for (let i = 0; i < bytes.length; i += CHUNK_SIZE) {
+    const chunk = bytes.subarray(i, Math.min(i + CHUNK_SIZE, bytes.length));
+    parts.push(String.fromCharCode(...chunk));
+  }
+  return btoa(parts.join(""));
+}
+
 // ─── Born-Digital Text Extraction ───────────────────────
 // Attempts to extract text directly from PDF binary without OCR.
 // Uses a simple heuristic: search for text stream markers in PDF.
@@ -303,12 +315,9 @@ Deno.serve(async (req: Request) => {
 
         // For PDFs, we send the entire document as base64 to the AI
         // The AI will extract text from the visible content
-        const cappedBytes = fileBytes.subarray(0, Math.min(fileBytes.length, 10_000_000));
-        let binaryStr = "";
-        for (let j = 0; j < cappedBytes.length; j++) {
-          binaryStr += String.fromCharCode(cappedBytes[j]);
-        }
-        const base64 = btoa(binaryStr);
+        // Cap at 5MB to stay within edge function memory limits
+        const cappedBytes = fileBytes.subarray(0, Math.min(fileBytes.length, 5_000_000));
+        const base64 = uint8ArrayToBase64(cappedBytes);
 
         // Process as single document (AI handles multi-page)
         const result = await ocrProvider.extractPageText(
@@ -346,11 +355,8 @@ Deno.serve(async (req: Request) => {
       }
 
       const ocrProvider = getOcrProvider(lovableApiKey);
-      let imgBinaryStr = "";
-      for (let j = 0; j < fileBytes.length; j++) {
-        imgBinaryStr += String.fromCharCode(fileBytes[j]);
-      }
-      const base64 = btoa(imgBinaryStr);
+      const cappedImgBytes = fileBytes.subarray(0, Math.min(fileBytes.length, 5_000_000));
+      const base64 = uint8ArrayToBase64(cappedImgBytes);
       const result = await ocrProvider.extractPageText(base64, doc.file_type, 1);
 
       pages = [
