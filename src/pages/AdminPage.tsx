@@ -41,6 +41,7 @@ const ENTITLEMENT_BADGE: Record<EntitlementStatus, string> = {
 };
 
 const AdminPage = () => {
+  const navigate = useNavigate();
   const { role, tenantId } = useAuth();
   const [tab, setTab] = useState<"users" | "permissions" | "modules" | "compliance" | "settings">("users");
   const [users, setUsers] = useState<TenantUser[]>([]);
