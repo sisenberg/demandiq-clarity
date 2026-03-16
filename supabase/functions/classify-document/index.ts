@@ -335,6 +335,25 @@ Confidence scores:
           });
           console.log("[classify-document] Enqueued workflow job:", workflow);
         }
+
+        // Auto-trigger orchestrate-intake to fire extraction functions
+        try {
+          await fetch(`${supabaseUrl}/functions/v1/orchestrate-intake`, {
+            method: "POST",
+            headers: {
+              Authorization: `Bearer ${serviceRoleKey}`,
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+              document_id: doc.id,
+              case_id: doc.case_id,
+              tenant_id: doc.tenant_id,
+            }),
+          });
+          console.log("[classify-document] Triggered orchestrate-intake");
+        } catch (orchErr) {
+          console.warn("[classify-document] orchestrate-intake trigger failed (non-fatal):", orchErr);
+        }
       }
     }
 

@@ -22,6 +22,10 @@ import {
   type SimplifiedStepStatus,
   type CaseIntakeState,
 } from "@/lib/intakeWorkflowEngine";
+import {
+  useIntakeProgress,
+  computeExtractionSummary,
+} from "@/hooks/useIntakeOrchestration";
 
 interface Props {
   caseId: string;
@@ -29,10 +33,20 @@ interface Props {
   onNavigate?: (section: string) => void;
 }
 
+const JOB_TYPE_LABELS: Record<string, string> = {
+  demand_extraction: "Demand Extraction",
+  specials_extraction: "Specials Extraction",
+  treatment_extraction: "Treatment Extraction",
+  injury_extraction: "Injury Extraction",
+  general_review: "General Review",
+};
+
 const IntakeWorkflowDashboard = ({ caseId, documents, onNavigate }: Props) => {
   const workflow = useIntakeWorkflow(caseId, documents);
   const { state, simplifiedSteps, input, isLoading } = workflow;
   const [showDetailed, setShowDetailed] = useState(false);
+  const { data: intakeJobs } = useIntakeProgress(caseId);
+  const extractionSummary = intakeJobs ? computeExtractionSummary(intakeJobs) : {};
 
   if (isLoading) {
     return (
@@ -81,6 +95,29 @@ const IntakeWorkflowDashboard = ({ caseId, documents, onNavigate }: Props) => {
           />
         ))}
       </div>
+
+      {/* ── Active extraction jobs ── */}
+      {Object.keys(extractionSummary).length > 0 && (
+        <div className="px-5 py-3 border-t border-border">
+          <p className="text-[9px] font-semibold text-muted-foreground uppercase tracking-wider mb-2">Extraction Jobs</p>
+          <div className="space-y-1">
+            {Object.entries(extractionSummary).map(([jobType, info]) => (
+              <div key={jobType} className="flex items-center gap-2 py-0.5">
+                {info.status === "completed" && <CheckCircle2 className="h-3 w-3 text-[hsl(var(--status-approved))]" />}
+                {info.status === "running" && <Loader2 className="h-3 w-3 text-[hsl(var(--status-processing))] animate-spin" />}
+                {info.status === "queued" && <Circle className="h-3 w-3 text-muted-foreground/40" />}
+                {info.status === "failed" && <Circle className="h-3 w-3 text-destructive" />}
+                <span className={`text-[10px] ${info.status === "completed" ? "text-foreground" : "text-muted-foreground"}`}>
+                  {JOB_TYPE_LABELS[jobType] || jobType}
+                </span>
+                {info.status === "failed" && info.error && (
+                  <span className="text-[9px] text-destructive truncate max-w-[120px]">{info.error}</span>
+                )}
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
 
       {/* ── Detailed toggle ── */}
       <div className="px-5 pb-3">
