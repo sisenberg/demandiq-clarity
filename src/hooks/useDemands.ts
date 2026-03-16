@@ -21,6 +21,9 @@ export interface DemandRow {
   demand_summary_text: string;
   claimant_party_id: string | null;
   attorney_party_id: string | null;
+  total_billed_specials: number;
+  number_of_bills: number;
+  number_of_providers: number;
   created_at: string;
   updated_at: string;
 }

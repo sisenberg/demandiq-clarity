@@ -8,3 +8,6 @@ verify_jwt = false
 
 [functions.extract-demand]
 verify_jwt = false
+
+[functions.extract-specials]
+verify_jwt = false
