@@ -710,6 +710,71 @@ export type Database = {
           },
         ]
       }
+      chunk_labels: {
+        Row: {
+          case_id: string
+          chunk_id: string
+          confidence: number | null
+          created_at: string
+          document_id: string
+          id: string
+          label: string
+          source: string
+          tenant_id: string
+        }
+        Insert: {
+          case_id: string
+          chunk_id: string
+          confidence?: number | null
+          created_at?: string
+          document_id: string
+          id?: string
+          label: string
+          source?: string
+          tenant_id: string
+        }
+        Update: {
+          case_id?: string
+          chunk_id?: string
+          confidence?: number | null
+          created_at?: string
+          document_id?: string
+          id?: string
+          label?: string
+          source?: string
+          tenant_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "chunk_labels_case_id_fkey"
+            columns: ["case_id"]
+            isOneToOne: false
+            referencedRelation: "cases"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "chunk_labels_chunk_id_fkey"
+            columns: ["chunk_id"]
+            isOneToOne: false
+            referencedRelation: "document_chunks"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "chunk_labels_document_id_fkey"
+            columns: ["document_id"]
+            isOneToOne: false
+            referencedRelation: "case_documents"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "chunk_labels_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       claimant_representation_history: {
         Row: {
           attorney_name: string | null
@@ -4415,6 +4480,66 @@ export type Database = {
           },
           {
             foreignKeyName: "representation_analytics_facts_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      retrieval_events: {
+        Row: {
+          case_id: string
+          created_at: string
+          filters: Json
+          id: string
+          latency_ms: number | null
+          module: string | null
+          query_text: string
+          result_chunk_ids: string[]
+          result_count: number
+          retrieval_mode: string
+          tenant_id: string
+          triggered_by: string
+        }
+        Insert: {
+          case_id: string
+          created_at?: string
+          filters?: Json
+          id?: string
+          latency_ms?: number | null
+          module?: string | null
+          query_text?: string
+          result_chunk_ids?: string[]
+          result_count?: number
+          retrieval_mode?: string
+          tenant_id: string
+          triggered_by?: string
+        }
+        Update: {
+          case_id?: string
+          created_at?: string
+          filters?: Json
+          id?: string
+          latency_ms?: number | null
+          module?: string | null
+          query_text?: string
+          result_chunk_ids?: string[]
+          result_count?: number
+          retrieval_mode?: string
+          tenant_id?: string
+          triggered_by?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "retrieval_events_case_id_fkey"
+            columns: ["case_id"]
+            isOneToOne: false
+            referencedRelation: "cases"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "retrieval_events_tenant_id_fkey"
             columns: ["tenant_id"]
             isOneToOne: false
             referencedRelation: "tenants"
