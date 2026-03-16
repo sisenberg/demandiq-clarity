@@ -17,7 +17,6 @@ import {
   Calculator,
   Handshake,
   ClipboardCheck,
-  Handshake,
 } from "lucide-react";
 
 export type CaseSection =
