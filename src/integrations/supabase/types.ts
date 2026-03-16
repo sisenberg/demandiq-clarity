@@ -867,9 +867,11 @@ export type Database = {
           demand_date: string
           demand_deadline: string | null
           demand_summary_text: string
+          first_treatment_date: string | null
           id: string
           insured_name: string
           is_active: boolean
+          last_treatment_date: string | null
           law_firm_name: string
           loss_date: string
           number_of_bills: number | null
@@ -878,6 +880,9 @@ export type Database = {
           source_document_id: string | null
           tenant_id: string
           total_billed_specials: number | null
+          total_treatment_events: number | null
+          treatment_duration_days: number | null
+          treatment_provider_count: number | null
           updated_at: string
         }
         Insert: {
@@ -892,9 +897,11 @@ export type Database = {
           demand_date?: string
           demand_deadline?: string | null
           demand_summary_text?: string
+          first_treatment_date?: string | null
           id?: string
           insured_name?: string
           is_active?: boolean
+          last_treatment_date?: string | null
           law_firm_name?: string
           loss_date?: string
           number_of_bills?: number | null
@@ -903,6 +910,9 @@ export type Database = {
           source_document_id?: string | null
           tenant_id: string
           total_billed_specials?: number | null
+          total_treatment_events?: number | null
+          treatment_duration_days?: number | null
+          treatment_provider_count?: number | null
           updated_at?: string
         }
         Update: {
@@ -917,9 +927,11 @@ export type Database = {
           demand_date?: string
           demand_deadline?: string | null
           demand_summary_text?: string
+          first_treatment_date?: string | null
           id?: string
           insured_name?: string
           is_active?: boolean
+          last_treatment_date?: string | null
           law_firm_name?: string
           loss_date?: string
           number_of_bills?: number | null
@@ -928,6 +940,9 @@ export type Database = {
           source_document_id?: string | null
           tenant_id?: string
           total_billed_specials?: number | null
+          total_treatment_events?: number | null
+          treatment_duration_days?: number | null
+          treatment_provider_count?: number | null
           updated_at?: string
         }
         Relationships: [
@@ -4401,6 +4416,117 @@ export type Database = {
           slug?: string
         }
         Relationships: []
+      }
+      treatment_events: {
+        Row: {
+          body_part_reference: string | null
+          case_id: string
+          created_at: string
+          event_summary: string
+          event_type: string
+          extraction_confidence: number | null
+          id: string
+          linked_demand_id: string | null
+          provider_name: string
+          provider_party_id: string | null
+          source_document_id: string | null
+          source_page: number | null
+          source_snippet: string
+          specialty: string | null
+          symptoms_or_complaints: string
+          tenant_id: string
+          treatment_plan_notes: string
+          updated_at: string
+          verification_status: string
+          verified_at: string | null
+          verified_by: string | null
+          visit_date: string
+        }
+        Insert: {
+          body_part_reference?: string | null
+          case_id: string
+          created_at?: string
+          event_summary?: string
+          event_type?: string
+          extraction_confidence?: number | null
+          id?: string
+          linked_demand_id?: string | null
+          provider_name?: string
+          provider_party_id?: string | null
+          source_document_id?: string | null
+          source_page?: number | null
+          source_snippet?: string
+          specialty?: string | null
+          symptoms_or_complaints?: string
+          tenant_id: string
+          treatment_plan_notes?: string
+          updated_at?: string
+          verification_status?: string
+          verified_at?: string | null
+          verified_by?: string | null
+          visit_date?: string
+        }
+        Update: {
+          body_part_reference?: string | null
+          case_id?: string
+          created_at?: string
+          event_summary?: string
+          event_type?: string
+          extraction_confidence?: number | null
+          id?: string
+          linked_demand_id?: string | null
+          provider_name?: string
+          provider_party_id?: string | null
+          source_document_id?: string | null
+          source_page?: number | null
+          source_snippet?: string
+          specialty?: string | null
+          symptoms_or_complaints?: string
+          tenant_id?: string
+          treatment_plan_notes?: string
+          updated_at?: string
+          verification_status?: string
+          verified_at?: string | null
+          verified_by?: string | null
+          visit_date?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "treatment_events_case_id_fkey"
+            columns: ["case_id"]
+            isOneToOne: false
+            referencedRelation: "cases"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "treatment_events_linked_demand_id_fkey"
+            columns: ["linked_demand_id"]
+            isOneToOne: false
+            referencedRelation: "demands"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "treatment_events_provider_party_id_fkey"
+            columns: ["provider_party_id"]
+            isOneToOne: false
+            referencedRelation: "case_parties"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "treatment_events_source_document_id_fkey"
+            columns: ["source_document_id"]
+            isOneToOne: false
+            referencedRelation: "case_documents"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "treatment_events_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       treatment_records: {
         Row: {

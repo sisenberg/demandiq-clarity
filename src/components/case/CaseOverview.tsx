@@ -12,6 +12,7 @@ import IntakeReadinessPanel from "./IntakeReadinessPanel";
 import DemandSummaryPanel from "./DemandSummaryPanel";
 import PartyNormalizationPanel from "./PartyNormalizationPanel";
 import SpecialsReviewTable from "./SpecialsReviewTable";
+import TreatmentTimelineView from "./TreatmentTimelineView";
 import {
   User,
   Car,
@@ -120,6 +121,15 @@ const CaseOverview = ({ caseData, documents, onNavigate }: CaseOverviewProps) =>
           tenantId={caseData.tenant_id}
           billDocumentIds={documents
             .filter((d) => ["medical_bill", "itemized_statement", "billing_record"].includes(d.document_type))
+            .map((d) => d.id)}
+        />
+
+        {/* ── Treatment Timeline ── */}
+        <TreatmentTimelineView
+          caseId={caseData.id}
+          tenantId={caseData.tenant_id}
+          medicalDocumentIds={documents
+            .filter((d) => ["medical_record", "narrative_report", "imaging_report"].includes(d.document_type))
             .map((d) => d.id)}
         />
 

@@ -11,3 +11,6 @@ verify_jwt = false
 
 [functions.extract-specials]
 verify_jwt = false
+
+[functions.extract-treatment-timeline]
+verify_jwt = false

@@ -24,6 +24,11 @@ export interface DemandRow {
   total_billed_specials: number;
   number_of_bills: number;
   number_of_providers: number;
+  first_treatment_date: string | null;
+  last_treatment_date: string | null;
+  treatment_duration_days: number;
+  total_treatment_events: number;
+  treatment_provider_count: number;
   created_at: string;
   updated_at: string;
 }
