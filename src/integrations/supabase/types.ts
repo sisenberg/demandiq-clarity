@@ -2349,6 +2349,121 @@ export type Database = {
           },
         ]
       }
+      intake_evaluation_packages: {
+        Row: {
+          active_demand_id: string | null
+          assembled_at: string | null
+          assembled_by: string | null
+          attorney_name: string
+          case_id: string
+          claimant_name: string
+          created_at: string
+          demand_amount: number | null
+          demand_deadline: string | null
+          functional_impact_flags: Json
+          id: string
+          injury_summary: Json
+          invasive_treatment_flags: Json
+          law_firm: string
+          missing_data_flags: Json
+          objective_support_flags: Json
+          package_payload: Json
+          package_status: string
+          provider_list: Json
+          published_at: string | null
+          published_by: string | null
+          represented_status: string
+          residual_symptom_flags: Json
+          specials_summary: Json
+          tenant_id: string
+          treatment_summary: Json
+          updated_at: string
+          version: number
+        }
+        Insert: {
+          active_demand_id?: string | null
+          assembled_at?: string | null
+          assembled_by?: string | null
+          attorney_name?: string
+          case_id: string
+          claimant_name?: string
+          created_at?: string
+          demand_amount?: number | null
+          demand_deadline?: string | null
+          functional_impact_flags?: Json
+          id?: string
+          injury_summary?: Json
+          invasive_treatment_flags?: Json
+          law_firm?: string
+          missing_data_flags?: Json
+          objective_support_flags?: Json
+          package_payload?: Json
+          package_status?: string
+          provider_list?: Json
+          published_at?: string | null
+          published_by?: string | null
+          represented_status?: string
+          residual_symptom_flags?: Json
+          specials_summary?: Json
+          tenant_id: string
+          treatment_summary?: Json
+          updated_at?: string
+          version?: number
+        }
+        Update: {
+          active_demand_id?: string | null
+          assembled_at?: string | null
+          assembled_by?: string | null
+          attorney_name?: string
+          case_id?: string
+          claimant_name?: string
+          created_at?: string
+          demand_amount?: number | null
+          demand_deadline?: string | null
+          functional_impact_flags?: Json
+          id?: string
+          injury_summary?: Json
+          invasive_treatment_flags?: Json
+          law_firm?: string
+          missing_data_flags?: Json
+          objective_support_flags?: Json
+          package_payload?: Json
+          package_status?: string
+          provider_list?: Json
+          published_at?: string | null
+          published_by?: string | null
+          represented_status?: string
+          residual_symptom_flags?: Json
+          specials_summary?: Json
+          tenant_id?: string
+          treatment_summary?: Json
+          updated_at?: string
+          version?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "intake_evaluation_packages_active_demand_id_fkey"
+            columns: ["active_demand_id"]
+            isOneToOne: false
+            referencedRelation: "demands"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "intake_evaluation_packages_case_id_fkey"
+            columns: ["case_id"]
+            isOneToOne: false
+            referencedRelation: "cases"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "intake_evaluation_packages_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       intake_jobs: {
         Row: {
           case_id: string
