@@ -95,13 +95,13 @@ const IntakeUploadZone = ({ caseId, onUploadComplete }: IntakeUploadZoneProps) =
           Drop files here or click to browse
         </p>
         <p className="text-xs text-muted-foreground mt-1">
-          PDF, DOCX, JPG, PNG, TIFF — up to 20MB each
+          PDF, DOCX, JPG, JPEG, PNG, WEBP — up to 20MB each
         </p>
         <input
           ref={inputRef}
           type="file"
           multiple
-          accept=".pdf,.docx,.doc,.jpg,.jpeg,.png,.tiff,.tif"
+          accept=".pdf,.docx,.doc,.jpg,.jpeg,.png,.webp"
           className="hidden"
           onChange={(e) => e.target.files && handleFiles(e.target.files)}
         />
