@@ -4,6 +4,7 @@ import { type DocumentRow, useDeleteDocument } from "@/hooks/useDocuments";
 import { useRetryIntakeJob, useCaseIntakeJobs } from "@/hooks/useIntakeJobs";
 import { useInvokeExtraction, useTriggerCaseExtraction } from "@/hooks/useExtraction";
 import { useCaseDuplicateFlags } from "@/hooks/useDuplicateFlags";
+import { useOverrideDocumentType } from "@/hooks/useDocumentClassification";
 import { useAuth } from "@/contexts/AuthContext";
 import { useAuditLog } from "@/hooks/useAuditLog";
 import { supabase } from "@/integrations/supabase/client";
@@ -15,6 +16,7 @@ import {
   isIntakeProcessing,
   isIntakeComplete,
   getPipelineStageLabel,
+  DOCUMENT_TYPE_LABEL as DOC_TYPE_LABEL,
 } from "@/lib/statuses";
 import IntakeUploadZone from "./IntakeUploadZone";
 import IntakeSummaryPanel from "./IntakeSummaryPanel";
