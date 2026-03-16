@@ -437,6 +437,7 @@ Deno.serve(async (req: Request) => {
     } else if (isImage) {
       // 7. Image files: always OCR
       extractionMethod = "ocr-image";
+      ocrProviderName = "lovable-ai-gemini";
 
       if (!lovableApiKey) {
         throw new Error("LOVABLE_API_KEY not configured for image OCR.");
