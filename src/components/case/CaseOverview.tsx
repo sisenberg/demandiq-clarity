@@ -9,6 +9,7 @@ import { isDocumentReady } from "@/lib/statuses";
 import type { EvidenceReference, TimelineEvent } from "@/types";
 import { maskClaimNumber } from "@/lib/phi-utils";
 import IntakeReadinessPanel from "./IntakeReadinessPanel";
+import IntakeWorkflowDashboard from "./IntakeWorkflowDashboard";
 import DemandSummaryPanel from "./DemandSummaryPanel";
 import DemandChronologyPanel from "./DemandChronologyPanel";
 import PartyNormalizationPanel from "./PartyNormalizationPanel";
