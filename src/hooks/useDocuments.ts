@@ -4,6 +4,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
 import { isIntakeProcessing } from "@/lib/statuses";
 import { useAuditLog } from "@/hooks/useAuditLog";
+import { createProcessingRun, transitionDocumentState } from "@/lib/documentStateMachine";
 export interface DocumentRow {
   id: string;
   tenant_id: string;
