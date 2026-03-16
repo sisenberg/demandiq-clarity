@@ -274,6 +274,35 @@ function extractAllPdfText(pdfBytes: Uint8Array): string {
   return parts.join(" ").replace(/\\n/g, "\n").replace(/\s+/g, " ").trim();
 }
 
+// ─── Text Quality Gate ─────────────────────────────────
+// Detects garbled/encoding-garbage text from failed born-digital extraction.
+// Returns true if text appears to be garbage (high non-printable ratio, etc.)
+function isGarbageText(text: string): boolean {
+  if (!text || text.trim().length < 20) return true;
+  
+  const cleaned = text.trim();
+  let nonPrintable = 0;
+  let controlChars = 0;
+  
+  for (let i = 0; i < cleaned.length; i++) {
+    const code = cleaned.charCodeAt(i);
+    if (code > 127) nonPrintable++;
+    if (code < 32 && code !== 10 && code !== 13 && code !== 9) controlChars++;
+  }
+  
+  const nonPrintableRatio = nonPrintable / cleaned.length;
+  const controlRatio = controlChars / cleaned.length;
+  
+  if (nonPrintableRatio > 0.3 || controlRatio > 0.05) return true;
+  
+  // Check for very low word density
+  const words = cleaned.split(/\s+/).filter(w => w.length >= 2);
+  const avgWordLen = words.reduce((sum, w) => sum + w.length, 0) / (words.length || 1);
+  if (avgWordLen > 15 || words.length < 5) return true;
+  
+  return false;
+}
+
 // ─── Main Handler ───────────────────────────────────────
 // COMPLIANCE NOTE: This function sends document content (L4 restricted_phi) to
 // the Lovable AI Gateway for OCR processing. This is a subprocessor data flow
