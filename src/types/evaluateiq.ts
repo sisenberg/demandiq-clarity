@@ -55,6 +55,10 @@ export interface EvaluateEligibility {
   sourceVersion: number | null;
   /** Reason if not eligible */
   blockerReason: string | null;
+  /** Published DemandPackage version (primary gate) */
+  demandPackageVersion?: number | null;
+  /** Published DemandPackage ID */
+  demandPackageId?: string | null;
 }
 
 // ─── CTA Actions ────────────────────────────────────────

@@ -334,6 +334,41 @@ serve(async (req) => {
       after_value: { version: nextVersion, status: targetStatus, provenance_count: provenanceRows.length },
     });
 
+    // ─── Sync module_completions on publish ─────────────
+    if (action === "publish") {
+      const { data: existingCompletion } = await supabase
+        .from("module_completions")
+        .select("id, status, version")
+        .eq("case_id", case_id)
+        .eq("module_id", "demandiq")
+        .maybeSingle();
+
+      if (existingCompletion) {
+        if (existingCompletion.status !== "completed") {
+          await supabase
+            .from("module_completions")
+            .update({
+              status: "completed",
+              completed_by: user_id ?? null,
+              completed_at: now,
+            })
+            .eq("id", existingCompletion.id);
+        }
+      } else {
+        await supabase
+          .from("module_completions")
+          .insert({
+            tenant_id,
+            case_id,
+            module_id: "demandiq",
+            status: "completed",
+            version: 1,
+            completed_by: user_id ?? null,
+            completed_at: now,
+          });
+      }
+    }
+
     console.log(`[publish-intake-package] ${targetStatus} v${nextVersion} for case ${case_id} — ${provenanceRows.length} provenance records`);
 
     return new Response(

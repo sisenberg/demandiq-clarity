@@ -51,7 +51,11 @@ const EvaluateInlineWorkspace = ({ caseId }: Props) => {
 
   const handleCTA = () => {
     if (cta?.action === "start" || cta?.action === "resume") {
-      startEvaluate.mutate(caseId);
+      startEvaluate.mutate({
+        caseId,
+        demandPackageId: eligibility.demandPackageId,
+        demandPackageVersion: eligibility.demandPackageVersion,
+      });
     }
   };
 
@@ -71,6 +75,11 @@ const EvaluateInlineWorkspace = ({ caseId }: Props) => {
           </div>
         </div>
         <div className="flex items-center gap-2">
+          {eligibility.demandPackageVersion && (
+            <span className="text-[10px] font-medium text-muted-foreground bg-accent px-2 py-1 rounded-md">
+              DemandPackage v{eligibility.demandPackageVersion}
+            </span>
+          )}
           {eligibility.inputSource && (
             <span className="text-[10px] font-medium text-muted-foreground bg-accent px-2 py-1 rounded-md">
               Source: {eligibility.inputSource === "revieweriq" ? "ReviewerIQ" : "DemandIQ"} v{eligibility.sourceVersion}
