@@ -123,6 +123,8 @@ const CaseOverview = ({ caseData, documents, onNavigate }: CaseOverviewProps) =>
             .map((d) => d.id)}
         />
 
+        {/* ── Row 1: Case Snapshot + Key Metrics ── */}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
           {/* Case / Claimant Summary */}
           <div className="lg:col-span-2 card-elevated p-4">
             <div className="flex items-start gap-3 mb-3">
