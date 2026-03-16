@@ -128,15 +128,6 @@ const App = () => (
                 }
               />
               <Route
-                path="/audit"
-                element={
-                  <RoleGuard permission="view_audit_log">
-                    <AuditLogPage />
-                  </RoleGuard>
-                }
-              />
-              </Route>
-              <Route
                 path="/admin/benchmarks"
                 element={
                   <RoleGuard permission="view_admin">
@@ -144,6 +135,15 @@ const App = () => (
                   </RoleGuard>
                 }
               />
+              <Route
+                path="/audit"
+                element={
+                  <RoleGuard permission="view_audit_log">
+                    <AuditLogPage />
+                  </RoleGuard>
+                }
+              />
+            </Route>
             <Route path="*" element={<NotFound />} />
           </Routes>
         </BrowserRouter>
