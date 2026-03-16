@@ -6,6 +6,14 @@ export interface CitationSource {
   page: string;
   excerpt?: string;
   relevance?: "direct" | "corroborating" | "contradicting" | "contextual";
+  /** Database document ID for deep-link resolution */
+  documentId?: string;
+  /** Evidence anchor ID */
+  anchorId?: string;
+  /** Parse version the citation refers to */
+  parseVersion?: number;
+  /** Chunk ID for chunk-level resolution */
+  chunkId?: string;
 }
 
 const RELEVANCE_STYLE: Record<string, string> = {

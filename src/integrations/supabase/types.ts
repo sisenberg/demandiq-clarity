@@ -1833,41 +1833,62 @@ export type Database = {
       }
       evidence_references: {
         Row: {
+          anchor_entity_id: string | null
+          anchor_entity_type: string | null
+          anchor_module: string | null
+          bounding_box: Json | null
           case_id: string
           character_end: number | null
           character_start: number | null
+          chunk_id: string | null
           created_at: string
           created_by: string | null
           document_id: string
           evidence_type: string
           id: string
           page_number: number
+          parse_version: number | null
+          processing_run_id: string | null
           quoted_text: string
           tenant_id: string
         }
         Insert: {
+          anchor_entity_id?: string | null
+          anchor_entity_type?: string | null
+          anchor_module?: string | null
+          bounding_box?: Json | null
           case_id: string
           character_end?: number | null
           character_start?: number | null
+          chunk_id?: string | null
           created_at?: string
           created_by?: string | null
           document_id: string
           evidence_type?: string
           id?: string
           page_number: number
+          parse_version?: number | null
+          processing_run_id?: string | null
           quoted_text?: string
           tenant_id: string
         }
         Update: {
+          anchor_entity_id?: string | null
+          anchor_entity_type?: string | null
+          anchor_module?: string | null
+          bounding_box?: Json | null
           case_id?: string
           character_end?: number | null
           character_start?: number | null
+          chunk_id?: string | null
           created_at?: string
           created_by?: string | null
           document_id?: string
           evidence_type?: string
           id?: string
           page_number?: number
+          parse_version?: number | null
+          processing_run_id?: string | null
           quoted_text?: string
           tenant_id?: string
         }
@@ -1880,10 +1901,24 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "evidence_references_chunk_id_fkey"
+            columns: ["chunk_id"]
+            isOneToOne: false
+            referencedRelation: "document_chunks"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "evidence_references_document_id_fkey"
             columns: ["document_id"]
             isOneToOne: false
             referencedRelation: "case_documents"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "evidence_references_processing_run_id_fkey"
+            columns: ["processing_run_id"]
+            isOneToOne: false
+            referencedRelation: "document_processing_runs"
             referencedColumns: ["id"]
           },
           {
