@@ -79,6 +79,7 @@ const IntakeDocumentsWorkstation = ({ documents, loading, caseId }: IntakeDocume
   const triggerExtraction = useTriggerCaseExtraction();
   const invokeExtraction = useInvokeExtraction();
   const retryIntakeJob = useRetryIntakeJob();
+  const reprocessDoc = useReprocessDocument();
   const { data: intakeJobs = [] } = useCaseIntakeJobs(caseId);
   const { data: duplicateFlags = [] } = useCaseDuplicateFlags(caseId);
 
