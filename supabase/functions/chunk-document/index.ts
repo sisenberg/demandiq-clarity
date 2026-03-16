@@ -381,14 +381,112 @@ serve(async (req) => {
       }
     }
 
-    // 9. Update document pipeline stage
+    // 9. Auto-label chunks with claim-aware heuristics
+    let labelsCreated = 0;
+    if (chunkRecords.length > 0) {
+      const labelRecords: any[] = [];
+      for (const cr of chunkRecords) {
+        const text = cr.chunk_text.toLowerCase();
+        const assignLabels: { label: string; confidence: number }[] = [];
+
+        // Liability
+        if (/\b(?:liabilit|negligen|fault|comparative|proximate\s+cause|causation)\b/i.test(cr.chunk_text)) {
+          assignLabels.push({ label: "liability", confidence: doc.document_type === "demand_letter" ? 0.85 : 0.7 });
+        }
+        // Treatment chronology
+        if (/\b(?:visit|treatment|therapy|diagnos|mri|ct|surgery|procedure|rehabilitation|chiropractic)\b/i.test(cr.chunk_text)) {
+          assignLabels.push({ label: "treatment_chronology", confidence: doc.document_type === "medical_record" ? 0.9 : 0.7 });
+        }
+        // Specials / billing
+        if (/\b(?:cpt|billed?|charges?|invoice|co-?pay|\$[\d,.]+|itemized)\b/i.test(cr.chunk_text)) {
+          assignLabels.push({ label: "specials_billing", confidence: /bill|statement/.test(doc.document_type) ? 0.9 : 0.75 });
+        }
+        // Wage loss
+        if (/\b(?:income|wages?|lost\s+earn|employment|salary|earning\s+capacity)\b/i.test(cr.chunk_text)) {
+          assignLabels.push({ label: "wage_loss", confidence: 0.7 });
+        }
+        // Future damages
+        if (/\b(?:future\s+(?:medical|treatment|care|damage)|life\s+care\s+plan|prognosis|permanent|long[- ]term)\b/i.test(cr.chunk_text)) {
+          assignLabels.push({ label: "future_damages", confidence: 0.7 });
+        }
+        // Policy / coverage
+        if (/\b(?:policy|coverage|limits?|u[im]m?|deductible|insurance|bodily\s+injury)\b/i.test(cr.chunk_text)) {
+          assignLabels.push({ label: "policy_coverage", confidence: 0.7 });
+        }
+        // Attorney demand
+        if (/\b(?:demand|settlement\s+(?:demand|value)|compensation|damages?\s+(?:sought|claimed))\b/i.test(cr.chunk_text)) {
+          assignLabels.push({ label: "attorney_demand", confidence: doc.document_type === "demand_letter" ? 0.9 : 0.7 });
+        }
+        // Settlement posture
+        if (/\b(?:counteroffer|negotiat|authority|reserve|mediation|arbitration)\b/i.test(cr.chunk_text)) {
+          assignLabels.push({ label: "settlement_posture", confidence: 0.65 });
+        }
+        // Visual evidence
+        if (/\b(?:photo(?:graph)?s?|exhibit|radiograph|scan|surveillance)\b/i.test(cr.chunk_text)) {
+          assignLabels.push({ label: "visual_evidence", confidence: 0.6 });
+        }
+        // Prior injuries
+        if (/\b(?:pre[- ]existing|prior\s+(?:injury|condition|history)|degenerative|chronic|baseline)\b/i.test(cr.chunk_text)) {
+          assignLabels.push({ label: "prior_injuries", confidence: 0.65 });
+        }
+
+        for (const al of assignLabels) {
+          labelRecords.push({
+            tenant_id: doc.tenant_id,
+            case_id: doc.case_id,
+            chunk_id: cr.content_hash, // Will be replaced with actual chunk IDs below
+            document_id: document_id,
+            label: al.label,
+            confidence: al.confidence,
+            source: "heuristic",
+          });
+        }
+      }
+
+      // Fetch inserted chunk IDs to map labels
+      if (labelRecords.length > 0) {
+        const { data: insertedChunks } = await supabase
+          .from("document_chunks")
+          .select("id, chunk_index")
+          .eq("document_id", document_id)
+          .order("chunk_index", { ascending: true });
+
+        if (insertedChunks?.length) {
+          // Map label records to actual chunk IDs using chunk_index
+          const fixedLabels: any[] = [];
+          for (const lr of labelRecords) {
+            // Find the chunk record this label belongs to by matching content_hash
+            const chunkRecord = chunkRecords.find((cr) => cr.content_hash === lr.chunk_id);
+            if (chunkRecord) {
+              const dbChunk = insertedChunks.find((ic: any) => ic.chunk_index === chunkRecord.chunk_index);
+              if (dbChunk) {
+                fixedLabels.push({ ...lr, chunk_id: dbChunk.id });
+              }
+            }
+          }
+
+          if (fixedLabels.length > 0) {
+            const { error: labelErr } = await supabase
+              .from("chunk_labels")
+              .insert(fixedLabels);
+            if (labelErr) {
+              console.warn("[chunk-document] Label insertion error:", labelErr.message);
+            } else {
+              labelsCreated = fixedLabels.length;
+            }
+          }
+        }
+      }
+    }
+
+    // 10. Update document pipeline stage
     await supabase
       .from("case_documents")
       .update({ pipeline_stage: "chunked" })
       .eq("id", document_id);
 
     console.log(
-      `[chunk-document] ${doc.document_type} → ${strategy}: ${chunks.length} chunks, passes: [${extractionPasses.join(", ")}]`
+      `[chunk-document] ${doc.document_type} → ${strategy}: ${chunks.length} chunks, ${labelsCreated} labels, passes: [${extractionPasses.join(", ")}]`
     );
 
     return new Response(
@@ -397,6 +495,7 @@ serve(async (req) => {
         document_type: doc.document_type,
         chunk_strategy: strategy,
         chunks_created: chunks.length,
+        labels_created: labelsCreated,
         extraction_passes: extractionPasses,
         jobs_created: jobsCreated,
       }),
