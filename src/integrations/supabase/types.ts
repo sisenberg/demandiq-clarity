@@ -857,9 +857,11 @@ export type Database = {
       demands: {
         Row: {
           attorney_name: string
+          attorney_party_id: string | null
           case_id: string
           claim_number: string
           claimant_name: string
+          claimant_party_id: string | null
           created_at: string
           demand_amount: number | null
           demand_date: string
@@ -877,9 +879,11 @@ export type Database = {
         }
         Insert: {
           attorney_name?: string
+          attorney_party_id?: string | null
           case_id: string
           claim_number?: string
           claimant_name?: string
+          claimant_party_id?: string | null
           created_at?: string
           demand_amount?: number | null
           demand_date?: string
@@ -897,9 +901,11 @@ export type Database = {
         }
         Update: {
           attorney_name?: string
+          attorney_party_id?: string | null
           case_id?: string
           claim_number?: string
           claimant_name?: string
+          claimant_party_id?: string | null
           created_at?: string
           demand_amount?: number | null
           demand_date?: string
@@ -917,10 +923,24 @@ export type Database = {
         }
         Relationships: [
           {
+            foreignKeyName: "demands_attorney_party_id_fkey"
+            columns: ["attorney_party_id"]
+            isOneToOne: false
+            referencedRelation: "case_parties"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "demands_case_id_fkey"
             columns: ["case_id"]
             isOneToOne: false
             referencedRelation: "cases"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "demands_claimant_party_id_fkey"
+            columns: ["claimant_party_id"]
+            isOneToOne: false
+            referencedRelation: "case_parties"
             referencedColumns: ["id"]
           },
           {
