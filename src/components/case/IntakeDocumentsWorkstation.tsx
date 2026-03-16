@@ -4,6 +4,7 @@ import { type DocumentRow, useDeleteDocument } from "@/hooks/useDocuments";
 import { useRetryIntakeJob, useCaseIntakeJobs } from "@/hooks/useIntakeJobs";
 import { useInvokeExtraction, useTriggerCaseExtraction } from "@/hooks/useExtraction";
 import { useCaseDuplicateFlags } from "@/hooks/useDuplicateFlags";
+import { useOverrideDocumentType } from "@/hooks/useDocumentClassification";
 import { useAuth } from "@/contexts/AuthContext";
 import { useAuditLog } from "@/hooks/useAuditLog";
 import { supabase } from "@/integrations/supabase/client";
@@ -15,6 +16,7 @@ import {
   isIntakeProcessing,
   isIntakeComplete,
   getPipelineStageLabel,
+  DOCUMENT_TYPE_LABEL as DOC_TYPE_LABEL,
 } from "@/lib/statuses";
 import IntakeUploadZone from "./IntakeUploadZone";
 import IntakeSummaryPanel from "./IntakeSummaryPanel";
@@ -71,6 +73,7 @@ const IntakeDocumentsWorkstation = ({ documents, loading, caseId }: IntakeDocume
   const [reviewDocId, setReviewDocId] = useState<string | null>(null);
 
   const auditLog = useAuditLog();
+  const overrideType = useOverrideDocumentType();
   const deleteDoc = useDeleteDocument();
   const triggerExtraction = useTriggerCaseExtraction();
   const invokeExtraction = useInvokeExtraction();
@@ -334,7 +337,7 @@ const IntakeDocumentsWorkstation = ({ documents, loading, caseId }: IntakeDocume
                           )}
                         </div>
                         <div className="flex items-center gap-2 mt-0.5">
-                          <DocumentTypeTag type={doc.document_type} />
+                          <DocumentTypeTag type={doc.document_type} predictedType={doc.predicted_type} />
                           <span className="text-[10px] text-muted-foreground">{formatBytes(doc.file_size_bytes)}</span>
                           {doc.page_count && <span className="text-[10px] text-muted-foreground">{doc.page_count} pg</span>}
                         </div>
@@ -380,6 +383,31 @@ const IntakeDocumentsWorkstation = ({ documents, loading, caseId }: IntakeDocume
                   <MetaItem label="Pipeline" value={getPipelineStageLabel(selectedDoc.pipeline_stage)} />
                   <MetaItem label="Uploaded" value={formatDate(selectedDoc.created_at)} />
                   <MetaItem label="Pages" value={selectedDoc.page_count?.toString() ?? "—"} />
+                </div>
+
+                {/* Classification: predicted vs final with one-click override */}
+                <div className="rounded-lg border border-border bg-card p-3 space-y-2">
+                  <div className="flex items-center justify-between">
+                    <span className="text-[9px] font-semibold text-muted-foreground uppercase tracking-widest">Classification</span>
+                    <DocumentTypeTag type={selectedDoc.document_type} predictedType={selectedDoc.predicted_type} showWorkflow />
+                  </div>
+                  {selectedDoc.predicted_type && selectedDoc.predicted_type !== selectedDoc.document_type && (
+                    <p className="text-[10px] text-muted-foreground">
+                      AI predicted <strong>{selectedDoc.predicted_type.replace(/_/g, " ")}</strong>, manually set to <strong>{selectedDoc.document_type.replace(/_/g, " ")}</strong>
+                    </p>
+                  )}
+                  <div className="flex items-center gap-2">
+                    <span className="text-[9px] text-muted-foreground shrink-0">Override:</span>
+                    <select
+                      value={selectedDoc.document_type}
+                      onChange={(e) => overrideType.mutate({ documentId: selectedDoc.id, newType: e.target.value })}
+                      className="text-[10px] bg-accent border border-border rounded px-2 py-1 text-foreground outline-none flex-1"
+                    >
+                      {Object.entries(DOC_TYPE_LABEL).map(([k, v]) => (
+                        <option key={k} value={k}>{v}</option>
+                      ))}
+                    </select>
+                  </div>
                 </div>
 
                 {/* AI Classification & Metadata Panel */}

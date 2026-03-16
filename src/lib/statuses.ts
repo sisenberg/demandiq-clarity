@@ -188,22 +188,69 @@ export const JOB_TYPE_LABEL: Record<IntakeJobType, string> = {
 // ═══════════════════════════════════════════════════════
 
 export type DocumentType =
-  | "medical_record" | "police_report" | "legal_filing" | "correspondence"
-  | "billing_record" | "imaging_report" | "insurance_document" | "employment_record"
-  | "expert_report" | "photograph" | "other";
+  | "demand_letter" | "medical_bill" | "medical_record" | "itemized_statement"
+  | "narrative_report" | "imaging_report" | "wage_loss_document"
+  | "police_report" | "legal_filing" | "correspondence"
+  | "billing_record" | "insurance_document" | "employment_record"
+  | "expert_report" | "photograph" | "unknown" | "other";
 
 export const DOCUMENT_TYPE_LABEL: Record<DocumentType, string> = {
+  demand_letter: "Demand Letter",
+  medical_bill: "Medical Bill",
   medical_record: "Medical Record",
+  itemized_statement: "Itemized Statement",
+  narrative_report: "Narrative Report",
+  imaging_report: "Imaging Report",
+  wage_loss_document: "Wage Loss",
   police_report: "Police Report",
   legal_filing: "Legal Filing",
   correspondence: "Correspondence",
   billing_record: "Billing Record",
-  imaging_report: "Imaging Report",
   insurance_document: "Insurance",
   employment_record: "Employment",
   expert_report: "Expert Report",
   photograph: "Photograph",
+  unknown: "Unknown",
   other: "Other",
+};
+
+// ═══════════════════════════════════════════════════════
+// 7. DOCUMENT WORKFLOW ROUTING
+// ═══════════════════════════════════════════════════════
+
+export type ExtractionWorkflow =
+  | "demand_extraction"
+  | "specials_extraction"
+  | "treatment_extraction"
+  | "general_review"
+  | "pending_classification";
+
+export const WORKFLOW_ROUTING: Record<DocumentType, ExtractionWorkflow> = {
+  demand_letter: "demand_extraction",
+  medical_bill: "specials_extraction",
+  itemized_statement: "specials_extraction",
+  billing_record: "specials_extraction",
+  wage_loss_document: "specials_extraction",
+  medical_record: "treatment_extraction",
+  narrative_report: "treatment_extraction",
+  imaging_report: "treatment_extraction",
+  police_report: "general_review",
+  correspondence: "general_review",
+  legal_filing: "general_review",
+  insurance_document: "general_review",
+  employment_record: "general_review",
+  expert_report: "general_review",
+  photograph: "general_review",
+  unknown: "pending_classification",
+  other: "general_review",
+};
+
+export const WORKFLOW_LABEL: Record<ExtractionWorkflow, string> = {
+  demand_extraction: "Demand Extraction",
+  specials_extraction: "Specials Extraction",
+  treatment_extraction: "Treatment Extraction",
+  general_review: "General Review",
+  pending_classification: "Awaiting Classification",
 };
 
 // ═══════════════════════════════════════════════════════
@@ -245,4 +292,14 @@ export function isIntakeComplete(status: string): boolean {
 /** Check if a document_status indicates readiness for downstream use */
 export function isDocumentReady(status: string): boolean {
   return status === "complete" || status === "extracted";
+}
+
+/** Get the extraction workflow for a document type */
+export function getWorkflowRoute(docType: string): ExtractionWorkflow {
+  return WORKFLOW_ROUTING[docType as DocumentType] ?? "general_review";
+}
+
+/** Get document type label with safe fallback */
+export function getDocumentTypeLabel(docType: string): string {
+  return DOCUMENT_TYPE_LABEL[docType as DocumentType] ?? docType.replace(/_/g, " ");
 }

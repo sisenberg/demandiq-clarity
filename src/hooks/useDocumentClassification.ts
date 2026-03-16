@@ -151,7 +151,7 @@ export function useAcceptTypeSuggestion() {
         .update({ is_accepted: true })
         .eq("id", suggestionId);
 
-      // Update the document type
+      // Update the document type (final_type)
       await supabase
         .from("case_documents")
         .update({ document_type: suggestedType as any })
@@ -161,6 +161,31 @@ export function useAcceptTypeSuggestion() {
       queryClient.invalidateQueries({ queryKey: ["type-suggestions"] });
       queryClient.invalidateQueries({ queryKey: ["case-documents"] });
       toast.success("Document type updated");
+    },
+  });
+}
+
+/** Manual one-click override of document type */
+export function useOverrideDocumentType() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async ({ documentId, newType }: {
+      documentId: string;
+      newType: string;
+    }) => {
+      const { error } = await supabase
+        .from("case_documents")
+        .update({ document_type: newType as any })
+        .eq("id", documentId);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["case-documents"] });
+      toast.success("Document type corrected");
+    },
+    onError: (err) => {
+      toast.error(`Failed to update type: ${(err as Error).message}`);
     },
   });
 }

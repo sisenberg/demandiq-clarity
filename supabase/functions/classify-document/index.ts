@@ -24,18 +24,46 @@ const METADATA_FIELDS = [
 ] as const;
 
 const DOCUMENT_TYPES = [
+  "demand_letter",
+  "medical_bill",
   "medical_record",
-  "police_report",
-  "legal_filing",
-  "correspondence",
-  "billing_record",
+  "itemized_statement",
+  "narrative_report",
   "imaging_report",
+  "wage_loss_document",
+  "police_report",
+  "correspondence",
+  "legal_filing",
   "insurance_document",
   "employment_record",
   "expert_report",
   "photograph",
+  "billing_record",
+  "unknown",
   "other",
 ] as const;
+
+// ── Workflow routing map ────────────────────────────────
+// Maps document types to their downstream extraction workflow
+const WORKFLOW_ROUTING: Record<string, string> = {
+  demand_letter: "demand_extraction",
+  medical_bill: "specials_extraction",
+  itemized_statement: "specials_extraction",
+  billing_record: "specials_extraction",
+  medical_record: "treatment_extraction",
+  narrative_report: "treatment_extraction",
+  imaging_report: "treatment_extraction",
+  wage_loss_document: "specials_extraction",
+  police_report: "general_review",
+  correspondence: "general_review",
+  legal_filing: "general_review",
+  insurance_document: "general_review",
+  employment_record: "general_review",
+  expert_report: "general_review",
+  photograph: "general_review",
+  unknown: "pending_classification",
+  other: "general_review",
+};
 
 // COMPLIANCE NOTE: This function sends document text (L3–L4 PII/PHI) to the
 // Lovable AI Gateway for classification and metadata extraction. Subprocessor
@@ -278,13 +306,35 @@ Confidence scores:
       topType = sorted[0]?.suggested_type;
       topConfidence = sorted[0]?.confidence;
 
-      // Auto-accept highest confidence if >= 0.8
+      // Always store the AI prediction in predicted_type
+      if (topType) {
+        await supabase
+          .from("case_documents")
+          .update({ predicted_type: topType })
+          .eq("id", document_id);
+        console.log("[classify-document] Set predicted_type to", topType);
+      }
+
+      // Auto-accept highest confidence if >= 0.8 → set document_type (final_type)
       if (topType && (topConfidence ?? 0) >= 0.8) {
         const { error: updateErr } = await supabase
           .from("case_documents")
           .update({ document_type: topType })
           .eq("id", document_id);
         console.log("[classify-document] Auto-set document_type to", topType, "err:", updateErr?.message ?? "none");
+
+        // Enqueue the routed workflow job based on document type
+        const workflow = WORKFLOW_ROUTING[topType] || "general_review";
+        if (workflow !== "pending_classification") {
+          await supabase.from("intake_jobs").insert({
+            tenant_id: doc.tenant_id,
+            case_id: doc.case_id,
+            document_id: doc.id,
+            job_type: workflow,
+            status: "queued",
+          });
+          console.log("[classify-document] Enqueued workflow job:", workflow);
+        }
       }
     }
 
@@ -321,12 +371,14 @@ Confidence scores:
 
     console.log("[classify-document] Updated pipeline_stage. err:", stageErr?.message ?? "none");
 
+    const routed_workflow = topType ? (WORKFLOW_ROUTING[topType] || "general_review") : null;
     const result = {
       success: true,
       type_suggestions: typeSuggestions.length,
       metadata_extractions: metadataExtractions.length,
       top_type: topType,
       top_confidence: topConfidence,
+      routed_workflow,
     };
 
     console.log("[classify-document] Complete:", JSON.stringify(result));
