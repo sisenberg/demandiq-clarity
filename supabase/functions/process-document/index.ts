@@ -343,11 +343,8 @@ Deno.serve(async (req: Request) => {
       }
 
       const ocrProvider = getOcrProvider(lovableApiKey);
-      let imgBinaryStr = "";
-      for (let j = 0; j < fileBytes.length; j++) {
-        imgBinaryStr += String.fromCharCode(fileBytes[j]);
-      }
-      const base64 = btoa(imgBinaryStr);
+      const cappedImgBytes = fileBytes.subarray(0, Math.min(fileBytes.length, 5_000_000));
+      const base64 = uint8ArrayToBase64(cappedImgBytes);
       const result = await ocrProvider.extractPageText(base64, doc.file_type, 1);
 
       pages = [
