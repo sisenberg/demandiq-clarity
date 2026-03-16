@@ -1906,6 +1906,7 @@ export type Database = {
           character_end: number | null
           character_start: number | null
           chunk_id: string | null
+          confidence: number | null
           created_at: string
           created_by: string | null
           document_id: string
@@ -1926,6 +1927,7 @@ export type Database = {
           character_end?: number | null
           character_start?: number | null
           chunk_id?: string | null
+          confidence?: number | null
           created_at?: string
           created_by?: string | null
           document_id: string
@@ -1946,6 +1948,7 @@ export type Database = {
           character_end?: number | null
           character_start?: number | null
           chunk_id?: string | null
+          confidence?: number | null
           created_at?: string
           created_by?: string | null
           document_id?: string
