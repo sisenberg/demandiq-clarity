@@ -33,10 +33,20 @@ interface Props {
   onNavigate?: (section: string) => void;
 }
 
+const JOB_TYPE_LABELS: Record<string, string> = {
+  demand_extraction: "Demand Extraction",
+  specials_extraction: "Specials Extraction",
+  treatment_extraction: "Treatment Extraction",
+  injury_extraction: "Injury Extraction",
+  general_review: "General Review",
+};
+
 const IntakeWorkflowDashboard = ({ caseId, documents, onNavigate }: Props) => {
   const workflow = useIntakeWorkflow(caseId, documents);
   const { state, simplifiedSteps, input, isLoading } = workflow;
   const [showDetailed, setShowDetailed] = useState(false);
+  const { data: intakeJobs } = useIntakeProgress(caseId);
+  const extractionSummary = intakeJobs ? computeExtractionSummary(intakeJobs) : {};
 
   if (isLoading) {
     return (
