@@ -1193,6 +1193,149 @@ export type Database = {
           },
         ]
       }
+      document_processing_runs: {
+        Row: {
+          case_id: string
+          completed_at: string | null
+          created_at: string
+          document_id: string
+          error_code: string | null
+          error_message: string | null
+          failure_stage: string | null
+          id: string
+          metadata: Json
+          provider: string | null
+          run_number: number
+          run_status: Database["public"]["Enums"]["processing_run_status"]
+          started_at: string | null
+          tenant_id: string
+          trigger_reason: Database["public"]["Enums"]["processing_trigger_reason"]
+          triggered_by: string | null
+          updated_at: string
+        }
+        Insert: {
+          case_id: string
+          completed_at?: string | null
+          created_at?: string
+          document_id: string
+          error_code?: string | null
+          error_message?: string | null
+          failure_stage?: string | null
+          id?: string
+          metadata?: Json
+          provider?: string | null
+          run_number?: number
+          run_status?: Database["public"]["Enums"]["processing_run_status"]
+          started_at?: string | null
+          tenant_id: string
+          trigger_reason?: Database["public"]["Enums"]["processing_trigger_reason"]
+          triggered_by?: string | null
+          updated_at?: string
+        }
+        Update: {
+          case_id?: string
+          completed_at?: string | null
+          created_at?: string
+          document_id?: string
+          error_code?: string | null
+          error_message?: string | null
+          failure_stage?: string | null
+          id?: string
+          metadata?: Json
+          provider?: string | null
+          run_number?: number
+          run_status?: Database["public"]["Enums"]["processing_run_status"]
+          started_at?: string | null
+          tenant_id?: string
+          trigger_reason?: Database["public"]["Enums"]["processing_trigger_reason"]
+          triggered_by?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "document_processing_runs_case_id_fkey"
+            columns: ["case_id"]
+            isOneToOne: false
+            referencedRelation: "cases"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "document_processing_runs_document_id_fkey"
+            columns: ["document_id"]
+            isOneToOne: false
+            referencedRelation: "case_documents"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "document_processing_runs_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      document_state_transitions: {
+        Row: {
+          created_at: string
+          document_id: string
+          field_name: string
+          from_status: string | null
+          id: string
+          metadata: Json
+          processing_run_id: string | null
+          tenant_id: string
+          to_status: string
+          triggered_by: string
+        }
+        Insert: {
+          created_at?: string
+          document_id: string
+          field_name?: string
+          from_status?: string | null
+          id?: string
+          metadata?: Json
+          processing_run_id?: string | null
+          tenant_id: string
+          to_status: string
+          triggered_by?: string
+        }
+        Update: {
+          created_at?: string
+          document_id?: string
+          field_name?: string
+          from_status?: string | null
+          id?: string
+          metadata?: Json
+          processing_run_id?: string | null
+          tenant_id?: string
+          to_status?: string
+          triggered_by?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "document_state_transitions_document_id_fkey"
+            columns: ["document_id"]
+            isOneToOne: false
+            referencedRelation: "case_documents"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "document_state_transitions_processing_run_id_fkey"
+            columns: ["processing_run_id"]
+            isOneToOne: false
+            referencedRelation: "document_processing_runs"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "document_state_transitions_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       document_type_suggestions: {
         Row: {
           case_id: string
@@ -2611,11 +2754,15 @@ export type Database = {
           completed_at: string | null
           created_at: string
           document_id: string | null
+          error_code: string | null
           error_message: string | null
+          failure_stage: string | null
           id: string
           job_type: Database["public"]["Enums"]["intake_job_type"]
           max_retries: number
           metadata: Json
+          processing_run_id: string | null
+          provider: string | null
           retry_count: number
           started_at: string | null
           status: Database["public"]["Enums"]["intake_job_status"]
@@ -2627,11 +2774,15 @@ export type Database = {
           completed_at?: string | null
           created_at?: string
           document_id?: string | null
+          error_code?: string | null
           error_message?: string | null
+          failure_stage?: string | null
           id?: string
           job_type: Database["public"]["Enums"]["intake_job_type"]
           max_retries?: number
           metadata?: Json
+          processing_run_id?: string | null
+          provider?: string | null
           retry_count?: number
           started_at?: string | null
           status?: Database["public"]["Enums"]["intake_job_status"]
@@ -2643,11 +2794,15 @@ export type Database = {
           completed_at?: string | null
           created_at?: string
           document_id?: string | null
+          error_code?: string | null
           error_message?: string | null
+          failure_stage?: string | null
           id?: string
           job_type?: Database["public"]["Enums"]["intake_job_type"]
           max_retries?: number
           metadata?: Json
+          processing_run_id?: string | null
+          provider?: string | null
           retry_count?: number
           started_at?: string | null
           status?: Database["public"]["Enums"]["intake_job_status"]
@@ -2667,6 +2822,13 @@ export type Database = {
             columns: ["document_id"]
             isOneToOne: false
             referencedRelation: "case_documents"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "intake_jobs_processing_run_id_fkey"
+            columns: ["processing_run_id"]
+            isOneToOne: false
+            referencedRelation: "document_processing_runs"
             referencedColumns: ["id"]
           },
           {
@@ -5865,6 +6027,9 @@ export type Database = {
         | "document_parsing"
         | "fact_extraction"
         | "duplicate_detection"
+        | "validation"
+        | "chunking"
+        | "indexing"
       intake_status:
         | "uploaded"
         | "queued_for_text_extraction"
@@ -5945,6 +6110,17 @@ export type Database = {
         | "extraction_complete"
         | "evidence_links_created"
         | "review_items_generated"
+        | "validated"
+        | "chunked"
+        | "indexed"
+        | "extraction_ready"
+      processing_run_status:
+        | "queued"
+        | "running"
+        | "completed"
+        | "failed"
+        | "partial"
+      processing_trigger_reason: "initial" | "retry" | "reprocess" | "manual"
       provider_normalization_status:
         | "pending"
         | "matched"
@@ -6295,6 +6471,9 @@ export const Constants = {
         "document_parsing",
         "fact_extraction",
         "duplicate_detection",
+        "validation",
+        "chunking",
+        "indexing",
       ],
       intake_status: [
         "uploaded",
@@ -6384,7 +6563,19 @@ export const Constants = {
         "extraction_complete",
         "evidence_links_created",
         "review_items_generated",
+        "validated",
+        "chunked",
+        "indexed",
+        "extraction_ready",
       ],
+      processing_run_status: [
+        "queued",
+        "running",
+        "completed",
+        "failed",
+        "partial",
+      ],
+      processing_trigger_reason: ["initial", "retry", "reprocess", "manual"],
       provider_normalization_status: [
         "pending",
         "matched",

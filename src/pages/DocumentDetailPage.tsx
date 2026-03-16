@@ -9,6 +9,7 @@ import { hasPermission } from "@/lib/permissions";
 import { useTriggerProcessing } from "@/hooks/useJobs";
 import { useCreateIntakeJob, useRetryIntakeJob } from "@/hooks/useIntakeJobs";
 import ProcessingPipeline from "@/components/case/ProcessingPipeline";
+import DocumentProcessingStatePanel from "@/components/case/DocumentProcessingStatePanel";
 import JobsPanel from "@/components/case/JobsPanel";
 import DocumentTypeTag from "@/components/case/DocumentTypeTag";
 import { INTAKE_STATUS_LABEL, INTAKE_JOB_TYPE_LABEL, FACT_TYPE_LABEL } from "@/types/intake";
@@ -187,15 +188,13 @@ const DocumentDetailPage = () => {
             </div>
           </div>
 
-          {/* Pipeline */}
-          <div className="card-elevated overflow-hidden">
-            <div className="px-5 py-3.5 border-b border-border bg-muted/30">
-              <h2 className="text-xs font-semibold text-foreground uppercase tracking-wider">Processing Pipeline</h2>
-            </div>
-            <div className="px-5 py-4">
-              <ProcessingPipeline currentStage={doc.pipeline_stage} documentStatus={doc.document_status} />
-            </div>
-          </div>
+          {/* Processing State Machine */}
+          <DocumentProcessingStatePanel
+            documentId={doc.id}
+            caseId={doc.case_id}
+            currentStage={doc.pipeline_stage}
+            documentStatus={doc.document_status}
+          />
 
           {/* Document Pages */}
           {pages.length > 0 && (

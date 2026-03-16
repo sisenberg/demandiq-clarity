@@ -4,6 +4,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
 import { isIntakeProcessing } from "@/lib/statuses";
 import { useAuditLog } from "@/hooks/useAuditLog";
+import { createProcessingRun, transitionDocumentState } from "@/lib/documentStateMachine";
 export interface DocumentRow {
   id: string;
   tenant_id: string;
@@ -168,10 +169,29 @@ export function useUploadDocuments() {
             afterValue: { file_name: file.name, file_type: file.type, file_size_bytes: file.size, document_type: documentType },
           });
 
-          // Auto-enqueue intake jobs for this document
+          // Create processing run for this document
+          const run = await createProcessingRun({
+            documentId: data.id,
+            caseId,
+            tenantId,
+            triggeredBy: user.id,
+            triggerReason: "initial",
+          });
+
+          // Log initial state transition
+          await transitionDocumentState({
+            documentId: data.id,
+            tenantId,
+            fromStatus: null,
+            toStatus: "uploaded",
+            triggeredBy: user.id,
+            processingRunId: run.id,
+          });
+
+          // Auto-enqueue intake jobs for this document (linked to run)
           const { data: createdJobs } = await (supabase.from("intake_jobs") as any).insert([
-            { tenant_id: tenantId, case_id: caseId, document_id: data.id, job_type: "text_extraction", status: "queued" },
-            { tenant_id: tenantId, case_id: caseId, document_id: data.id, job_type: "duplicate_detection", status: "queued" },
+            { tenant_id: tenantId, case_id: caseId, document_id: data.id, job_type: "text_extraction", status: "queued", processing_run_id: run.id },
+            { tenant_id: tenantId, case_id: caseId, document_id: data.id, job_type: "duplicate_detection", status: "queued", processing_run_id: run.id },
           ]).select();
 
           // Fire-and-forget: invoke extraction for the text_extraction job
@@ -193,6 +213,8 @@ export function useUploadDocuments() {
       queryClient.invalidateQueries({ queryKey: ["case-documents", caseId] });
       queryClient.invalidateQueries({ queryKey: ["case-documents", "all"] });
       queryClient.invalidateQueries({ queryKey: ["intake-jobs", caseId] });
+      queryClient.invalidateQueries({ queryKey: ["document-processing-runs"] });
+      queryClient.invalidateQueries({ queryKey: ["document-state-transitions"] });
     },
     onError: (err) => {
       toast.error(`Upload failed: ${(err as Error).message}`);

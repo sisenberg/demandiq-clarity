@@ -120,19 +120,27 @@ export const INTAKE_COMPLETE_STATUSES: IntakeStatus[] = [
 
 export type PipelineStage =
   | "upload_received"
+  | "validated"
   | "ocr_queued"
   | "ocr_complete"
   | "document_classified"
   | "extraction_complete"
+  | "chunked"
+  | "indexed"
+  | "extraction_ready"
   | "evidence_links_created"
   | "review_items_generated";
 
 export const PIPELINE_STAGE_LABEL: Record<PipelineStage, string> = {
   upload_received: "Upload Received",
+  validated: "Validated",
   ocr_queued: "OCR Queued",
   ocr_complete: "OCR Complete",
   document_classified: "Classified",
   extraction_complete: "Extraction Complete",
+  chunked: "Chunked",
+  indexed: "Indexed",
+  extraction_ready: "Extraction Ready",
   evidence_links_created: "Evidence Links Created",
   review_items_generated: "Review Items Generated",
 };
@@ -140,10 +148,14 @@ export const PIPELINE_STAGE_LABEL: Record<PipelineStage, string> = {
 /** Ordered pipeline stages for stepper/progress visualization */
 export const PIPELINE_STAGES_ORDERED: { key: PipelineStage; label: string }[] = [
   { key: "upload_received", label: "Upload Received" },
+  { key: "validated", label: "Validated" },
   { key: "ocr_queued", label: "OCR Queued" },
   { key: "ocr_complete", label: "OCR Complete" },
   { key: "document_classified", label: "Classified" },
   { key: "extraction_complete", label: "Extraction Complete" },
+  { key: "chunked", label: "Chunked" },
+  { key: "indexed", label: "Indexed" },
+  { key: "extraction_ready", label: "Extraction Ready" },
   { key: "evidence_links_created", label: "Evidence Links Created" },
   { key: "review_items_generated", label: "Review Items Generated" },
 ];
@@ -174,13 +186,23 @@ export const JOB_STATUS_BADGE: Record<IntakeJobStatus, { className: string; labe
 // 5. INTAKE JOB TYPE labels
 // ═══════════════════════════════════════════════════════
 
-export type IntakeJobType = "text_extraction" | "document_parsing" | "fact_extraction" | "duplicate_detection";
+export type IntakeJobType =
+  | "text_extraction"
+  | "document_parsing"
+  | "fact_extraction"
+  | "duplicate_detection"
+  | "validation"
+  | "chunking"
+  | "indexing";
 
 export const JOB_TYPE_LABEL: Record<IntakeJobType, string> = {
   text_extraction: "Text Extraction (OCR)",
   document_parsing: "Document Parsing",
   fact_extraction: "Fact Extraction",
   duplicate_detection: "Duplicate Detection",
+  validation: "Validation",
+  chunking: "Chunking",
+  indexing: "Indexing",
 };
 
 // ═══════════════════════════════════════════════════════
