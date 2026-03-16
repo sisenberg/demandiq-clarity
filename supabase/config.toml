@@ -5,3 +5,6 @@ verify_jwt = false
 
 [functions.representation-history]
 verify_jwt = false
+
+[functions.extract-demand]
+verify_jwt = false

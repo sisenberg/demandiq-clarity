@@ -9,6 +9,7 @@ import { isDocumentReady } from "@/lib/statuses";
 import type { EvidenceReference, TimelineEvent } from "@/types";
 import { maskClaimNumber } from "@/lib/phi-utils";
 import IntakeReadinessPanel from "./IntakeReadinessPanel";
+import DemandSummaryPanel from "./DemandSummaryPanel";
 import {
   User,
   Car,
@@ -100,6 +101,13 @@ const CaseOverview = ({ caseData, documents, onNavigate }: CaseOverviewProps) =>
       <div className="flex-1 min-w-0 flex flex-col gap-4">
         {/* ── Row 0: Intake Readiness ── */}
         <IntakeReadinessPanel documents={documents} caseId={caseData.id} onNavigate={onNavigate} />
+
+        {/* ── Demand Summary ── */}
+        <DemandSummaryPanel
+          caseId={caseData.id}
+          tenantId={caseData.tenant_id}
+          demandDocumentId={documents.find((d) => d.document_type === "demand_letter")?.id}
+        />
 
         {/* ── Row 1: Case Snapshot + Key Metrics ── */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
