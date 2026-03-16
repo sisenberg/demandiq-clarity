@@ -159,7 +159,7 @@ export const BENCHMARK_CORPUS: BenchmarkCorpusItem[] = [
     documentType: "demand_letter",
     fileType: "application/pdf",
     fileSizeBytes: 18_000_000,
-    pageCount: 85,
+    pageCount: 83,
     pageTexts: [
       "DEMAND FOR SETTLEMENT — CONSOLIDATED\n\nRe: James Martinez v. ABC Transport LLC\nClaim: #2023-BI-44291\nDate of Loss: September 3, 2023\n\nDear Ms. Anderson,\n\nThis firm represents Mr. Martinez in connection with the catastrophic injuries sustained in the commercial vehicle collision.",
       "LIABILITY\n\nYour insured's driver was operating a commercial truck in violation of FMCSA hours-of-service regulations, constituting negligence per se. Proximate cause is undisputed based on the police report and witness statements.",
