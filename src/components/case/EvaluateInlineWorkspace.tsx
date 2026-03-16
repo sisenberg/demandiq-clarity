@@ -51,7 +51,11 @@ const EvaluateInlineWorkspace = ({ caseId }: Props) => {
 
   const handleCTA = () => {
     if (cta?.action === "start" || cta?.action === "resume") {
-      startEvaluate.mutate(caseId);
+      startEvaluate.mutate({
+        caseId,
+        demandPackageId: eligibility.demandPackageId,
+        demandPackageVersion: eligibility.demandPackageVersion,
+      });
     }
   };
 

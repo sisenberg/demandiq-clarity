@@ -165,7 +165,11 @@ const EvaluateWorkspacePage = () => {
   const handleCTA = () => {
     if (!caseId) return;
     if (cta?.action === "start" || cta?.action === "resume") {
-      startEvaluate.mutate(caseId);
+      startEvaluate.mutate({
+        caseId,
+        demandPackageId: eligibility.demandPackageId,
+        demandPackageVersion: eligibility.demandPackageVersion,
+      });
     } else if (cta?.action === "complete" && snapshot) {
       const validation = validateEvaluateCompletion(snapshot, evalCompletion?.status);
       if (!validation.valid) {
