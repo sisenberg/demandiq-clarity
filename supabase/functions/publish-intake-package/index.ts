@@ -251,7 +251,90 @@ serve(async (req) => {
 
     if (insertErr) throw insertErr;
 
-    console.log(`[publish-intake-package] ${targetStatus} v${nextVersion} for case ${case_id}`);
+    // ─── Write provenance audit trail ───────────────────
+    const corrections: any[] = [];
+    const { data: corrRows } = await supabase
+      .from("intake_review_corrections")
+      .select("*")
+      .eq("case_id", case_id);
+
+    const corrMap = new Map<string, any>();
+    (corrRows ?? []).forEach((c: any) => corrMap.set(`${c.section}::${c.field_name}`, c));
+
+    const publishEvent = action === "publish" ? "published" : "assembled";
+    const provenanceRows: any[] = [];
+
+    const addProv = (section: string, fieldName: string, extractedVal: string, sourceDocId?: string, sourcePage?: number, sourceSnippet?: string) => {
+      const corrKey = `${section}::${fieldName}`;
+      const corr = corrMap.get(corrKey);
+      const correctedVal = corr?.corrected_value ?? null;
+      const finalVal = correctedVal ?? extractedVal;
+      const reviewerAction = corr?.corrected_value != null
+        ? "human_corrected"
+        : corr ? "human_verified" : "auto_accepted";
+
+      provenanceRows.push({
+        tenant_id,
+        case_id,
+        intake_package_id: pkg.id,
+        intake_package_version: nextVersion,
+        section,
+        field_name: fieldName,
+        extracted_value: extractedVal,
+        corrected_value: correctedVal,
+        final_value: finalVal,
+        source_document_id: sourceDocId ?? corr?.evidence_document_id ?? null,
+        source_page: sourcePage ?? corr?.evidence_page ?? null,
+        source_snippet: sourceSnippet ?? corr?.evidence_snippet ?? "",
+        reviewer_action: reviewerAction,
+        reviewer_user_id: corr?.corrected_by ?? null,
+        reviewer_timestamp: corr?.corrected_at ?? null,
+        publish_event: publishEvent,
+      });
+    };
+
+    // Demand fields provenance
+    const demandDocId = demand?.source_document_id ?? null;
+    addProv("demand", "claimant_name", demand?.claimant_name ?? "", demandDocId);
+    addProv("demand", "attorney_name", demand?.attorney_name ?? "", demandDocId);
+    addProv("demand", "law_firm", demand?.law_firm_name ?? "", demandDocId);
+    addProv("demand", "represented_status", demand?.represented_status ?? "", demandDocId);
+    addProv("demand", "demand_amount", String(demand?.demand_amount ?? ""), demandDocId);
+    addProv("demand", "demand_deadline", demand?.demand_deadline ?? "", demandDocId);
+
+    // Specials provenance
+    specialsList.forEach((s: any, i: number) => {
+      addProv("specials", `special_${i}`, `${s.provider_name ?? ""} | $${s.billed_amount ?? 0} | ${s.date_of_service ?? ""}`, s.source_document_id ?? null, s.source_page ?? null);
+    });
+
+    // Treatment provenance
+    treatmentList.forEach((t: any, i: number) => {
+      addProv("treatment", `treatment_${i}`, `${t.provider_name ?? ""} | ${t.visit_date ?? ""} | ${t.event_type ?? ""}`, t.source_document_id ?? null, t.source_page ?? null, t.source_snippet ?? "");
+    });
+
+    // Injury provenance
+    injuryList.forEach((inj: any, i: number) => {
+      addProv("injury", `injury_${i}`, `${inj.body_part ?? ""} | ${inj.injury_description ?? ""}`, inj.source_document_id ?? null, inj.source_page_reference ?? null, inj.evidence_snippet ?? "");
+    });
+
+    // Batch insert provenance (in chunks of 50)
+    for (let i = 0; i < provenanceRows.length; i += 50) {
+      const batch = provenanceRows.slice(i, i + 50);
+      await supabase.from("intake_field_provenance").insert(batch);
+    }
+
+    // Write audit_events record
+    await supabase.from("audit_events").insert({
+      tenant_id,
+      actor_user_id: user_id ?? "system",
+      action_type: action === "publish" ? "intake_published" : "intake_assembled",
+      entity_type: "intake_evaluation_package",
+      entity_id: pkg.id,
+      case_id,
+      after_value: { version: nextVersion, status: targetStatus, provenance_count: provenanceRows.length },
+    });
+
+    console.log(`[publish-intake-package] ${targetStatus} v${nextVersion} for case ${case_id} — ${provenanceRows.length} provenance records`);
 
     return new Response(
       JSON.stringify({
