@@ -20,6 +20,7 @@ interface Props {
 }
 
 const IntakeEvaluatePublishPanel = ({ caseId, tenantId }: Props) => {
+  const navigate = useNavigate();
   const { user } = useAuth();
   const { data: pkg, isLoading } = useIntakeEvaluationPackage(caseId);
   const assemblePackage = useAssembleIntakePackage();
