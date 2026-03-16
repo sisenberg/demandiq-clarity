@@ -26,3 +26,6 @@ verify_jwt = false
 
 [functions.search-chunks]
 verify_jwt = false
+
+[functions.orchestrate-intake]
+verify_jwt = false
