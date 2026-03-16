@@ -22,6 +22,10 @@ import {
   type SimplifiedStepStatus,
   type CaseIntakeState,
 } from "@/lib/intakeWorkflowEngine";
+import {
+  useIntakeProgress,
+  computeExtractionSummary,
+} from "@/hooks/useIntakeOrchestration";
 
 interface Props {
   caseId: string;
