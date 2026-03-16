@@ -382,6 +382,31 @@ const IntakeDocumentsWorkstation = ({ documents, loading, caseId }: IntakeDocume
                   <MetaItem label="Pages" value={selectedDoc.page_count?.toString() ?? "—"} />
                 </div>
 
+                {/* Classification: predicted vs final with one-click override */}
+                <div className="rounded-lg border border-border bg-card p-3 space-y-2">
+                  <div className="flex items-center justify-between">
+                    <span className="text-[9px] font-semibold text-muted-foreground uppercase tracking-widest">Classification</span>
+                    <DocumentTypeTag type={selectedDoc.document_type} predictedType={selectedDoc.predicted_type} showWorkflow />
+                  </div>
+                  {selectedDoc.predicted_type && selectedDoc.predicted_type !== selectedDoc.document_type && (
+                    <p className="text-[10px] text-muted-foreground">
+                      AI predicted <strong>{selectedDoc.predicted_type.replace(/_/g, " ")}</strong>, manually set to <strong>{selectedDoc.document_type.replace(/_/g, " ")}</strong>
+                    </p>
+                  )}
+                  <div className="flex items-center gap-2">
+                    <span className="text-[9px] text-muted-foreground shrink-0">Override:</span>
+                    <select
+                      value={selectedDoc.document_type}
+                      onChange={(e) => overrideType.mutate({ documentId: selectedDoc.id, newType: e.target.value })}
+                      className="text-[10px] bg-accent border border-border rounded px-2 py-1 text-foreground outline-none flex-1"
+                    >
+                      {Object.entries(DOC_TYPE_LABEL).map(([k, v]) => (
+                        <option key={k} value={k}>{v}</option>
+                      ))}
+                    </select>
+                  </div>
+                </div>
+
                 {/* AI Classification & Metadata Panel */}
                 <DocumentMetadataPanel
                   documentId={selectedDoc.id}
