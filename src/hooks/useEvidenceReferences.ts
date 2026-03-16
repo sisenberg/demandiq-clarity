@@ -13,6 +13,13 @@ export interface EvidenceReferenceRow {
   character_start: number | null;
   character_end: number | null;
   evidence_type: string;
+  chunk_id: string | null;
+  parse_version: number | null;
+  processing_run_id: string | null;
+  bounding_box: Record<string, number> | null;
+  anchor_entity_type: string | null;
+  anchor_entity_id: string | null;
+  anchor_module: string | null;
   created_by: string | null;
   created_at: string;
 }
