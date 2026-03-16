@@ -19,12 +19,22 @@ import {
   CHRONO_CATEGORY_LABEL,
   type ChronologyCandidateRow,
 } from "@/hooks/useChronologyCandidates";
+import {
+  useDocumentEvidenceRefs,
+  useCreateEvidenceRef,
+  useDeleteEvidenceRef,
+  formatEvidenceCitation,
+  EVIDENCE_TYPE_LABEL,
+  type EvidenceType,
+  type EvidenceReferenceRow,
+} from "@/hooks/useEvidenceReferences";
 import { useAuditLog } from "@/hooks/useAuditLog";
 import { ConfidenceBadge } from "@/components/case/DocumentMetadataPanel";
 import { DOCUMENT_TYPE_LABEL, INTAKE_STATUS_LABEL } from "@/lib/statuses";
 import type { DocumentPageRow } from "@/types/intake";
 import type { ExtractedFactRow } from "@/types/intake";
 import { FACT_TYPE_LABEL } from "@/types/intake";
+import { toast } from "sonner";
 import {
   FileText,
   ChevronLeft,
@@ -42,6 +52,9 @@ import {
   Clock,
   EyeOff,
   ExternalLink,
+  Copy,
+  Bookmark,
+  Trash2,
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 
