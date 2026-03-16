@@ -14,3 +14,6 @@ verify_jwt = false
 
 [functions.extract-treatment-timeline]
 verify_jwt = false
+
+[functions.extract-injuries]
+verify_jwt = false

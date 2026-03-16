@@ -2066,6 +2066,128 @@ export type Database = {
           },
         ]
       }
+      injury_records: {
+        Row: {
+          body_part: string
+          case_id: string
+          created_at: string
+          diagnosis_description: string
+          extraction_confidence: number | null
+          functional_impact_flag: boolean
+          functional_limitations: string
+          icd_codes: string[]
+          id: string
+          imaging_references: string
+          injections_or_procedures: string
+          injury_description: string
+          invasive_treatment_flag: boolean
+          linked_demand_id: string | null
+          objective_support_flag: boolean
+          residual_symptom_flag: boolean
+          residual_symptom_language: string
+          source_document_id: string | null
+          source_page: number | null
+          source_snippet: string
+          surgery_mentions: string
+          tenant_id: string
+          therapy_mentions: string
+          updated_at: string
+          verification_status: string
+          verified_at: string | null
+          verified_by: string | null
+          work_restrictions: string
+        }
+        Insert: {
+          body_part?: string
+          case_id: string
+          created_at?: string
+          diagnosis_description?: string
+          extraction_confidence?: number | null
+          functional_impact_flag?: boolean
+          functional_limitations?: string
+          icd_codes?: string[]
+          id?: string
+          imaging_references?: string
+          injections_or_procedures?: string
+          injury_description?: string
+          invasive_treatment_flag?: boolean
+          linked_demand_id?: string | null
+          objective_support_flag?: boolean
+          residual_symptom_flag?: boolean
+          residual_symptom_language?: string
+          source_document_id?: string | null
+          source_page?: number | null
+          source_snippet?: string
+          surgery_mentions?: string
+          tenant_id: string
+          therapy_mentions?: string
+          updated_at?: string
+          verification_status?: string
+          verified_at?: string | null
+          verified_by?: string | null
+          work_restrictions?: string
+        }
+        Update: {
+          body_part?: string
+          case_id?: string
+          created_at?: string
+          diagnosis_description?: string
+          extraction_confidence?: number | null
+          functional_impact_flag?: boolean
+          functional_limitations?: string
+          icd_codes?: string[]
+          id?: string
+          imaging_references?: string
+          injections_or_procedures?: string
+          injury_description?: string
+          invasive_treatment_flag?: boolean
+          linked_demand_id?: string | null
+          objective_support_flag?: boolean
+          residual_symptom_flag?: boolean
+          residual_symptom_language?: string
+          source_document_id?: string | null
+          source_page?: number | null
+          source_snippet?: string
+          surgery_mentions?: string
+          tenant_id?: string
+          therapy_mentions?: string
+          updated_at?: string
+          verification_status?: string
+          verified_at?: string | null
+          verified_by?: string | null
+          work_restrictions?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "injury_records_case_id_fkey"
+            columns: ["case_id"]
+            isOneToOne: false
+            referencedRelation: "cases"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "injury_records_linked_demand_id_fkey"
+            columns: ["linked_demand_id"]
+            isOneToOne: false
+            referencedRelation: "demands"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "injury_records_source_document_id_fkey"
+            columns: ["source_document_id"]
+            isOneToOne: false
+            referencedRelation: "case_documents"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "injury_records_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       insurance_policies: {
         Row: {
           carrier_name: string
