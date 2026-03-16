@@ -15,6 +15,7 @@ import SpecialsReviewTable from "./SpecialsReviewTable";
 import TreatmentTimelineView from "./TreatmentTimelineView";
 import InjuryReviewPanel from "./InjuryReviewPanel";
 import IntakeEvaluatePublishPanel from "./IntakeEvaluatePublishPanel";
+import IntakeQualityPanel from "./IntakeQualityPanel";
 import {
   User,
   Car,
