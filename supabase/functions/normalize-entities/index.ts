@@ -345,11 +345,96 @@ Deno.serve(async (req: Request) => {
       }
     }
 
+    // 7. Sync entity clusters → case_parties for identity types
+    const PARTY_ROLE_MAP: Record<string, string> = {
+      claimant: "claimant",
+      attorney: "attorney",
+      law_firm: "firm",
+      insurer: "insurer",
+      provider: "provider",
+    };
+
+    let partiesCreated = 0;
+
+    for (const result of clusterResults) {
+      const partyRole = PARTY_ROLE_MAP[result.entity_type];
+      if (!partyRole) continue;
+
+      const items = byEntityType[result.entity_type];
+
+      for (const cluster of result.clusters) {
+        // Derive the display name
+        const displayName = cluster.display_value;
+        // Get first member's document_id for source linking
+        const firstMemberIdx = cluster.member_indices[0];
+        const sourceDocId = firstMemberIdx != null && items[firstMemberIdx]
+          ? items[firstMemberIdx].document_id
+          : null;
+
+        // Upsert into case_parties: check if one already exists with same role + name
+        const { data: existingParty } = await supabase
+          .from("case_parties")
+          .select("id")
+          .eq("case_id", case_id)
+          .eq("party_role", partyRole)
+          .ilike("full_name", displayName)
+          .limit(1)
+          .maybeSingle();
+
+        let partyId: string;
+
+        if (existingParty) {
+          partyId = existingParty.id;
+        } else {
+          const { data: newParty, error: partyErr } = await supabase
+            .from("case_parties")
+            .insert({
+              tenant_id: tenantId,
+              case_id: case_id,
+              party_role: partyRole,
+              full_name: displayName,
+              notes: `Auto-created from entity normalization. Raw values: ${
+                cluster.member_indices
+                  .filter((idx: number) => idx >= 0 && idx < items.length)
+                  .map((idx: number) => items[idx].value)
+                  .join(", ")
+              }`,
+            })
+            .select("id")
+            .single();
+
+          if (partyErr || !newParty) {
+            console.error("Failed to create party:", partyErr?.message);
+            continue;
+          }
+          partyId = newParty.id;
+          partiesCreated++;
+        }
+
+        // Link active demand to claimant/attorney party
+        if (partyRole === "claimant" && cluster.is_primary) {
+          await supabase
+            .from("demands")
+            .update({ claimant_party_id: partyId })
+            .eq("case_id", case_id)
+            .eq("is_active", true);
+        }
+        if (partyRole === "attorney" && cluster.is_primary) {
+          await supabase
+            .from("demands")
+            .update({ attorney_party_id: partyId })
+            .eq("case_id", case_id)
+            .eq("is_active", true);
+        }
+      }
+    }
+
     return new Response(
       JSON.stringify({
         success: true,
         clusters_created: totalClusters,
         members_linked: totalMembers,
+        parties_created: partiesCreated,
         entity_types_processed: Object.keys(byEntityType).length,
       }),
       { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }

@@ -19,6 +19,8 @@ export interface DemandRow {
   insured_name: string;
   claim_number: string;
   demand_summary_text: string;
+  claimant_party_id: string | null;
+  attorney_party_id: string | null;
   created_at: string;
   updated_at: string;
 }

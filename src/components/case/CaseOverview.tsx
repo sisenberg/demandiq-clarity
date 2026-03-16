@@ -10,6 +10,7 @@ import type { EvidenceReference, TimelineEvent } from "@/types";
 import { maskClaimNumber } from "@/lib/phi-utils";
 import IntakeReadinessPanel from "./IntakeReadinessPanel";
 import DemandSummaryPanel from "./DemandSummaryPanel";
+import PartyNormalizationPanel from "./PartyNormalizationPanel";
 import {
   User,
   Car,
@@ -109,7 +110,9 @@ const CaseOverview = ({ caseData, documents, onNavigate }: CaseOverviewProps) =>
           demandDocumentId={documents.find((d) => d.document_type === "demand_letter")?.id}
         />
 
-        {/* ── Row 1: Case Snapshot + Key Metrics ── */}
+        {/* ── Party Normalization ── */}
+        <PartyNormalizationPanel caseId={caseData.id} />
+
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
           {/* Case / Claimant Summary */}
           <div className="lg:col-span-2 card-elevated p-4">
