@@ -306,6 +306,7 @@ Deno.serve(async (req: Request) => {
 
     let pages: { pageNumber: number; text: string; confidence: number }[] = [];
     let extractionMethod = "unknown";
+    let ocrProviderName = "unknown";
 
     if (isPdf) {
       // 6a. Try born-digital extraction first
