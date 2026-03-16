@@ -209,7 +209,7 @@ If a field cannot be found, use empty string with confidence 0.`;
       .update({ status: "completed", completed_at: new Date().toISOString() })
       .eq("document_id", document_id)
       .eq("job_type", "demand_extraction")
-      .eq("status", "queued");
+      .in("status", ["queued", "running"]);
 
     console.log("[extract-demand] Created demand", demand.id, "with", fields.length, "field extractions");
 

@@ -50,6 +50,13 @@ export function useIntakeEvaluationPackage(caseId: string | undefined) {
   return useQuery({
     queryKey: ["intake-evaluation-package", caseId],
     enabled: !!caseId,
+    refetchInterval: (query) => {
+      const pkg = query.state.data as IntakeEvaluationPackageRow | null | undefined;
+      if (pkg && pkg.package_status !== "published_to_evaluateiq") {
+        return 5000;
+      }
+      return false;
+    },
     queryFn: async () => {
       const { data, error } = await (supabase.from("intake_evaluation_packages") as any)
         .select("*")
