@@ -616,6 +616,18 @@ export const SourceDrawer = () => {
                   {state.source.relevance}
                 </span>
               )}
+              {state.resolvedCitation?.parseVersion != null && (
+                <span className="inline-flex items-center gap-0.5 text-[8px] font-semibold text-muted-foreground bg-accent px-1.5 py-0.5 rounded border border-border">
+                  <GitBranch className="h-2 w-2" />
+                  v{state.resolvedCitation.parseVersion}
+                </span>
+              )}
+              {state.source?.parseVersion != null && !state.resolvedCitation && (
+                <span className="inline-flex items-center gap-0.5 text-[8px] font-semibold text-muted-foreground bg-accent px-1.5 py-0.5 rounded border border-border">
+                  <GitBranch className="h-2 w-2" />
+                  v{state.source.parseVersion}
+                </span>
+              )}
             </div>
           </div>
           <button
