@@ -147,6 +147,7 @@ export function useUploadDocuments() {
               intake_status: "uploaded",
               file_hash: hash,
               uploaded_by: user.id,
+              source_module: "general_intake",
             })
             .select()
             .single();

@@ -336,6 +336,7 @@ export type Database = {
           intake_status: Database["public"]["Enums"]["intake_status"]
           page_count: number | null
           pipeline_stage: Database["public"]["Enums"]["pipeline_stage"]
+          source_module: string
           storage_path: string | null
           tenant_id: string
           updated_at: string
@@ -356,6 +357,7 @@ export type Database = {
           intake_status?: Database["public"]["Enums"]["intake_status"]
           page_count?: number | null
           pipeline_stage?: Database["public"]["Enums"]["pipeline_stage"]
+          source_module?: string
           storage_path?: string | null
           tenant_id: string
           updated_at?: string
@@ -376,6 +378,7 @@ export type Database = {
           intake_status?: Database["public"]["Enums"]["intake_status"]
           page_count?: number | null
           pipeline_stage?: Database["public"]["Enums"]["pipeline_stage"]
+          source_module?: string
           storage_path?: string | null
           tenant_id?: string
           updated_at?: string

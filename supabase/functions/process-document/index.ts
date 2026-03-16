@@ -353,6 +353,36 @@ Deno.serve(async (req: Request) => {
           confidence: result.confidence,
         },
       ];
+    } else if (/\.(docx|doc)$/i.test(doc.file_name) || doc.file_type === "application/vnd.openxmlformats-officedocument.wordprocessingml.document") {
+      // DOCX: flag as needing external conversion — not OCR-able directly
+      extractionMethod = "unsupported-docx";
+      // Mark document with a status that allows manual re-processing later
+      await supabase
+        .from("case_documents")
+        .update({
+          intake_status: "needs_review",
+          document_status: "needs_attention",
+          pipeline_stage: "upload_received",
+        })
+        .eq("id", doc.id);
+
+      await supabase
+        .from("intake_jobs")
+        .update({
+          status: "failed",
+          completed_at: new Date().toISOString(),
+          error_message: "DOCX text extraction is not yet supported. Convert to PDF and re-upload.",
+        })
+        .eq("id", job_id);
+
+      return new Response(
+        JSON.stringify({
+          success: false,
+          extraction_method: extractionMethod,
+          error: "DOCX text extraction not yet supported. Convert to PDF and re-upload.",
+        }),
+        { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
     } else {
       // Unsupported file type for text extraction
       throw new Error(
