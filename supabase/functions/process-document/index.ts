@@ -512,6 +512,77 @@ Deno.serve(async (req: Request) => {
       if (insertErr) {
         throw new Error(`Failed to save pages: ${insertErr.message}`);
       }
+
+      // 8b. Persist canonical parsed_document_pages
+      try {
+        // Determine next parse_version
+        const { data: prevVersions } = await supabase
+          .from("parsed_document_pages")
+          .select("parse_version")
+          .eq("document_id", doc.id)
+          .order("parse_version", { ascending: false })
+          .limit(1);
+
+        const nextVersion = ((prevVersions?.[0]?.parse_version as number) ?? 0) + 1;
+
+        // Mark previous versions as non-current
+        if (nextVersion > 1) {
+          await supabase
+            .from("parsed_document_pages")
+            .update({ is_current: false })
+            .eq("document_id", doc.id)
+            .eq("is_current", true);
+        }
+
+        // Build canonical pages with heuristic content block detection
+        const canonicalPages = pages.map((p) => {
+          const blocks = detectContentBlocksEdge(p.text);
+          const headings = blocks.filter((b: any) => b.block_type === "heading").map((b: any) => ({
+            text: b.text, level: b.level, block_index: b.block_index,
+            char_start: b.char_start, char_end: b.char_end,
+          }));
+          const tableRegions = blocks.filter((b: any) => b.block_type === "table").map((b: any) => ({
+            block_index: b.block_index, rows: b.rows, cols: b.cols,
+            char_start: b.char_start, char_end: b.char_end, preview: b.text.substring(0, 120),
+          }));
+          const listRegions = blocks.filter((b: any) => b.block_type === "list").map((b: any) => ({
+            block_index: b.block_index, ordered: b.ordered, items: b.items,
+            char_start: b.char_start, char_end: b.char_end,
+          }));
+
+          return {
+            tenant_id: doc.tenant_id,
+            case_id: doc.case_id,
+            document_id: doc.id,
+            parse_version: nextVersion,
+            page_number: p.pageNumber,
+            page_text: p.text,
+            content_blocks: blocks,
+            headings,
+            table_regions: tableRegions,
+            list_regions: listRegions,
+            image_artifacts: [],
+            provider: ocrProviderName,
+            provider_model: null,
+            provider_run_metadata: { extraction_method: extractionMethod },
+            confidence_score: p.confidence,
+            is_current: true,
+            processing_run_id: null,
+          };
+        });
+
+        const { error: canonErr } = await supabase
+          .from("parsed_document_pages")
+          .insert(canonicalPages);
+        if (canonErr) {
+          console.error("[process-document] Canonical page insert failed:", canonErr.message);
+        } else {
+          console.log(`[process-document] Persisted ${canonicalPages.length} canonical pages (v${nextVersion})`);
+        }
+      } catch (canonErr) {
+        // Non-fatal: raw pages are still saved; canonical is best-effort
+        console.error("[process-document] Canonical normalization error:", canonErr);
+      }
     }
 
     // 9. Combine all page text for the document-level extracted_text
