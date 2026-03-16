@@ -213,6 +213,8 @@ export function useUploadDocuments() {
       queryClient.invalidateQueries({ queryKey: ["case-documents", caseId] });
       queryClient.invalidateQueries({ queryKey: ["case-documents", "all"] });
       queryClient.invalidateQueries({ queryKey: ["intake-jobs", caseId] });
+      queryClient.invalidateQueries({ queryKey: ["document-processing-runs"] });
+      queryClient.invalidateQueries({ queryKey: ["document-state-transitions"] });
     },
     onError: (err) => {
       toast.error(`Upload failed: ${(err as Error).message}`);
