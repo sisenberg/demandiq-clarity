@@ -314,6 +314,7 @@ Deno.serve(async (req: Request) => {
 
       if (isBornDigital) {
         extractionMethod = "born-digital";
+        ocrProviderName = "born-digital-native";
         const extractedPages = extractBornDigitalPages(fileBytes);
 
         if (extractedPages.length > 0 && extractedPages.some((p) => p.trim().length > 10)) {
