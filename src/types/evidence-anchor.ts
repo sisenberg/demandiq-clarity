@@ -63,6 +63,7 @@ export interface EvidenceAnchorRow {
   anchor_entity_type: AnchorEntityType | null;
   anchor_entity_id: string | null;
   anchor_module: AnchorModule | null;
+  confidence: number | null;
   created_by: string | null;
   created_at: string;
 }
