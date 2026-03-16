@@ -2,6 +2,7 @@ import { useState, useMemo } from "react";
 import { Link } from "react-router-dom";
 import { type DocumentRow, useDeleteDocument } from "@/hooks/useDocuments";
 import { useRetryIntakeJob, useCaseIntakeJobs } from "@/hooks/useIntakeJobs";
+import { useReprocessDocument } from "@/hooks/useDocumentProcessingState";
 import { useInvokeExtraction, useTriggerCaseExtraction } from "@/hooks/useExtraction";
 import { useCaseDuplicateFlags } from "@/hooks/useDuplicateFlags";
 import { useOverrideDocumentType } from "@/hooks/useDocumentClassification";
