@@ -144,6 +144,12 @@ const CaseOverview = ({ caseData, documents, onNavigate }: CaseOverviewProps) =>
             .map((d) => d.id)}
         />
 
+        {/* ── EvaluateIQ Intake Package ── */}
+        <IntakeEvaluatePublishPanel
+          caseId={caseData.id}
+          tenantId={caseData.tenant_id}
+        />
+
         {/* ── Row 1: Case Snapshot + Key Metrics ── */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
           {/* Case / Claimant Summary */}
