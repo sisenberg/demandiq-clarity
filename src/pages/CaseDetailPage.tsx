@@ -255,6 +255,11 @@ const CaseDetailPage = () => {
                 <DetectedEntitiesPanel caseId={caseData.id} />
               )}
 
+              {/* ── INTAKE REVIEW ─────────────────── */}
+              {activeSection === "intake-review" && (
+                <IntakeReviewWorkspace caseId={caseData.id} tenantId={caseData.tenant_id} />
+              )}
+
               {/* ── MEDICAL REVIEW ────────────────── */}
               {activeSection === "medical-review" && (
                 <MedicalReviewWorkspace caseId={caseData.id} />
