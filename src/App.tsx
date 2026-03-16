@@ -24,6 +24,7 @@ import EvaluateAnalyticsPage from "@/pages/EvaluateAnalyticsPage";
 import ModuleGuard from "@/components/auth/ModuleGuard";
 import CalibrationPage from "@/pages/CalibrationPage";
 import NegotiateWorkspacePage from "@/pages/NegotiateWorkspacePage";
+import BenchmarkDashboardPage from "@/pages/BenchmarkDashboardPage";
 import NotFound from "@/pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -134,7 +135,15 @@ const App = () => (
                   </RoleGuard>
                 }
               />
-            </Route>
+              </Route>
+              <Route
+                path="/admin/benchmarks"
+                element={
+                  <RoleGuard permission="view_admin">
+                    <BenchmarkDashboardPage />
+                  </RoleGuard>
+                }
+              />
             <Route path="*" element={<NotFound />} />
           </Routes>
         </BrowserRouter>

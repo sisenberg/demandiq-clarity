@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
-import { Settings, Users, ShieldCheck, Check, X, Building2, Blocks, ShieldAlert } from "lucide-react";
+import { useNavigate } from "react-router-dom";
+import { Settings, Users, ShieldCheck, Check, X, Building2, Blocks, ShieldAlert, FlaskConical } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/lib/supabase";
 import RoleBadge from "@/components/ui/RoleBadge";
@@ -40,6 +41,7 @@ const ENTITLEMENT_BADGE: Record<EntitlementStatus, string> = {
 };
 
 const AdminPage = () => {
+  const navigate = useNavigate();
   const { role, tenantId } = useAuth();
   const [tab, setTab] = useState<"users" | "permissions" | "modules" | "compliance" | "settings">("users");
   const [users, setUsers] = useState<TenantUser[]>([]);
@@ -342,8 +344,13 @@ const AdminPage = () => {
           {[
             { label: "Tenant Settings", description: "Organization name, slug, and configuration", icon: Building2 },
             { label: "System Settings", description: "Extraction defaults, export formats, integrations", icon: Settings },
+            { label: "Pipeline Benchmarks", description: "Golden test harness for OCR, chunking & extraction validation", icon: FlaskConical, href: "/admin/benchmarks" },
           ].map((section) => (
-            <div key={section.label} className="card-elevated-hover px-5 py-5 cursor-pointer">
+            <div
+              key={section.label}
+              className="card-elevated-hover px-5 py-5 cursor-pointer"
+              onClick={() => "href" in section && section.href && navigate(section.href)}
+            >
               <div className="flex items-start gap-3.5">
                 <div className="h-9 w-9 rounded-lg bg-accent flex items-center justify-center shrink-0">
                   <section.icon className="h-4 w-4 text-primary" />
