@@ -27,6 +27,7 @@ import DetectedEntitiesPanel from "@/components/case/DetectedEntitiesPanel";
 import MedicalReviewWorkspace from "@/components/case/MedicalReviewWorkspace";
 import EvaluateInlineWorkspace from "@/components/case/EvaluateInlineWorkspace";
 import NegotiateInlineWorkspace from "@/components/case/NegotiateInlineWorkspace";
+import IntakeReviewWorkspace from "@/components/case/IntakeReviewWorkspace";
 import DocumentUpload from "@/components/case/DocumentUpload";
 import JobsPanel from "@/components/case/JobsPanel";
 import DocumentTypeTag from "@/components/case/DocumentTypeTag";
@@ -252,6 +253,11 @@ const CaseDetailPage = () => {
               {/* ── ENTITIES ──────────────────────── */}
               {activeSection === "entities" && (
                 <DetectedEntitiesPanel caseId={caseData.id} />
+              )}
+
+              {/* ── INTAKE REVIEW ─────────────────── */}
+              {activeSection === "intake-review" && (
+                <IntakeReviewWorkspace caseId={caseData.id} tenantId={caseData.tenant_id} />
               )}
 
               {/* ── MEDICAL REVIEW ────────────────── */}

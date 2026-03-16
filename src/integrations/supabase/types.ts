@@ -2360,9 +2360,15 @@ export type Database = {
           created_at: string
           demand_amount: number | null
           demand_deadline: string | null
+          demand_verified: boolean
+          demand_verified_at: string | null
+          demand_verified_by: string | null
           functional_impact_flags: Json
           id: string
           injury_summary: Json
+          injury_verified: boolean
+          injury_verified_at: string | null
+          injury_verified_by: string | null
           invasive_treatment_flags: Json
           law_firm: string
           missing_data_flags: Json
@@ -2375,8 +2381,14 @@ export type Database = {
           represented_status: string
           residual_symptom_flags: Json
           specials_summary: Json
+          specials_verified: boolean
+          specials_verified_at: string | null
+          specials_verified_by: string | null
           tenant_id: string
           treatment_summary: Json
+          treatment_verified: boolean
+          treatment_verified_at: string | null
+          treatment_verified_by: string | null
           updated_at: string
           version: number
         }
@@ -2390,9 +2402,15 @@ export type Database = {
           created_at?: string
           demand_amount?: number | null
           demand_deadline?: string | null
+          demand_verified?: boolean
+          demand_verified_at?: string | null
+          demand_verified_by?: string | null
           functional_impact_flags?: Json
           id?: string
           injury_summary?: Json
+          injury_verified?: boolean
+          injury_verified_at?: string | null
+          injury_verified_by?: string | null
           invasive_treatment_flags?: Json
           law_firm?: string
           missing_data_flags?: Json
@@ -2405,8 +2423,14 @@ export type Database = {
           represented_status?: string
           residual_symptom_flags?: Json
           specials_summary?: Json
+          specials_verified?: boolean
+          specials_verified_at?: string | null
+          specials_verified_by?: string | null
           tenant_id: string
           treatment_summary?: Json
+          treatment_verified?: boolean
+          treatment_verified_at?: string | null
+          treatment_verified_by?: string | null
           updated_at?: string
           version?: number
         }
@@ -2420,9 +2444,15 @@ export type Database = {
           created_at?: string
           demand_amount?: number | null
           demand_deadline?: string | null
+          demand_verified?: boolean
+          demand_verified_at?: string | null
+          demand_verified_by?: string | null
           functional_impact_flags?: Json
           id?: string
           injury_summary?: Json
+          injury_verified?: boolean
+          injury_verified_at?: string | null
+          injury_verified_by?: string | null
           invasive_treatment_flags?: Json
           law_firm?: string
           missing_data_flags?: Json
@@ -2435,8 +2465,14 @@ export type Database = {
           represented_status?: string
           residual_symptom_flags?: Json
           specials_summary?: Json
+          specials_verified?: boolean
+          specials_verified_at?: string | null
+          specials_verified_by?: string | null
           tenant_id?: string
           treatment_summary?: Json
+          treatment_verified?: boolean
+          treatment_verified_at?: string | null
+          treatment_verified_by?: string | null
           updated_at?: string
           version?: number
         }
@@ -2530,6 +2566,79 @@ export type Database = {
           },
           {
             foreignKeyName: "intake_jobs_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      intake_review_corrections: {
+        Row: {
+          case_id: string
+          corrected_at: string | null
+          corrected_by: string | null
+          corrected_value: string | null
+          created_at: string
+          evidence_document_id: string | null
+          evidence_page: number | null
+          evidence_snippet: string
+          extracted_value: string
+          field_name: string
+          id: string
+          section: string
+          tenant_id: string
+          updated_at: string
+        }
+        Insert: {
+          case_id: string
+          corrected_at?: string | null
+          corrected_by?: string | null
+          corrected_value?: string | null
+          created_at?: string
+          evidence_document_id?: string | null
+          evidence_page?: number | null
+          evidence_snippet?: string
+          extracted_value?: string
+          field_name: string
+          id?: string
+          section: string
+          tenant_id: string
+          updated_at?: string
+        }
+        Update: {
+          case_id?: string
+          corrected_at?: string | null
+          corrected_by?: string | null
+          corrected_value?: string | null
+          created_at?: string
+          evidence_document_id?: string | null
+          evidence_page?: number | null
+          evidence_snippet?: string
+          extracted_value?: string
+          field_name?: string
+          id?: string
+          section?: string
+          tenant_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "intake_review_corrections_case_id_fkey"
+            columns: ["case_id"]
+            isOneToOne: false
+            referencedRelation: "cases"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "intake_review_corrections_evidence_document_id_fkey"
+            columns: ["evidence_document_id"]
+            isOneToOne: false
+            referencedRelation: "case_documents"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "intake_review_corrections_tenant_id_fkey"
             columns: ["tenant_id"]
             isOneToOne: false
             referencedRelation: "tenants"

@@ -16,6 +16,7 @@ import {
   Stethoscope,
   Calculator,
   Handshake,
+  ClipboardCheck,
 } from "lucide-react";
 
 export type CaseSection =
@@ -28,6 +29,7 @@ export type CaseSection =
   | "entities"
   | "chronology"
   | "medical-review"
+  | "intake-review"
   | "evaluate"
   | "negotiate";
 
@@ -35,6 +37,7 @@ const NAV_ITEMS: { key: CaseSection; label: string; icon: React.ElementType }[] 
   { key: "overview", label: "Overview", icon: LayoutDashboard },
   { key: "notes", label: "Case Notes", icon: StickyNote },
   { key: "chronology", label: "Chronology", icon: Calendar },
+  { key: "intake-review", label: "Intake Review", icon: ClipboardCheck },
   { key: "medical-review", label: "Medical Review", icon: Stethoscope },
   { key: "evaluate", label: "EvaluateIQ", icon: Calculator },
   { key: "negotiate", label: "NegotiateIQ", icon: Handshake },
