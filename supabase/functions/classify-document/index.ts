@@ -371,12 +371,14 @@ Confidence scores:
 
     console.log("[classify-document] Updated pipeline_stage. err:", stageErr?.message ?? "none");
 
+    const routed_workflow = topType ? (WORKFLOW_ROUTING[topType] || "general_review") : null;
     const result = {
       success: true,
       type_suggestions: typeSuggestions.length,
       metadata_extractions: metadataExtractions.length,
       top_type: topType,
       top_confidence: topConfidence,
+      routed_workflow,
     };
 
     console.log("[classify-document] Complete:", JSON.stringify(result));
