@@ -1,7 +1,8 @@
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import {
   Package, CheckCircle2, AlertTriangle, ArrowRight, RefreshCw,
-  FileText, Activity, Bone, DollarSign, Users, Shield, XCircle,
+  FileText, Activity, Bone, DollarSign, Users, Shield, XCircle, Rocket,
 } from "lucide-react";
 import {
   useIntakeEvaluationPackage,
@@ -19,6 +20,7 @@ interface Props {
 }
 
 const IntakeEvaluatePublishPanel = ({ caseId, tenantId }: Props) => {
+  const navigate = useNavigate();
   const { user } = useAuth();
   const { data: pkg, isLoading } = useIntakeEvaluationPackage(caseId);
   const assemblePackage = useAssembleIntakePackage();
@@ -84,9 +86,18 @@ const IntakeEvaluatePublishPanel = ({ caseId, tenantId }: Props) => {
           )}
 
           {isPublished && (
-            <span className="inline-flex items-center gap-1 text-[10px] font-medium text-[hsl(var(--status-approved))]">
-              <CheckCircle2 className="h-3.5 w-3.5" /> Published
-            </span>
+            <div className="flex items-center gap-2">
+              <span className="inline-flex items-center gap-1 text-[10px] font-medium text-[hsl(var(--status-approved))]">
+                <CheckCircle2 className="h-3.5 w-3.5" /> Published
+              </span>
+              <button
+                onClick={() => navigate(`/cases/${caseId}/evaluate`)}
+                className="inline-flex items-center gap-1.5 text-[10px] font-medium px-3 py-1.5 rounded-lg bg-primary text-primary-foreground hover:bg-primary/90 transition-colors"
+              >
+                <Rocket className="h-3 w-3" />
+                Launch EvaluateIQ
+              </button>
+            </div>
           )}
         </div>
       </div>

@@ -491,9 +491,9 @@ async function maybeAutoAssemblePackage(
       return;
     }
 
-    // Trigger package assembly (action=assemble, not publish)
+    // Trigger package assembly
     console.log("[orchestrate-intake] All extractions complete — triggering package assembly");
-    await fetch(`${supabaseUrl}/functions/v1/publish-intake-package`, {
+    const assembleResp = await fetch(`${supabaseUrl}/functions/v1/publish-intake-package`, {
       method: "POST",
       headers: {
         Authorization: `Bearer ${serviceRoleKey}`,
@@ -505,6 +505,30 @@ async function maybeAutoAssemblePackage(
         action: "assemble",
       }),
     });
+
+    // Auto-publish if assembly produced a ready_for_review package
+    if (assembleResp.ok) {
+      try {
+        const assembleData = await assembleResp.json();
+        if (assembleData?.status === "ready_for_review") {
+          console.log("[orchestrate-intake] Package ready — auto-publishing to EvaluateIQ");
+          await fetch(`${supabaseUrl}/functions/v1/publish-intake-package`, {
+            method: "POST",
+            headers: {
+              Authorization: `Bearer ${serviceRoleKey}`,
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+              case_id: caseId,
+              tenant_id: tenantId,
+              action: "publish",
+            }),
+          });
+        }
+      } catch (pubErr) {
+        console.warn("[orchestrate-intake] Auto-publish parse error (non-fatal):", pubErr);
+      }
+    }
   } catch (e) {
     console.warn("[orchestrate-intake] Auto-assemble error (non-fatal):", e);
   }

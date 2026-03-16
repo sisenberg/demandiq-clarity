@@ -29,3 +29,12 @@ verify_jwt = false
 
 [functions.orchestrate-intake]
 verify_jwt = false
+
+[functions.process-document]
+verify_jwt = false
+
+[functions.classify-document]
+verify_jwt = false
+
+[functions.normalize-entities]
+verify_jwt = false
