@@ -9,6 +9,7 @@ import { isDocumentReady } from "@/lib/statuses";
 import type { EvidenceReference, TimelineEvent } from "@/types";
 import { maskClaimNumber } from "@/lib/phi-utils";
 import IntakeReadinessPanel from "./IntakeReadinessPanel";
+import IntakeWorkflowDashboard from "./IntakeWorkflowDashboard";
 import DemandSummaryPanel from "./DemandSummaryPanel";
 import DemandChronologyPanel from "./DemandChronologyPanel";
 import PartyNormalizationPanel from "./PartyNormalizationPanel";
@@ -107,7 +108,10 @@ const CaseOverview = ({ caseData, documents, onNavigate }: CaseOverviewProps) =>
     <div className="flex gap-5">
       {/* ═══ LEFT COLUMN — Main content ═══ */}
       <div className="flex-1 min-w-0 flex flex-col gap-4">
-        {/* ── Row 0: Intake Readiness ── */}
+        {/* ── Row 0: Intake Workflow Dashboard ── */}
+        <IntakeWorkflowDashboard caseId={caseData.id} documents={documents} onNavigate={onNavigate} />
+
+        {/* ── Row 0b: Intake Readiness (legacy detail) ── */}
         <IntakeReadinessPanel documents={documents} caseId={caseData.id} onNavigate={onNavigate} />
 
         {/* ── Demand Summary ── */}
