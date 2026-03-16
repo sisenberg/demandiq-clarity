@@ -71,6 +71,9 @@ const DocumentReviewWorkspace = ({ documentId, caseId, onBack }: DocumentReviewW
   const { data: typeSuggestions = [] } = useDocumentTypeSuggestions(documentId);
   const { data: metaExtractions = [] } = useDocumentMetadataExtractions(documentId);
   const { data: chronoCandidates = [] } = useCaseChronologyCandidates(caseId);
+  const { data: evidenceRefs = [] } = useDocumentEvidenceRefs(documentId);
+  const createEvidenceRef = useCreateEvidenceRef();
+  const deleteEvidenceRef = useDeleteEvidenceRef();
   const classifyDoc = useClassifyDocument();
   const acceptType = useAcceptTypeSuggestion();
   const correctMeta = useCorrectMetadata();
