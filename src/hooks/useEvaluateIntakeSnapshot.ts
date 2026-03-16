@@ -1,36 +1,31 @@
 import { useMemo } from "react";
-import { useCasePackage } from "@/hooks/useCasePackage";
 import { useAuth } from "@/contexts/AuthContext";
 import { useEvaluateEligibility } from "@/hooks/useEvaluateEligibility";
-import { buildEvaluateIntakeSnapshot } from "@/lib/evaluateIntakeBuilder";
+import { useDemandPackagePublished } from "@/hooks/useDemandPackage";
+import { buildIntakeFromDemandPackage } from "@/lib/demandPackageIntakeAdapter";
 import type { EvaluateIntakeSnapshot } from "@/types/evaluate-intake";
 
 /**
- * Builds and returns the EvaluateIQ intake snapshot for the current case.
- * The snapshot is derived (not persisted yet) from the CasePackage context.
+ * Builds the EvaluateIQ intake snapshot from the real published DemandPackage.
+ * No mock data — returns null until a valid published package exists.
  */
 export function useEvaluateIntakeSnapshot(caseId: string | undefined): {
   snapshot: EvaluateIntakeSnapshot | null;
   isReady: boolean;
 } {
-  const { pkg } = useCasePackage();
   const { user } = useAuth();
   const eligibility = useEvaluateEligibility(caseId);
+  const { data: pkg, isLoading } = useDemandPackagePublished(caseId);
 
   return useMemo(() => {
-    if (!eligibility.eligible || !eligibility.inputSource || !caseId) {
+    if (!caseId || !eligibility.eligible || isLoading) {
+      return { snapshot: null, isReady: false };
+    }
+    if (!pkg) {
       return { snapshot: null, isReady: false };
     }
 
-    const snapshot = buildEvaluateIntakeSnapshot({
-      casePackage: pkg,
-      reviewerPackage: null, // Will be wired when ReviewerPackage persistence is live
-      sourceModule: eligibility.inputSource,
-      sourceVersion: eligibility.sourceVersion ?? 1,
-      sourceSnapshotId: null,
-      userId: user?.id ?? null,
-    });
-
+    const snapshot = buildIntakeFromDemandPackage(pkg, user?.id ?? null);
     return { snapshot, isReady: true };
-  }, [pkg, eligibility, caseId, user]);
+  }, [caseId, eligibility.eligible, pkg, isLoading, user]);
 }
