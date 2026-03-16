@@ -15,6 +15,7 @@ import SpecialsReviewTable from "./SpecialsReviewTable";
 import TreatmentTimelineView from "./TreatmentTimelineView";
 import InjuryReviewPanel from "./InjuryReviewPanel";
 import IntakeEvaluatePublishPanel from "./IntakeEvaluatePublishPanel";
+import IntakeQualityPanel from "./IntakeQualityPanel";
 import {
   User,
   Car,
@@ -143,6 +144,9 @@ const CaseOverview = ({ caseData, documents, onNavigate }: CaseOverviewProps) =>
             .filter((d) => ["medical_record", "narrative_report", "imaging_report", "demand_letter"].includes(d.document_type))
             .map((d) => d.id)}
         />
+
+        {/* ── Intake Quality Validation ── */}
+        <IntakeQualityPanel caseId={caseData.id} />
 
         {/* ── EvaluateIQ Intake Package ── */}
         <IntakeEvaluatePublishPanel
