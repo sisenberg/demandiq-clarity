@@ -13,6 +13,7 @@ import DemandSummaryPanel from "./DemandSummaryPanel";
 import PartyNormalizationPanel from "./PartyNormalizationPanel";
 import SpecialsReviewTable from "./SpecialsReviewTable";
 import TreatmentTimelineView from "./TreatmentTimelineView";
+import InjuryReviewPanel from "./InjuryReviewPanel";
 import {
   User,
   Car,
