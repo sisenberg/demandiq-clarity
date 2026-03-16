@@ -173,7 +173,33 @@ function extractBornDigitalPages(pdfBytes: Uint8Array): string[] {
     return textBlocks;
   }
 
-  return []; // Couldn't extract → fall through to OCR
+  return []; // Couldn't extract → fall through to AI cleanup
+}
+
+// Broader text extraction: captures Tj, TJ array strings, and hex strings
+function extractAllPdfText(pdfBytes: Uint8Array): string {
+  const fullText = new TextDecoder("latin1").decode(pdfBytes);
+  const parts: string[] = [];
+
+  // Tj strings: (text) Tj
+  const tjRegex = /\(([^)]+)\)\s*Tj/g;
+  let m: RegExpExecArray | null;
+  while ((m = tjRegex.exec(fullText)) !== null) {
+    parts.push(m[1]);
+  }
+
+  // TJ arrays: [(text) num (text)] TJ
+  const tjArrayRegex = /\[([^\]]+)\]\s*TJ/g;
+  while ((m = tjArrayRegex.exec(fullText)) !== null) {
+    const inner = m[1];
+    const strRegex = /\(([^)]+)\)/g;
+    let sm: RegExpExecArray | null;
+    while ((sm = strRegex.exec(inner)) !== null) {
+      parts.push(sm[1]);
+    }
+  }
+
+  return parts.join(" ").replace(/\\n/g, "\n").replace(/\s+/g, " ").trim();
 }
 
 // ─── Main Handler ───────────────────────────────────────
@@ -301,50 +327,107 @@ Deno.serve(async (req: Request) => {
         }
       }
 
-      // 6b. If no text extracted, use OCR provider
+      // 6b. If no text extracted via born-digital, use AI text extraction
+      // NOTE: Gemini vision API does not accept raw PDF binary via image_url.
+      // Instead we extract whatever raw text we can from the PDF stream and
+      // send it to the AI for cleanup and structuring.
       if (pages.length === 0) {
         extractionMethod = isBornDigital ? "ocr-fallback" : "ocr";
 
         if (!lovableApiKey) {
           throw new Error(
-            "LOVABLE_API_KEY not configured. Required for OCR text extraction."
+            "LOVABLE_API_KEY not configured. Required for text extraction."
           );
         }
 
-        const ocrProvider = getOcrProvider(lovableApiKey);
+        // Extract ALL readable text strings from the PDF (broader regex)
+        const rawPdfText = extractAllPdfText(fileBytes);
 
-        // For PDFs, we send the entire document as base64 to the AI
-        // The AI will extract text from the visible content
-        // Cap at 5MB to stay within edge function memory limits
-        const cappedBytes = fileBytes.subarray(0, Math.min(fileBytes.length, 5_000_000));
-        const base64 = uint8ArrayToBase64(cappedBytes);
+        if (rawPdfText.trim().length < 20) {
+          // Truly scanned PDF with no extractable text — mark for manual review
+          extractionMethod = "scanned-pdf-no-text";
+          await supabase
+            .from("case_documents")
+            .update({
+              intake_status: "needs_review",
+              document_status: "needs_attention",
+              pipeline_stage: "upload_received",
+            })
+            .eq("id", doc.id);
 
-        // Process as single document (AI handles multi-page)
-        const result = await ocrProvider.extractPageText(
-          base64,
-          "application/pdf",
-          1
+          await supabase
+            .from("intake_jobs")
+            .update({
+              status: "failed",
+              completed_at: new Date().toISOString(),
+              error_message: "Scanned PDF with no extractable text. Image-based OCR for PDFs is not yet supported.",
+            })
+            .eq("id", job_id);
+
+          return new Response(
+            JSON.stringify({
+              success: false,
+              extraction_method: extractionMethod,
+              error: "Scanned PDF detected. Image-based OCR for PDFs is not yet supported. Please upload a born-digital (text-based) PDF.",
+            }),
+            { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+          );
+        }
+
+        // Send raw text to AI for cleanup and page structuring
+        const cleanupResponse = await fetch(
+          "https://ai.gateway.lovable.dev/v1/chat/completions",
+          {
+            method: "POST",
+            headers: {
+              Authorization: `Bearer ${lovableApiKey}`,
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+              model: "google/gemini-2.5-flash",
+              messages: [
+                {
+                  role: "system",
+                  content: "You are a document text extraction engine. You receive raw text extracted from a PDF document. Clean it up, fix encoding artifacts, restore paragraph structure, and return the readable text. Preserve all content faithfully — do not summarize or omit anything. If you can identify page boundaries, separate pages with the marker: --- Page N ---",
+                },
+                {
+                  role: "user",
+                  content: `Clean up and structure this raw PDF text extraction:\n\n${rawPdfText.substring(0, 30000)}`,
+                },
+              ],
+              max_tokens: 8192,
+              temperature: 0,
+            }),
+          }
         );
 
-        if (result.text.trim().length > 0) {
-          // Split AI response by likely page breaks
-          const pageTexts = result.text.split(/\n---\s*page\s*\d+\s*---\n/i);
+        if (!cleanupResponse.ok) {
+          const errBody = await cleanupResponse.text();
+          console.error("[process-document] AI cleanup failed:", cleanupResponse.status, errBody.substring(0, 300));
+          // Fall back to raw text
+          pages = [{
+            pageNumber: 1,
+            text: rawPdfText.substring(0, 50000),
+            confidence: 0.5,
+          }];
+        } else {
+          const cleanupData = await cleanupResponse.json();
+          const cleanedText = cleanupData.choices?.[0]?.message?.content?.trim() || rawPdfText;
+
+          // Split by page markers if present
+          const pageTexts = cleanedText.split(/\n---\s*Page\s*\d+\s*---\n/i);
           if (pageTexts.length > 1) {
-            pages = pageTexts.map((text, i) => ({
+            pages = pageTexts.filter((t: string) => t.trim()).map((text: string, i: number) => ({
               pageNumber: i + 1,
               text: text.trim(),
-              confidence: result.confidence,
+              confidence: 0.8,
             }));
           } else {
-            pages = [
-              {
-                pageNumber: 1,
-                text: result.text.trim(),
-                confidence: result.confidence,
-              },
-            ];
-          }
-        }
+            pages = [{
+              pageNumber: 1,
+              text: cleanedText,
+              confidence: 0.8,
+            }];
       }
     } else if (isImage) {
       // 7. Image files: always OCR
