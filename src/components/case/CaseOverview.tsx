@@ -145,6 +145,9 @@ const CaseOverview = ({ caseData, documents, onNavigate }: CaseOverviewProps) =>
             .map((d) => d.id)}
         />
 
+        {/* ── Intake Quality Validation ── */}
+        <IntakeQualityPanel caseId={caseData.id} />
+
         {/* ── EvaluateIQ Intake Package ── */}
         <IntakeEvaluatePublishPanel
           caseId={caseData.id}
