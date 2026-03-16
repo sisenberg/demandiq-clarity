@@ -14,6 +14,7 @@ import PartyNormalizationPanel from "./PartyNormalizationPanel";
 import SpecialsReviewTable from "./SpecialsReviewTable";
 import TreatmentTimelineView from "./TreatmentTimelineView";
 import InjuryReviewPanel from "./InjuryReviewPanel";
+import IntakeEvaluatePublishPanel from "./IntakeEvaluatePublishPanel";
 import {
   User,
   Car,
@@ -141,6 +142,12 @@ const CaseOverview = ({ caseData, documents, onNavigate }: CaseOverviewProps) =>
           medicalDocumentIds={documents
             .filter((d) => ["medical_record", "narrative_report", "imaging_report", "demand_letter"].includes(d.document_type))
             .map((d) => d.id)}
+        />
+
+        {/* ── EvaluateIQ Intake Package ── */}
+        <IntakeEvaluatePublishPanel
+          caseId={caseData.id}
+          tenantId={caseData.tenant_id}
         />
 
         {/* ── Row 1: Case Snapshot + Key Metrics ── */}
