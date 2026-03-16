@@ -134,6 +134,15 @@ const CaseOverview = ({ caseData, documents, onNavigate }: CaseOverviewProps) =>
             .map((d) => d.id)}
         />
 
+        {/* ── Injury & Diagnosis Review ── */}
+        <InjuryReviewPanel
+          caseId={caseData.id}
+          tenantId={caseData.tenant_id}
+          medicalDocumentIds={documents
+            .filter((d) => ["medical_record", "narrative_report", "imaging_report", "demand_letter"].includes(d.document_type))
+            .map((d) => d.id)}
+        />
+
         {/* ── Row 1: Case Snapshot + Key Metrics ── */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
           {/* Case / Claimant Summary */}
