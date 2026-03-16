@@ -334,7 +334,7 @@ const IntakeDocumentsWorkstation = ({ documents, loading, caseId }: IntakeDocume
                           )}
                         </div>
                         <div className="flex items-center gap-2 mt-0.5">
-                          <DocumentTypeTag type={doc.document_type} />
+                          <DocumentTypeTag type={doc.document_type} predictedType={doc.predicted_type} />
                           <span className="text-[10px] text-muted-foreground">{formatBytes(doc.file_size_bytes)}</span>
                           {doc.page_count && <span className="text-[10px] text-muted-foreground">{doc.page_count} pg</span>}
                         </div>
