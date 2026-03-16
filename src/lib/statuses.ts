@@ -174,13 +174,23 @@ export const JOB_STATUS_BADGE: Record<IntakeJobStatus, { className: string; labe
 // 5. INTAKE JOB TYPE labels
 // ═══════════════════════════════════════════════════════
 
-export type IntakeJobType = "text_extraction" | "document_parsing" | "fact_extraction" | "duplicate_detection";
+export type IntakeJobType =
+  | "text_extraction"
+  | "document_parsing"
+  | "fact_extraction"
+  | "duplicate_detection"
+  | "validation"
+  | "chunking"
+  | "indexing";
 
 export const JOB_TYPE_LABEL: Record<IntakeJobType, string> = {
   text_extraction: "Text Extraction (OCR)",
   document_parsing: "Document Parsing",
   fact_extraction: "Fact Extraction",
   duplicate_detection: "Duplicate Detection",
+  validation: "Validation",
+  chunking: "Chunking",
+  indexing: "Indexing",
 };
 
 // ═══════════════════════════════════════════════════════

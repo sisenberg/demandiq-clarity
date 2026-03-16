@@ -188,15 +188,13 @@ const DocumentDetailPage = () => {
             </div>
           </div>
 
-          {/* Pipeline */}
-          <div className="card-elevated overflow-hidden">
-            <div className="px-5 py-3.5 border-b border-border bg-muted/30">
-              <h2 className="text-xs font-semibold text-foreground uppercase tracking-wider">Processing Pipeline</h2>
-            </div>
-            <div className="px-5 py-4">
-              <ProcessingPipeline currentStage={doc.pipeline_stage} documentStatus={doc.document_status} />
-            </div>
-          </div>
+          {/* Processing State Machine */}
+          <DocumentProcessingStatePanel
+            documentId={doc.id}
+            caseId={doc.case_id}
+            currentStage={doc.pipeline_stage}
+            documentStatus={doc.document_status}
+          />
 
           {/* Document Pages */}
           {pages.length > 0 && (
