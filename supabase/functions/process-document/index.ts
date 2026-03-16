@@ -110,6 +110,18 @@ function getOcrProvider(lovableApiKey: string): OcrProvider {
   return new LovableAiOcrProvider(lovableApiKey);
 }
 
+// ─── Efficient Base64 Encoding ──────────────────────────
+// Converts Uint8Array to base64 using chunked processing to avoid stack overflow
+function uint8ArrayToBase64(bytes: Uint8Array): string {
+  const CHUNK_SIZE = 32768; // 32KB chunks
+  const parts: string[] = [];
+  for (let i = 0; i < bytes.length; i += CHUNK_SIZE) {
+    const chunk = bytes.subarray(i, Math.min(i + CHUNK_SIZE, bytes.length));
+    parts.push(String.fromCharCode(...chunk));
+  }
+  return btoa(parts.join(""));
+}
+
 // ─── Born-Digital Text Extraction ───────────────────────
 // Attempts to extract text directly from PDF binary without OCR.
 // Uses a simple heuristic: search for text stream markers in PDF.
