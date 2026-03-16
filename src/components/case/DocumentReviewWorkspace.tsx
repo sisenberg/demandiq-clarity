@@ -353,15 +353,103 @@ const DocumentReviewWorkspace = ({ documentId, caseId, onBack }: DocumentReviewW
   );
 };
 
-// ── Text Panel ──────────────────────────────────────────
+// ── Text Panel (with evidence selection) ────────────────
 
-function TextPanel({ pages, activePage, onJumpToPage }: {
+function TextPanel({ pages, activePage, onJumpToPage, documentId, caseId, fileName, createEvidenceRef }: {
   pages: DocumentPageRow[];
   activePage: number;
   onJumpToPage: (p: number) => void;
+  documentId: string;
+  caseId: string;
+  fileName?: string;
+  createEvidenceRef: any;
 }) {
+  const [selectedText, setSelectedText] = useState("");
+  const [selectedPageNum, setSelectedPageNum] = useState<number | null>(null);
+  const [charRange, setCharRange] = useState<{ start: number; end: number } | null>(null);
+  const [evidenceType, setEvidenceType] = useState<EvidenceType>("direct");
+
+  const handleTextSelect = (pageNumber: number, pageText: string) => {
+    const selection = window.getSelection();
+    if (!selection || selection.isCollapsed) return;
+    const text = selection.toString().trim();
+    if (text.length < 3) return;
+
+    // Calculate character offsets within page text
+    const start = pageText.indexOf(text);
+    setSelectedText(text);
+    setSelectedPageNum(pageNumber);
+    setCharRange(start >= 0 ? { start, end: start + text.length } : null);
+  };
+
+  const handleSaveEvidence = () => {
+    if (!selectedText || selectedPageNum == null) return;
+    createEvidenceRef.mutate({
+      caseId,
+      documentId,
+      pageNumber: selectedPageNum,
+      quotedText: selectedText,
+      characterStart: charRange?.start,
+      characterEnd: charRange?.end,
+      evidenceType,
+    });
+    setSelectedText("");
+    setSelectedPageNum(null);
+    setCharRange(null);
+  };
+
+  const handleCopyRef = () => {
+    if (!selectedText || selectedPageNum == null) return;
+    const citation = `[${evidenceType.toUpperCase()}] "${fileName || "Document"}" p.${selectedPageNum}${charRange ? ` chars ${charRange.start}–${charRange.end}` : ""}\n"${selectedText}"`;
+    navigator.clipboard.writeText(citation);
+    toast.success("Evidence citation copied to clipboard");
+  };
+
   return (
     <div className="space-y-3">
+      {/* Evidence selection toolbar */}
+      {selectedText && (
+        <div className="sticky top-0 z-10 rounded-lg border border-primary/30 bg-primary/5 p-3 space-y-2">
+          <div className="flex items-start gap-2">
+            <Bookmark className="h-3.5 w-3.5 text-primary shrink-0 mt-0.5" />
+            <div className="flex-1 min-w-0">
+              <p className="text-[9px] font-semibold text-muted-foreground uppercase tracking-widest mb-1">
+                Selected from Page {selectedPageNum}
+                {charRange && <span className="normal-case tracking-normal ml-1">(chars {charRange.start}–{charRange.end})</span>}
+              </p>
+              <p className="text-[10px] text-foreground font-mono line-clamp-3">"{selectedText}"</p>
+            </div>
+            <button onClick={() => { setSelectedText(""); setSelectedPageNum(null); }} className="p-1 text-muted-foreground hover:text-foreground">
+              <X className="h-3 w-3" />
+            </button>
+          </div>
+          <div className="flex items-center gap-2">
+            <select
+              value={evidenceType}
+              onChange={(e) => setEvidenceType(e.target.value as EvidenceType)}
+              className="text-[10px] bg-card border border-border rounded px-2 py-1 text-foreground outline-none"
+            >
+              {(Object.entries(EVIDENCE_TYPE_LABEL) as [EvidenceType, string][]).map(([k, v]) => (
+                <option key={k} value={k}>{v}</option>
+              ))}
+            </select>
+            <button
+              onClick={handleSaveEvidence}
+              disabled={createEvidenceRef.isPending}
+              className="flex items-center gap-1 text-[10px] font-medium px-2.5 py-1 rounded-lg bg-primary text-primary-foreground hover:bg-primary/90 disabled:opacity-50 transition-colors"
+            >
+              <Bookmark className="h-3 w-3" /> Save Reference
+            </button>
+            <button
+              onClick={handleCopyRef}
+              className="flex items-center gap-1 text-[10px] font-medium px-2.5 py-1 rounded-lg border border-border bg-card text-foreground hover:bg-accent transition-colors"
+            >
+              <Copy className="h-3 w-3" /> Copy Citation
+            </button>
+          </div>
+        </div>
+      )}
+
       {pages.length === 0 ? (
         <p className="text-[11px] text-muted-foreground italic py-4 text-center">No extracted text available</p>
       ) : (
@@ -389,12 +477,96 @@ function TextPanel({ pages, activePage, onJumpToPage }: {
                 <span className="text-[7px] font-bold text-primary uppercase ml-auto">Viewing</span>
               )}
             </button>
-            <pre className="text-[10px] text-foreground font-mono whitespace-pre-wrap leading-relaxed max-h-40 overflow-y-auto">
+            <pre
+              className="text-[10px] text-foreground font-mono whitespace-pre-wrap leading-relaxed max-h-40 overflow-y-auto select-text cursor-text"
+              onMouseUp={() => handleTextSelect(page.page_number, page.extracted_text || "")}
+            >
               {page.extracted_text || "No text"}
             </pre>
           </div>
         ))
       )}
+    </div>
+  );
+}
+
+// ── Evidence Panel ──────────────────────────────────────
+
+function EvidencePanel({ evidenceRefs, fileName, deleteEvidenceRef, onJumpToPage }: {
+  evidenceRefs: EvidenceReferenceRow[];
+  fileName?: string;
+  deleteEvidenceRef: any;
+  onJumpToPage: (p: number) => void;
+}) {
+  const handleCopy = (ref: EvidenceReferenceRow) => {
+    navigator.clipboard.writeText(formatEvidenceCitation(ref, fileName));
+    toast.success("Citation copied");
+  };
+
+  const EVIDENCE_STYLE: Record<string, string> = {
+    direct: "border-l-primary bg-primary/5",
+    corroborating: "border-l-[hsl(var(--status-approved))] bg-[hsl(var(--status-approved-bg))]",
+    contradicting: "border-l-destructive bg-destructive/5",
+    contextual: "border-l-muted-foreground bg-accent/50",
+  };
+
+  if (evidenceRefs.length === 0) {
+    return (
+      <div className="flex flex-col items-center justify-center py-8 text-center">
+        <Bookmark className="h-6 w-6 text-muted-foreground/30 mb-2" />
+        <p className="text-[11px] text-muted-foreground mb-1">No evidence references yet</p>
+        <p className="text-[10px] text-muted-foreground/70">
+          Select text in the Text tab to create evidence references
+        </p>
+      </div>
+    );
+  }
+
+  return (
+    <div className="space-y-2">
+      <p className="text-[10px] text-muted-foreground mb-2">
+        {evidenceRefs.length} reference{evidenceRefs.length !== 1 ? "s" : ""} saved
+      </p>
+      {evidenceRefs.map((ref) => (
+        <div
+          key={ref.id}
+          className={`rounded-lg border-l-2 border border-border p-3 ${EVIDENCE_STYLE[ref.evidence_type] || ""}`}
+        >
+          <div className="flex items-center gap-2 mb-1.5">
+            <span className="text-[8px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded bg-accent text-muted-foreground">
+              {EVIDENCE_TYPE_LABEL[ref.evidence_type as EvidenceType] ?? ref.evidence_type}
+            </span>
+            <button
+              onClick={() => onJumpToPage(ref.page_number)}
+              className="text-[9px] font-medium text-primary hover:underline"
+            >
+              Page {ref.page_number}
+            </button>
+            {ref.character_start != null && ref.character_end != null && (
+              <span className="text-[9px] text-muted-foreground">
+                chars {ref.character_start}–{ref.character_end}
+              </span>
+            )}
+            <div className="flex-1" />
+            <button onClick={() => handleCopy(ref)} className="p-1 text-muted-foreground hover:text-foreground transition-colors" title="Copy citation">
+              <Copy className="h-3 w-3" />
+            </button>
+            <button
+              onClick={() => deleteEvidenceRef.mutate(ref.id)}
+              className="p-1 text-muted-foreground hover:text-destructive transition-colors"
+              title="Remove reference"
+            >
+              <Trash2 className="h-3 w-3" />
+            </button>
+          </div>
+          <p className="text-[10px] text-foreground font-mono leading-relaxed line-clamp-4">
+            "{ref.quoted_text}"
+          </p>
+          <p className="text-[9px] text-muted-foreground mt-1">
+            {new Date(ref.created_at).toLocaleString()}
+          </p>
+        </div>
+      ))}
     </div>
   );
 }
