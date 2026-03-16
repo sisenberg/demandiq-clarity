@@ -7,14 +7,17 @@ import type { DocumentRow } from "./useDocuments";
 import {
   computeIntakeWorkflowState,
   computePipelineSteps,
+  computeSimplifiedPipeline,
   type CaseIntakeState,
   type PipelineStepStatus,
+  type SimplifiedStepStatus,
   type IntakeWorkflowInput,
 } from "@/lib/intakeWorkflowEngine";
 
 export interface IntakeWorkflowResult {
   state: CaseIntakeState;
   steps: PipelineStepStatus[];
+  simplifiedSteps: SimplifiedStepStatus[];
   input: IntakeWorkflowInput;
   isLoading: boolean;
 }
