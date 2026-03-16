@@ -454,7 +454,6 @@ const IntakeDocumentsWorkstation = ({ documents, loading, caseId }: IntakeDocume
                             onClick={() => {
                               retryIntakeJob.mutate(failedJob.id, {
                                 onSuccess: () => {
-                                  // Re-invoke extraction after retry
                                   setTimeout(() => invokeExtraction.mutate(failedJob.id), 500);
                                 },
                               });
@@ -463,6 +462,19 @@ const IntakeDocumentsWorkstation = ({ documents, loading, caseId }: IntakeDocume
                             className="flex items-center gap-1 text-[10px] font-medium px-3 py-1.5 rounded-lg bg-primary text-primary-foreground hover:bg-primary/90 transition-colors disabled:opacity-50"
                           >
                             <RotateCcw className="h-3 w-3" /> Retry Extraction
+                          </button>
+                          <button
+                            onClick={() =>
+                              reprocessDoc.mutate({
+                                documentId: selectedDoc.id,
+                                caseId,
+                                currentStage: selectedDoc.pipeline_stage,
+                              })
+                            }
+                            disabled={reprocessDoc.isPending}
+                            className="flex items-center gap-1 text-[10px] font-medium px-3 py-1.5 rounded-lg border border-border bg-card text-foreground hover:bg-accent transition-colors disabled:opacity-50"
+                          >
+                            <RotateCcw className="h-3 w-3" /> Reprocess (New Run)
                           </button>
                           <span className="text-[9px] text-muted-foreground">
                             {failedJob.retry_count}/{failedJob.max_retries} retries used
