@@ -169,10 +169,29 @@ export function useUploadDocuments() {
             afterValue: { file_name: file.name, file_type: file.type, file_size_bytes: file.size, document_type: documentType },
           });
 
-          // Auto-enqueue intake jobs for this document
+          // Create processing run for this document
+          const run = await createProcessingRun({
+            documentId: data.id,
+            caseId,
+            tenantId,
+            triggeredBy: user.id,
+            triggerReason: "initial",
+          });
+
+          // Log initial state transition
+          await transitionDocumentState({
+            documentId: data.id,
+            tenantId,
+            fromStatus: null,
+            toStatus: "uploaded",
+            triggeredBy: user.id,
+            processingRunId: run.id,
+          });
+
+          // Auto-enqueue intake jobs for this document (linked to run)
           const { data: createdJobs } = await (supabase.from("intake_jobs") as any).insert([
-            { tenant_id: tenantId, case_id: caseId, document_id: data.id, job_type: "text_extraction", status: "queued" },
-            { tenant_id: tenantId, case_id: caseId, document_id: data.id, job_type: "duplicate_detection", status: "queued" },
+            { tenant_id: tenantId, case_id: caseId, document_id: data.id, job_type: "text_extraction", status: "queued", processing_run_id: run.id },
+            { tenant_id: tenantId, case_id: caseId, document_id: data.id, job_type: "duplicate_detection", status: "queued", processing_run_id: run.id },
           ]).select();
 
           // Fire-and-forget: invoke extraction for the text_extraction job
