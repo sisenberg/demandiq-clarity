@@ -419,17 +419,21 @@ interface SourceDrawerState {
   open: boolean;
   source: CitationSource | null;
   page: SourcePage | null;
+  resolvedCitation: ResolvedCitation | null;
+  loading: boolean;
 }
 
 interface SourceDrawerContextValue {
   state: SourceDrawerState;
   openSource: (citation: CitationSource) => void;
+  openSourceFromAnchor: (anchor: EvidenceAnchorRow) => void;
   close: () => void;
 }
 
 const SourceDrawerContext = createContext<SourceDrawerContextValue>({
-  state: { open: false, source: null, page: null },
+  state: { open: false, source: null, page: null, resolvedCitation: null, loading: false },
   openSource: () => {},
+  openSourceFromAnchor: () => {},
   close: () => {},
 });
 
@@ -440,21 +444,134 @@ export const SourceDrawerProvider = ({ children }: { children: ReactNode }) => {
     open: false,
     source: null,
     page: null,
+    resolvedCitation: null,
+    loading: false,
   });
 
-  const openSource = (citation: CitationSource) => {
+  const openSource = async (citation: CitationSource) => {
+    // If citation has an anchorId, resolve from DB
+    if (citation.anchorId) {
+      setState({ open: true, source: citation, page: null, resolvedCitation: null, loading: true });
+      try {
+        const { data } = await (supabase.from("evidence_references") as any)
+          .select("*")
+          .eq("id", citation.anchorId)
+          .single();
+        if (data) {
+          const resolved = await resolveAnchor(data as EvidenceAnchorRow);
+          const page = resolvedToSourcePage(resolved);
+          setState({ open: true, source: citation, page, resolvedCitation: resolved, loading: false });
+          return;
+        }
+      } catch {
+        // Fall through to mock
+      }
+    }
+
+    // If citation has documentId but no anchorId, try DB page lookup
+    if (citation.documentId) {
+      setState({ open: true, source: citation, page: null, resolvedCitation: null, loading: true });
+      try {
+        const pageNum = parseInt(citation.page.replace(/\D/g, ""), 10);
+        if (!isNaN(pageNum)) {
+          // Try parsed_document_pages first
+          const { data: parsed } = await (supabase.from("parsed_document_pages") as any)
+            .select("page_text, provider, parse_version")
+            .eq("document_id", citation.documentId)
+            .eq("page_number", pageNum)
+            .eq("is_current", true)
+            .single();
+
+          const { data: doc } = await supabase
+            .from("case_documents")
+            .select("file_name, document_type")
+            .eq("id", citation.documentId)
+            .single();
+
+          if (parsed || doc) {
+            let pageText = parsed?.page_text;
+            if (!pageText) {
+              const { data: rawPage } = await supabase
+                .from("document_pages")
+                .select("extracted_text")
+                .eq("document_id", citation.documentId)
+                .eq("page_number", pageNum)
+                .single();
+              pageText = rawPage?.extracted_text;
+            }
+
+            const page: SourcePage = {
+              id: `db-${citation.documentId}-${pageNum}`,
+              documentId: citation.documentId,
+              docName: doc?.file_name ?? citation.docName,
+              pageNumber: pageNum,
+              pageLabel: citation.page,
+              documentType: doc?.document_type ?? "unknown",
+              extractedText: pageText ?? "",
+              highlights: citation.excerpt
+                ? [{ text: citation.excerpt, relevance: (citation.relevance ?? "direct") as any }]
+                : [],
+            };
+            setState({ open: true, source: citation, page, resolvedCitation: null, loading: false });
+            return;
+          }
+        }
+      } catch {
+        // Fall through to mock
+      }
+    }
+
+    // Mock fallback
     const page = findSourcePage(citation.docName, citation.page);
-    setState({ open: true, source: citation, page: page ?? null });
+    setState({ open: true, source: citation, page: page ?? null, resolvedCitation: null, loading: false });
   };
 
-  const close = () => setState({ open: false, source: null, page: null });
+  const openSourceFromAnchor = async (anchor: EvidenceAnchorRow) => {
+    setState({ open: true, source: null, page: null, resolvedCitation: null, loading: true });
+    try {
+      const resolved = await resolveAnchor(anchor);
+      const page = resolvedToSourcePage(resolved);
+      const citation: CitationSource = {
+        docName: resolved.fileName,
+        page: `pg. ${anchor.page_number}`,
+        excerpt: anchor.quoted_text || undefined,
+        relevance: anchor.evidence_type as any,
+        documentId: anchor.document_id,
+        anchorId: anchor.id,
+        parseVersion: resolved.parseVersion ?? undefined,
+        chunkId: anchor.chunk_id ?? undefined,
+      };
+      setState({ open: true, source: citation, page, resolvedCitation: resolved, loading: false });
+    } catch {
+      setState(s => ({ ...s, loading: false }));
+    }
+  };
+
+  const close = () => setState({ open: false, source: null, page: null, resolvedCitation: null, loading: false });
 
   return (
-    <SourceDrawerContext.Provider value={{ state, openSource, close }}>
+    <SourceDrawerContext.Provider value={{ state, openSource, openSourceFromAnchor, close }}>
       {children}
     </SourceDrawerContext.Provider>
   );
 };
+
+/** Convert a ResolvedCitation to a SourcePage for display */
+function resolvedToSourcePage(resolved: ResolvedCitation): SourcePage | null {
+  if (!resolved.pageText) return null;
+  return {
+    id: `resolved-${resolved.anchor.id}`,
+    documentId: resolved.anchor.document_id,
+    docName: resolved.fileName,
+    pageNumber: resolved.anchor.page_number,
+    pageLabel: `pg. ${resolved.anchor.page_number}`,
+    documentType: resolved.documentType,
+    extractedText: resolved.pageText,
+    highlights: resolved.anchor.quoted_text
+      ? [{ text: resolved.anchor.quoted_text, relevance: (resolved.anchor.evidence_type ?? "direct") as any }]
+      : [],
+  };
+}
 
 // ─── Relevance badge styles ─────────────────────────────
 const RELEVANCE_STYLE: Record<string, string> = {
