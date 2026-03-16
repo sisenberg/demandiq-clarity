@@ -10,6 +10,7 @@ import type { EvidenceReference, TimelineEvent } from "@/types";
 import { maskClaimNumber } from "@/lib/phi-utils";
 import IntakeReadinessPanel from "./IntakeReadinessPanel";
 import DemandSummaryPanel from "./DemandSummaryPanel";
+import PartyNormalizationPanel from "./PartyNormalizationPanel";
 import {
   User,
   Car,
