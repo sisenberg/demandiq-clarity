@@ -1,6 +1,9 @@
 import { useState, createContext, useContext, type ReactNode } from "react";
-import { X, BookOpen, ExternalLink, FileText, ChevronLeft, ChevronRight } from "lucide-react";
+import { X, BookOpen, ExternalLink, FileText, ChevronLeft, ChevronRight, GitBranch } from "lucide-react";
 import type { CitationSource } from "./EvidenceCitation";
+import { resolveAnchor } from "@/lib/citationService";
+import type { EvidenceAnchorRow, ResolvedCitation } from "@/types/evidence-anchor";
+import { supabase } from "@/integrations/supabase/client";
 
 // ─── Mock source page data ──────────────────────────────
 export interface SourcePage {
