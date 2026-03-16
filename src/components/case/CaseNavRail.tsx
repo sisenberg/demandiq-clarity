@@ -30,6 +30,7 @@ export type CaseSection =
   | "entities"
   | "chronology"
   | "medical-review"
+  | "intake-review"
   | "evaluate"
   | "negotiate";
 
