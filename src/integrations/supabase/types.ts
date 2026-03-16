@@ -336,6 +336,7 @@ export type Database = {
           intake_status: Database["public"]["Enums"]["intake_status"]
           page_count: number | null
           pipeline_stage: Database["public"]["Enums"]["pipeline_stage"]
+          predicted_type: string | null
           source_module: string
           storage_path: string | null
           tenant_id: string
@@ -357,6 +358,7 @@ export type Database = {
           intake_status?: Database["public"]["Enums"]["intake_status"]
           page_count?: number | null
           pipeline_stage?: Database["public"]["Enums"]["pipeline_stage"]
+          predicted_type?: string | null
           source_module?: string
           storage_path?: string | null
           tenant_id: string
@@ -378,6 +380,7 @@ export type Database = {
           intake_status?: Database["public"]["Enums"]["intake_status"]
           page_count?: number | null
           pipeline_stage?: Database["public"]["Enums"]["pipeline_stage"]
+          predicted_type?: string | null
           source_module?: string
           storage_path?: string | null
           tenant_id?: string
@@ -4799,6 +4802,12 @@ export type Database = {
         | "expert_report"
         | "photograph"
         | "other"
+        | "demand_letter"
+        | "medical_bill"
+        | "itemized_statement"
+        | "narrative_report"
+        | "wage_loss_document"
+        | "unknown"
       driver_family:
         | "injury_severity"
         | "treatment_intensity"
@@ -5222,6 +5231,12 @@ export const Constants = {
         "expert_report",
         "photograph",
         "other",
+        "demand_letter",
+        "medical_bill",
+        "itemized_statement",
+        "narrative_report",
+        "wage_loss_document",
+        "unknown",
       ],
       driver_family: [
         "injury_severity",
