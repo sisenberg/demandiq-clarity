@@ -280,6 +280,7 @@ const DocumentReviewWorkspace = ({ documentId, caseId, onBack }: DocumentReviewW
           <div className="pill-toggle-group mx-3 mt-2.5 mb-1">
             {([
               { key: "text" as const, label: "Text", count: pages.length },
+              { key: "evidence" as const, label: "Evidence", count: evidenceRefs.length },
               { key: "metadata" as const, label: "Metadata", count: metaExtractions.length },
               { key: "facts" as const, label: "Facts", count: facts.length },
               { key: "chronology" as const, label: "Chronology", count: docChronoCandidates.length },
@@ -298,7 +299,23 @@ const DocumentReviewWorkspace = ({ documentId, caseId, onBack }: DocumentReviewW
           {/* Panel content */}
           <div className="flex-1 overflow-y-auto px-3 py-2" ref={textPanelRef}>
             {rightTab === "text" && (
-              <TextPanel pages={pages} activePage={activePage} onJumpToPage={jumpToPage} />
+              <TextPanel
+                pages={pages}
+                activePage={activePage}
+                onJumpToPage={jumpToPage}
+                documentId={documentId}
+                caseId={caseId}
+                fileName={doc?.file_name}
+                createEvidenceRef={createEvidenceRef}
+              />
+            )}
+            {rightTab === "evidence" && (
+              <EvidencePanel
+                evidenceRefs={evidenceRefs}
+                fileName={doc?.file_name}
+                deleteEvidenceRef={deleteEvidenceRef}
+                onJumpToPage={jumpToPage}
+              />
             )}
             {rightTab === "metadata" && (
               <MetadataPanel
