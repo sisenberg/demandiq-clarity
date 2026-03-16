@@ -24,18 +24,46 @@ const METADATA_FIELDS = [
 ] as const;
 
 const DOCUMENT_TYPES = [
+  "demand_letter",
+  "medical_bill",
   "medical_record",
-  "police_report",
-  "legal_filing",
-  "correspondence",
-  "billing_record",
+  "itemized_statement",
+  "narrative_report",
   "imaging_report",
+  "wage_loss_document",
+  "police_report",
+  "correspondence",
+  "legal_filing",
   "insurance_document",
   "employment_record",
   "expert_report",
   "photograph",
+  "billing_record",
+  "unknown",
   "other",
 ] as const;
+
+// ── Workflow routing map ────────────────────────────────
+// Maps document types to their downstream extraction workflow
+const WORKFLOW_ROUTING: Record<string, string> = {
+  demand_letter: "demand_extraction",
+  medical_bill: "specials_extraction",
+  itemized_statement: "specials_extraction",
+  billing_record: "specials_extraction",
+  medical_record: "treatment_extraction",
+  narrative_report: "treatment_extraction",
+  imaging_report: "treatment_extraction",
+  wage_loss_document: "specials_extraction",
+  police_report: "general_review",
+  correspondence: "general_review",
+  legal_filing: "general_review",
+  insurance_document: "general_review",
+  employment_record: "general_review",
+  expert_report: "general_review",
+  photograph: "general_review",
+  unknown: "pending_classification",
+  other: "general_review",
+};
 
 // COMPLIANCE NOTE: This function sends document text (L3–L4 PII/PHI) to the
 // Lovable AI Gateway for classification and metadata extraction. Subprocessor
