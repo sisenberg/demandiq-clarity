@@ -16,6 +16,7 @@ import TreatmentTimelineView from "./TreatmentTimelineView";
 import InjuryReviewPanel from "./InjuryReviewPanel";
 import IntakeEvaluatePublishPanel from "./IntakeEvaluatePublishPanel";
 import IntakeQualityPanel from "./IntakeQualityPanel";
+import IntakeProvenancePanel from "./IntakeProvenancePanel";
 import {
   User,
   Car,
@@ -153,6 +154,9 @@ const CaseOverview = ({ caseData, documents, onNavigate }: CaseOverviewProps) =>
           caseId={caseData.id}
           tenantId={caseData.tenant_id}
         />
+
+        {/* ── Field Provenance Audit Trail ── */}
+        <IntakeProvenancePanel caseId={caseData.id} />
 
         {/* ── Row 1: Case Snapshot + Key Metrics ── */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">

@@ -2500,6 +2500,98 @@ export type Database = {
           },
         ]
       }
+      intake_field_provenance: {
+        Row: {
+          case_id: string
+          corrected_value: string | null
+          created_at: string
+          extracted_value: string
+          field_name: string
+          final_value: string
+          id: string
+          intake_package_id: string | null
+          intake_package_version: number
+          publish_event: string
+          reviewer_action: string
+          reviewer_timestamp: string | null
+          reviewer_user_id: string | null
+          section: string
+          source_document_id: string | null
+          source_page: number | null
+          source_snippet: string
+          tenant_id: string
+        }
+        Insert: {
+          case_id: string
+          corrected_value?: string | null
+          created_at?: string
+          extracted_value?: string
+          field_name: string
+          final_value?: string
+          id?: string
+          intake_package_id?: string | null
+          intake_package_version: number
+          publish_event?: string
+          reviewer_action?: string
+          reviewer_timestamp?: string | null
+          reviewer_user_id?: string | null
+          section: string
+          source_document_id?: string | null
+          source_page?: number | null
+          source_snippet?: string
+          tenant_id: string
+        }
+        Update: {
+          case_id?: string
+          corrected_value?: string | null
+          created_at?: string
+          extracted_value?: string
+          field_name?: string
+          final_value?: string
+          id?: string
+          intake_package_id?: string | null
+          intake_package_version?: number
+          publish_event?: string
+          reviewer_action?: string
+          reviewer_timestamp?: string | null
+          reviewer_user_id?: string | null
+          section?: string
+          source_document_id?: string | null
+          source_page?: number | null
+          source_snippet?: string
+          tenant_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "intake_field_provenance_case_id_fkey"
+            columns: ["case_id"]
+            isOneToOne: false
+            referencedRelation: "cases"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "intake_field_provenance_intake_package_id_fkey"
+            columns: ["intake_package_id"]
+            isOneToOne: false
+            referencedRelation: "intake_evaluation_packages"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "intake_field_provenance_source_document_id_fkey"
+            columns: ["source_document_id"]
+            isOneToOne: false
+            referencedRelation: "case_documents"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "intake_field_provenance_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       intake_jobs: {
         Row: {
           case_id: string
