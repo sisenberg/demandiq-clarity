@@ -19,6 +19,7 @@ import InjuryReviewPanel from "./InjuryReviewPanel";
 import IntakeEvaluatePublishPanel from "./IntakeEvaluatePublishPanel";
 import IntakeQualityPanel from "./IntakeQualityPanel";
 import IntakeProvenancePanel from "./IntakeProvenancePanel";
+import CitationSummaryPanel from "./CitationSummaryPanel";
 import {
   User,
   Car,
