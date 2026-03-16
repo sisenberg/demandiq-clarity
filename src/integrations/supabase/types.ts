@@ -4078,6 +4078,101 @@ export type Database = {
           },
         ]
       }
+      parsed_document_pages: {
+        Row: {
+          case_id: string
+          confidence_score: number | null
+          content_blocks: Json
+          created_at: string
+          document_id: string
+          headings: Json
+          id: string
+          image_artifacts: Json
+          is_current: boolean
+          list_regions: Json
+          page_number: number
+          page_text: string
+          parse_version: number
+          processing_run_id: string | null
+          provider: string
+          provider_model: string | null
+          provider_run_metadata: Json
+          table_regions: Json
+          tenant_id: string
+        }
+        Insert: {
+          case_id: string
+          confidence_score?: number | null
+          content_blocks?: Json
+          created_at?: string
+          document_id: string
+          headings?: Json
+          id?: string
+          image_artifacts?: Json
+          is_current?: boolean
+          list_regions?: Json
+          page_number: number
+          page_text?: string
+          parse_version?: number
+          processing_run_id?: string | null
+          provider?: string
+          provider_model?: string | null
+          provider_run_metadata?: Json
+          table_regions?: Json
+          tenant_id: string
+        }
+        Update: {
+          case_id?: string
+          confidence_score?: number | null
+          content_blocks?: Json
+          created_at?: string
+          document_id?: string
+          headings?: Json
+          id?: string
+          image_artifacts?: Json
+          is_current?: boolean
+          list_regions?: Json
+          page_number?: number
+          page_text?: string
+          parse_version?: number
+          processing_run_id?: string | null
+          provider?: string
+          provider_model?: string | null
+          provider_run_metadata?: Json
+          table_regions?: Json
+          tenant_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "parsed_document_pages_case_id_fkey"
+            columns: ["case_id"]
+            isOneToOne: false
+            referencedRelation: "cases"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "parsed_document_pages_document_id_fkey"
+            columns: ["document_id"]
+            isOneToOne: false
+            referencedRelation: "case_documents"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "parsed_document_pages_processing_run_id_fkey"
+            columns: ["processing_run_id"]
+            isOneToOne: false
+            referencedRelation: "document_processing_runs"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "parsed_document_pages_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       phi_readiness_config: {
         Row: {
           ai_retention_confirmed_at: string | null

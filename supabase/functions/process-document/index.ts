@@ -7,6 +7,78 @@ const corsHeaders = {
     "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
 };
 
+// ─── Inline Content Block Detection (mirrors src/lib/parseNormalizer.ts) ──
+// Edge functions can't import from src/, so we inline the heuristic here.
+
+const HEADING_PATTERNS_EDGE = [
+  /^#{1,6}\s+.+/,
+  /^[A-Z][A-Z\s,.\-:]{4,80}$/,
+  /^\d{1,3}\.\s+[A-Z]/,
+  /^[IVXLC]+\.\s+/,
+  /^(?:Section|Article|Part|Chapter)\s+/i,
+];
+const TABLE_LINE_EDGE = /^[|┃┆│].*[|┃┆│]$/;
+const TAB_DELIM_EDGE = /\t.*\t/;
+const LIST_BULLET_EDGE = /^[\s]*[-•●○◦▪▸►]\s+/;
+const LIST_ORDERED_EDGE = /^[\s]*(?:\d+[.)]\s+|[a-z][.)]\s+)/i;
+
+function detectContentBlocksEdge(pageText: string): any[] {
+  const lines = pageText.split("\n");
+  const blocks: any[] = [];
+  let charOffset = 0;
+  let blockIndex = 0;
+  let bufferLines: string[] = [];
+  let bufferStart = 0;
+  let currentType: string | null = null;
+
+  const flush = () => {
+    if (bufferLines.length === 0) return;
+    const text = bufferLines.join("\n");
+    const charEnd = bufferStart + text.length;
+    if (currentType === "table") {
+      const cols = bufferLines[0].includes("|")
+        ? bufferLines[0].split("|").filter(Boolean).length
+        : bufferLines[0].includes("\t") ? bufferLines[0].split("\t").length : 1;
+      blocks.push({ block_index: blockIndex++, block_type: "table", text, char_start: bufferStart, char_end: charEnd, rows: bufferLines.length, cols });
+    } else if (currentType === "list") {
+      blocks.push({ block_index: blockIndex++, block_type: "list", text, char_start: bufferStart, char_end: charEnd, ordered: LIST_ORDERED_EDGE.test(bufferLines[0]), items: bufferLines.length });
+    } else {
+      blocks.push({ block_index: blockIndex++, block_type: "paragraph", text, char_start: bufferStart, char_end: charEnd });
+    }
+    bufferLines = [];
+    currentType = null;
+  };
+
+  for (let i = 0; i < lines.length; i++) {
+    const line = lines[i];
+    const lineStart = charOffset;
+    charOffset += line.length + (i < lines.length - 1 ? 1 : 0);
+    const trimmed = line.trim();
+    if (!trimmed) { flush(); continue; }
+
+    if (trimmed.length <= 120 && HEADING_PATTERNS_EDGE.some((p) => p.test(trimmed))) {
+      flush();
+      const mdMatch = trimmed.match(/^(#{1,6})\s/);
+      const level = mdMatch ? mdMatch[1].length : /^[A-Z][A-Z\s,.\-:]+$/.test(trimmed) ? 1 : 2;
+      blocks.push({ block_index: blockIndex++, block_type: "heading", text: trimmed, char_start: lineStart, char_end: lineStart + line.length, level });
+      continue;
+    }
+    if (TABLE_LINE_EDGE.test(trimmed) || TAB_DELIM_EDGE.test(line)) {
+      if (currentType !== "table") { flush(); currentType = "table"; bufferStart = lineStart; }
+      bufferLines.push(line); continue;
+    }
+    if (LIST_BULLET_EDGE.test(line) || LIST_ORDERED_EDGE.test(line)) {
+      if (currentType !== "list") { flush(); currentType = "list"; bufferStart = lineStart; }
+      bufferLines.push(trimmed); continue;
+    }
+    if (currentType && currentType !== "paragraph") flush();
+    if (!bufferLines.length) { bufferStart = lineStart; currentType = "paragraph"; }
+    bufferLines.push(line);
+  }
+  flush();
+  return blocks;
+}
+
 // ─── OCR Provider Interface ─────────────────────────────
 interface OcrResult {
   text: string;
@@ -306,6 +378,7 @@ Deno.serve(async (req: Request) => {
 
     let pages: { pageNumber: number; text: string; confidence: number }[] = [];
     let extractionMethod = "unknown";
+    let ocrProviderName = "unknown";
 
     if (isPdf) {
       // 6a. Try born-digital extraction first
@@ -313,6 +386,7 @@ Deno.serve(async (req: Request) => {
 
       if (isBornDigital) {
         extractionMethod = "born-digital";
+        ocrProviderName = "born-digital-native";
         const extractedPages = extractBornDigitalPages(fileBytes);
 
         if (extractedPages.length > 0 && extractedPages.some((p) => p.trim().length > 10)) {
@@ -333,6 +407,7 @@ Deno.serve(async (req: Request) => {
       // send it to the AI for cleanup and structuring.
       if (pages.length === 0) {
         extractionMethod = isBornDigital ? "ocr-fallback" : "ocr";
+        ocrProviderName = "lovable-ai-gemini";
 
         if (!lovableApiKey) {
           throw new Error(
@@ -434,6 +509,7 @@ Deno.serve(async (req: Request) => {
     } else if (isImage) {
       // 7. Image files: always OCR
       extractionMethod = "ocr-image";
+      ocrProviderName = "lovable-ai-gemini";
 
       if (!lovableApiKey) {
         throw new Error("LOVABLE_API_KEY not configured for image OCR.");
@@ -511,6 +587,77 @@ Deno.serve(async (req: Request) => {
 
       if (insertErr) {
         throw new Error(`Failed to save pages: ${insertErr.message}`);
+      }
+
+      // 8b. Persist canonical parsed_document_pages
+      try {
+        // Determine next parse_version
+        const { data: prevVersions } = await supabase
+          .from("parsed_document_pages")
+          .select("parse_version")
+          .eq("document_id", doc.id)
+          .order("parse_version", { ascending: false })
+          .limit(1);
+
+        const nextVersion = ((prevVersions?.[0]?.parse_version as number) ?? 0) + 1;
+
+        // Mark previous versions as non-current
+        if (nextVersion > 1) {
+          await supabase
+            .from("parsed_document_pages")
+            .update({ is_current: false })
+            .eq("document_id", doc.id)
+            .eq("is_current", true);
+        }
+
+        // Build canonical pages with heuristic content block detection
+        const canonicalPages = pages.map((p) => {
+          const blocks = detectContentBlocksEdge(p.text);
+          const headings = blocks.filter((b: any) => b.block_type === "heading").map((b: any) => ({
+            text: b.text, level: b.level, block_index: b.block_index,
+            char_start: b.char_start, char_end: b.char_end,
+          }));
+          const tableRegions = blocks.filter((b: any) => b.block_type === "table").map((b: any) => ({
+            block_index: b.block_index, rows: b.rows, cols: b.cols,
+            char_start: b.char_start, char_end: b.char_end, preview: b.text.substring(0, 120),
+          }));
+          const listRegions = blocks.filter((b: any) => b.block_type === "list").map((b: any) => ({
+            block_index: b.block_index, ordered: b.ordered, items: b.items,
+            char_start: b.char_start, char_end: b.char_end,
+          }));
+
+          return {
+            tenant_id: doc.tenant_id,
+            case_id: doc.case_id,
+            document_id: doc.id,
+            parse_version: nextVersion,
+            page_number: p.pageNumber,
+            page_text: p.text,
+            content_blocks: blocks,
+            headings,
+            table_regions: tableRegions,
+            list_regions: listRegions,
+            image_artifacts: [],
+            provider: ocrProviderName,
+            provider_model: null,
+            provider_run_metadata: { extraction_method: extractionMethod },
+            confidence_score: p.confidence,
+            is_current: true,
+            processing_run_id: null,
+          };
+        });
+
+        const { error: canonErr } = await supabase
+          .from("parsed_document_pages")
+          .insert(canonicalPages);
+        if (canonErr) {
+          console.error("[process-document] Canonical page insert failed:", canonErr.message);
+        } else {
+          console.log(`[process-document] Persisted ${canonicalPages.length} canonical pages (v${nextVersion})`);
+        }
+      } catch (canonErr) {
+        // Non-fatal: raw pages are still saved; canonical is best-effort
+        console.error("[process-document] Canonical normalization error:", canonErr);
       }
     }
 
