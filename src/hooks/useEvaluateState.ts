@@ -41,14 +41,42 @@ export function deriveEvaluateState(
   }
 }
 
-/** Start EvaluateIQ for a case — creates/updates module_completions record */
+/** Start EvaluateIQ for a case — creates/updates module_completions record.
+ *  Pre-flight: verifies a published DemandPackage exists and stores the
+ *  source package reference in the evaluation_cases record.
+ */
 export function useStartEvaluate() {
   const { user, tenantId } = useAuth();
   const qc = useQueryClient();
 
   return useMutation({
-    mutationFn: async (caseId: string) => {
+    mutationFn: async ({
+      caseId,
+      demandPackageId,
+      demandPackageVersion,
+    }: {
+      caseId: string;
+      demandPackageId?: string | null;
+      demandPackageVersion?: number | null;
+    }) => {
       if (!user || !tenantId) throw new Error("Not authenticated");
+
+      // Pre-flight: verify published DemandPackage exists
+      const { data: publishedPkg } = await (supabase
+        .from("intake_evaluation_packages") as any)
+        .select("id, version")
+        .eq("case_id", caseId)
+        .eq("package_status", "published_to_evaluateiq")
+        .order("version", { ascending: false })
+        .limit(1)
+        .maybeSingle();
+
+      const pkgId = demandPackageId ?? publishedPkg?.id ?? null;
+      const pkgVersion = demandPackageVersion ?? publishedPkg?.version ?? null;
+
+      if (!pkgId) {
+        throw new Error("Cannot start EvaluateIQ: no published DemandPackage found for this case.");
+      }
 
       // Check for existing record
       const { data: existing } = await supabase
@@ -85,6 +113,16 @@ export function useStartEvaluate() {
       }) as any);
       if (evaluationCaseError) throw evaluationCaseError;
 
+      // Store source DemandPackage reference on evaluation_cases
+      await (supabase.from("evaluation_cases") as any)
+        .update({
+          source_demand_package_id: pkgId,
+          source_demand_package_version: pkgVersion,
+          updated_at: new Date().toISOString(),
+        })
+        .eq("case_id", caseId)
+        .eq("tenant_id", tenantId);
+
       // Audit event
       await (supabase.from("audit_events") as any).insert({
         actor_user_id: user.id,
@@ -93,11 +131,17 @@ export function useStartEvaluate() {
         entity_type: "module_completion",
         entity_id: caseId,
         case_id: caseId,
-        after_value: { module_id: "evaluateiq", status: "in_progress" },
+        after_value: {
+          module_id: "evaluateiq",
+          status: "in_progress",
+          source_demand_package_id: pkgId,
+          source_demand_package_version: pkgVersion,
+        },
       });
     },
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["module-completion"] });
+      qc.invalidateQueries({ queryKey: ["demand-package"] });
       toast.success("EvaluateIQ started");
     },
     onError: (err: Error) => toast.error(err.message),

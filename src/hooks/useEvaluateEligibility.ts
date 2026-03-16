@@ -3,13 +3,14 @@ import { useModuleCompletion } from "@/hooks/useModuleCompletion";
 import { useAuth } from "@/contexts/AuthContext";
 import { isEntitlementActive } from "@/hooks/useModuleEntitlements";
 import { ModuleCompletionStatus, ModuleId } from "@/types";
+import { useDemandPackageLaunchEligibility } from "@/hooks/useDemandPackage";
 import type { EvaluateEligibility } from "@/types/evaluateiq";
 
 /**
  * Determines whether a case is eligible for EvaluateIQ.
- * 
- * Preferred input: latest completed ReviewPackage v1
- * Fallback: latest completed DemandPackage v1 (when ReviewerIQ not present/completed)
+ *
+ * Primary gate: a published DemandPackage must exist.
+ * Preferred enrichment: ReviewerIQ completion (optional, not gating).
  */
 export function useEvaluateEligibility(caseId: string | undefined): EvaluateEligibility {
   const { entitlements } = useAuth();
@@ -17,7 +18,9 @@ export function useEvaluateEligibility(caseId: string | undefined): EvaluateElig
   const hasReviewerIQ = isEntitlementActive(entitlements, ModuleId.ReviewerIQ);
 
   const { data: reviewerCompletion } = useModuleCompletion(caseId, "revieweriq");
-  const { data: demandCompletion } = useModuleCompletion(caseId, "demandiq");
+
+  // Primary gate: published DemandPackage
+  const demandPkgEligibility = useDemandPackageLaunchEligibility(caseId);
 
   return useMemo<EvaluateEligibility>(() => {
     if (!hasEvaluateIQ) {
@@ -28,21 +31,36 @@ export function useEvaluateEligibility(caseId: string | undefined): EvaluateElig
       return { eligible: false, inputSource: null, sourceVersion: null, blockerReason: "No case selected." };
     }
 
-    // Preferred: ReviewerIQ completed
+    // Must have a published DemandPackage — this is the hard gate
+    if (!demandPkgEligibility.eligible) {
+      return {
+        eligible: false,
+        inputSource: null,
+        sourceVersion: null,
+        blockerReason: demandPkgEligibility.blockers[0] || "A published DemandPackage is required before starting evaluation.",
+      };
+    }
+
+    // Preferred: ReviewerIQ completed → use as input source (optional enrichment)
     if (hasReviewerIQ && reviewerCompletion?.status === ModuleCompletionStatus.Completed) {
-      return { eligible: true, inputSource: "revieweriq", sourceVersion: reviewerCompletion.version, blockerReason: null };
+      return {
+        eligible: true,
+        inputSource: "revieweriq",
+        sourceVersion: reviewerCompletion.version,
+        blockerReason: null,
+        demandPackageVersion: demandPkgEligibility.package_version,
+        demandPackageId: demandPkgEligibility.package_id,
+      };
     }
 
-    // EvaluateIQ must still work from DemandIQ alone when ReviewerIQ is absent or incomplete.
-    if (demandCompletion?.status === ModuleCompletionStatus.Completed) {
-      return { eligible: true, inputSource: "demandiq", sourceVersion: demandCompletion.version, blockerReason: null };
-    }
-
+    // Fallback: DemandPackage alone is sufficient
     return {
-      eligible: false,
-      inputSource: null,
-      sourceVersion: null,
-      blockerReason: "DemandIQ must be completed before starting evaluation.",
+      eligible: true,
+      inputSource: "demandiq",
+      sourceVersion: demandPkgEligibility.package_version,
+      blockerReason: null,
+      demandPackageVersion: demandPkgEligibility.package_version,
+      demandPackageId: demandPkgEligibility.package_id,
     };
-  }, [hasEvaluateIQ, hasReviewerIQ, caseId, reviewerCompletion, demandCompletion]);
+  }, [hasEvaluateIQ, hasReviewerIQ, caseId, reviewerCompletion, demandPkgEligibility]);
 }
