@@ -1464,6 +1464,8 @@ export type Database = {
           created_at: string
           id: string
           module_status: Database["public"]["Enums"]["evaluation_case_status"]
+          source_demand_package_id: string | null
+          source_demand_package_version: number | null
           started_at: string | null
           started_by: string | null
           tenant_id: string
@@ -1479,6 +1481,8 @@ export type Database = {
           created_at?: string
           id?: string
           module_status?: Database["public"]["Enums"]["evaluation_case_status"]
+          source_demand_package_id?: string | null
+          source_demand_package_version?: number | null
           started_at?: string | null
           started_by?: string | null
           tenant_id: string
@@ -1494,6 +1498,8 @@ export type Database = {
           created_at?: string
           id?: string
           module_status?: Database["public"]["Enums"]["evaluation_case_status"]
+          source_demand_package_id?: string | null
+          source_demand_package_version?: number | null
           started_at?: string | null
           started_by?: string | null
           tenant_id?: string
@@ -1526,6 +1532,13 @@ export type Database = {
             columns: ["case_id"]
             isOneToOne: false
             referencedRelation: "cases"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "evaluation_cases_source_demand_package_id_fkey"
+            columns: ["source_demand_package_id"]
+            isOneToOne: false
+            referencedRelation: "intake_evaluation_packages"
             referencedColumns: ["id"]
           },
           {
