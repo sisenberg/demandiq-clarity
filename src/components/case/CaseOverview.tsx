@@ -155,6 +155,9 @@ const CaseOverview = ({ caseData, documents, onNavigate }: CaseOverviewProps) =>
           tenantId={caseData.tenant_id}
         />
 
+        {/* ── Field Provenance Audit Trail ── */}
+        <IntakeProvenancePanel caseId={caseData.id} />
+
         {/* ── Row 1: Case Snapshot + Key Metrics ── */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
           {/* Case / Claimant Summary */}
