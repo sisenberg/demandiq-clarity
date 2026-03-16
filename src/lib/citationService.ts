@@ -39,6 +39,7 @@ export async function createEvidenceAnchor(
       anchor_entity_type: params.anchorEntityType ?? null,
       anchor_entity_id: params.anchorEntityId ?? null,
       anchor_module: params.anchorModule ?? null,
+      confidence: params.confidence ?? null,
       created_by: userId,
     })
     .select()
