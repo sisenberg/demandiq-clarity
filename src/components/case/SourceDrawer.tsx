@@ -640,7 +640,15 @@ export const SourceDrawer = () => {
 
         {/* Content */}
         <div className="flex-1 overflow-y-auto">
-          {state.page ? (
+          {state.loading ? (
+            <div className="p-5 text-center pt-16">
+              <div className="h-12 w-12 rounded-xl bg-accent/60 mx-auto flex items-center justify-center mb-3.5 animate-pulse">
+                <BookOpen className="h-6 w-6 text-muted-foreground/40" />
+              </div>
+              <p className="text-[13px] font-semibold text-foreground mb-1">Loading source…</p>
+              <p className="text-[11px] text-muted-foreground">Resolving citation from database</p>
+            </div>
+          ) : state.page ? (
             <div className="p-5">
               {/* Document meta */}
               <div className="flex items-center gap-2 mb-4">

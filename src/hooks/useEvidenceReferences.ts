@@ -77,6 +77,12 @@ export function useCreateEvidenceRef() {
       characterStart,
       characterEnd,
       evidenceType,
+      chunkId,
+      parseVersion,
+      processingRunId,
+      anchorEntityType,
+      anchorEntityId,
+      anchorModule,
     }: {
       caseId: string;
       documentId: string;
@@ -85,6 +91,12 @@ export function useCreateEvidenceRef() {
       characterStart?: number;
       characterEnd?: number;
       evidenceType: EvidenceType;
+      chunkId?: string;
+      parseVersion?: number;
+      processingRunId?: string;
+      anchorEntityType?: string;
+      anchorEntityId?: string;
+      anchorModule?: string;
     }) => {
       if (!tenantId || !user) throw new Error("Not authenticated");
       const { data, error } = await (supabase.from("evidence_references") as any)
@@ -97,6 +109,12 @@ export function useCreateEvidenceRef() {
           character_start: characterStart ?? null,
           character_end: characterEnd ?? null,
           evidence_type: evidenceType,
+          chunk_id: chunkId ?? null,
+          parse_version: parseVersion ?? null,
+          processing_run_id: processingRunId ?? null,
+          anchor_entity_type: anchorEntityType ?? null,
+          anchor_entity_id: anchorEntityId ?? null,
+          anchor_module: anchorModule ?? null,
           created_by: user.id,
         })
         .select()
