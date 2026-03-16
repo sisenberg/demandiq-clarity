@@ -117,7 +117,9 @@ const CaseOverview = ({ caseData, documents, onNavigate }: CaseOverviewProps) =>
           demandDocumentId={documents.find((d) => d.document_type === "demand_letter")?.id}
         />
 
-        {/* ── Party Normalization ── */}
+        {/* ── Demand Chronology ── */}
+        <DemandChronologyPanel caseId={caseData.id} />
+
         <PartyNormalizationPanel caseId={caseData.id} />
 
         {/* ── Medical Specials ── */}
