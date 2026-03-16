@@ -92,7 +92,8 @@ export function useIntakeWorkflow(
 
     const state = computeIntakeWorkflowState(input);
     const steps = computePipelineSteps(input);
+    const simplifiedSteps = computeSimplifiedPipeline(input);
 
-    return { state, steps, input, isLoading };
+    return { state, steps, simplifiedSteps, input, isLoading };
   }, [documents, pkg, pkgLoading, validation, valLoading, counts, countsLoading]);
 }

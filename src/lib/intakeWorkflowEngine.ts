@@ -123,3 +123,43 @@ export function computePipelineSteps(input: IntakeWorkflowInput): PipelineStepSt
     { step: "publish", label: "Publish to EvaluateIQ", status: s(input.packageStatus === "published_to_evaluateiq") },
   ];
 }
+
+// ─── Simplified 8-Step Pipeline ─────────────────────────
+
+export type SimplifiedPipelineStep =
+  | "documents_uploaded"
+  | "ocr_processed"
+  | "demand_identified"
+  | "bills_extracted"
+  | "treatment_timeline_built"
+  | "injuries_extracted"
+  | "demand_record_created"
+  | "ready_for_evaluateiq";
+
+export interface SimplifiedStepStatus {
+  step: SimplifiedPipelineStep;
+  label: string;
+  status: "complete" | "in_progress" | "pending";
+  detail?: string;
+}
+
+export function computeSimplifiedPipeline(input: IntakeWorkflowInput): SimplifiedStepStatus[] {
+  const s = (done: boolean, inProgress?: boolean): SimplifiedStepStatus["status"] =>
+    done ? "complete" : inProgress ? "in_progress" : "pending";
+
+  const hasUploads = input.totalDocuments > 0;
+  const ocrDone = hasUploads && input.ocrCompleteCount >= input.totalDocuments;
+  const allVerified = input.demandVerified && input.specialsVerified && input.treatmentVerified && input.injuryVerified;
+  const demandRecordReady = allVerified && !input.hasBlockers;
+
+  return [
+    { step: "documents_uploaded", label: "Documents Uploaded", status: s(hasUploads), detail: hasUploads ? `${input.totalDocuments} files` : undefined },
+    { step: "ocr_processed", label: "OCR Processed", status: s(ocrDone, input.processingInProgress), detail: ocrDone ? `${input.ocrCompleteCount} processed` : input.processingInProgress ? "Processing…" : undefined },
+    { step: "demand_identified", label: "Demand Identified", status: s(input.hasDemand) },
+    { step: "bills_extracted", label: "Bills Extracted", status: s(input.specialsCount > 0), detail: input.specialsCount > 0 ? `${input.specialsCount} records` : undefined },
+    { step: "treatment_timeline_built", label: "Treatment Timeline Built", status: s(input.treatmentCount > 0), detail: input.treatmentCount > 0 ? `${input.treatmentCount} events` : undefined },
+    { step: "injuries_extracted", label: "Injuries Extracted", status: s(input.injuryCount > 0), detail: input.injuryCount > 0 ? `${input.injuryCount} records` : undefined },
+    { step: "demand_record_created", label: "Demand Record Created", status: s(demandRecordReady, input.hasDemand && !demandRecordReady), detail: demandRecordReady ? "Verified" : undefined },
+    { step: "ready_for_evaluateiq", label: "Ready for EvaluateIQ", status: s(input.packageStatus === "published_to_evaluateiq") },
+  ];
+}
