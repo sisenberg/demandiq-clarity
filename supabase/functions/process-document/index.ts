@@ -402,10 +402,6 @@ Deno.serve(async (req: Request) => {
               text: cleanedText,
               confidence: 0.8,
             }];
-          }
-        }
-          }
-        }
       }
     } else if (isImage) {
       // 7. Image files: always OCR
