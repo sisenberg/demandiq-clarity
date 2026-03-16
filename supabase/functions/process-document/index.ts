@@ -390,24 +390,29 @@ Deno.serve(async (req: Request) => {
         const extractedPages = extractBornDigitalPages(fileBytes);
 
         if (extractedPages.length > 0 && extractedPages.some((p) => p.trim().length > 10)) {
-          pages = extractedPages.map((text, i) => ({
-            pageNumber: i + 1,
-            text: text.trim(),
-            confidence: 0.95,
-          }));
+          // Quality gate: check if extracted text is actually readable
+          const combinedText = extractedPages.join(" ");
+          if (!isGarbageText(combinedText)) {
+            pages = extractedPages.map((text, i) => ({
+              pageNumber: i + 1,
+              text: text.trim(),
+              confidence: 0.95,
+            }));
+          } else {
+            console.log("[process-document] Born-digital text failed quality gate, falling back to native PDF OCR");
+            extractionMethod = "ocr-fallback";
+          }
         } else {
           // Born-digital detection was wrong or text too sparse → fall to OCR
           extractionMethod = "ocr-fallback";
         }
       }
 
-      // 6b. If no text extracted via born-digital, use AI text extraction
-      // NOTE: Gemini vision API does not accept raw PDF binary via image_url.
-      // Instead we extract whatever raw text we can from the PDF stream and
-      // send it to the AI for cleanup and structuring.
+      // 6b. If no text extracted via born-digital, use Gemini native PDF vision OCR.
+      // Sends the full PDF binary as inline_data with application/pdf MIME type.
       if (pages.length === 0) {
         extractionMethod = isBornDigital ? "ocr-fallback" : "ocr";
-        ocrProviderName = "lovable-ai-gemini";
+        ocrProviderName = "lovable-ai-gemini-pdf-native";
 
         if (!lovableApiKey) {
           throw new Error(
@@ -415,12 +420,9 @@ Deno.serve(async (req: Request) => {
           );
         }
 
-        // Extract ALL readable text strings from the PDF (broader regex)
-        const rawPdfText = extractAllPdfText(fileBytes);
-
-        if (rawPdfText.trim().length < 20) {
-          // Truly scanned PDF with no extractable text — mark for manual review
-          extractionMethod = "scanned-pdf-no-text";
+        // Cap PDF size for AI processing (20MB limit)
+        const MAX_PDF_SIZE = 20_000_000;
+        if (fileBytes.length > MAX_PDF_SIZE) {
           await supabase
             .from("case_documents")
             .update({
@@ -435,22 +437,25 @@ Deno.serve(async (req: Request) => {
             .update({
               status: "failed",
               completed_at: new Date().toISOString(),
-              error_message: "Scanned PDF with no extractable text. Image-based OCR for PDFs is not yet supported.",
+              error_message: `PDF too large for OCR processing (${(fileBytes.length / 1_000_000).toFixed(1)}MB, max ${MAX_PDF_SIZE / 1_000_000}MB).`,
             })
             .eq("id", job_id);
 
           return new Response(
             JSON.stringify({
               success: false,
-              extraction_method: extractionMethod,
-              error: "Scanned PDF detected. Image-based OCR for PDFs is not yet supported. Please upload a born-digital (text-based) PDF.",
+              extraction_method: "pdf-too-large",
+              error: "PDF exceeds maximum size for OCR processing.",
             }),
             { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
           );
         }
 
-        // Send raw text to AI for cleanup and page structuring
-        const cleanupResponse = await fetch(
+        // Encode full PDF as base64 using chunked approach (avoids stack overflow)
+        console.log(`[process-document] Sending ${(fileBytes.length / 1_000_000).toFixed(2)}MB PDF to Gemini native vision`);
+        const pdfBase64 = uint8ArrayToBase64(fileBytes);
+
+        const visionResponse = await fetch(
           "https://ai.gateway.lovable.dev/v1/chat/completions",
           {
             method: "POST",
@@ -463,47 +468,70 @@ Deno.serve(async (req: Request) => {
               messages: [
                 {
                   role: "system",
-                  content: "You are a document text extraction engine. You receive raw text extracted from a PDF document. Clean it up, fix encoding artifacts, restore paragraph structure, and return the readable text. Preserve all content faithfully — do not summarize or omit anything. If you can identify page boundaries, separate pages with the marker: --- Page N ---",
+                  content: "You are a precise document OCR engine. Extract ALL text visible in this PDF document exactly as written. Preserve paragraph breaks with double newlines. Separate each page with the marker on its own line: --- Page N --- (where N is the page number starting from 1). Do not summarize, interpret, or add commentary. Output only the raw text content from the document.",
                 },
                 {
                   role: "user",
-                  content: `Clean up and structure this raw PDF text extraction:\n\n${rawPdfText.substring(0, 30000)}`,
+                  content: [
+                    {
+                      type: "text",
+                      text: "Extract all text from every page of this PDF document. Return ONLY the raw text, preserving layout. Separate pages with --- Page N --- markers.",
+                    },
+                    {
+                      type: "image_url",
+                      image_url: {
+                        url: `data:application/pdf;base64,${pdfBase64}`,
+                      },
+                    },
+                  ],
                 },
               ],
-              max_tokens: 8192,
+              max_tokens: 16384,
               temperature: 0,
             }),
           }
         );
 
-        if (!cleanupResponse.ok) {
-          const errBody = await cleanupResponse.text();
-          console.error("[process-document] AI cleanup failed:", cleanupResponse.status, errBody.substring(0, 300));
-          // Fall back to raw text
-          pages = [{
-            pageNumber: 1,
-            text: rawPdfText.substring(0, 50000),
-            confidence: 0.5,
-          }];
+        if (!visionResponse.ok) {
+          const errBody = await visionResponse.text();
+          console.error("[process-document] Native PDF vision failed:", visionResponse.status, errBody.substring(0, 300));
+          
+          // Last resort: try raw regex extraction
+          const rawPdfText = extractAllPdfText(fileBytes);
+          if (rawPdfText.trim().length > 20 && !isGarbageText(rawPdfText)) {
+            pages = [{
+              pageNumber: 1,
+              text: rawPdfText.substring(0, 50000),
+              confidence: 0.5,
+            }];
+            extractionMethod = "regex-fallback";
+          } else {
+            throw new Error(`PDF OCR failed: AI vision returned [${visionResponse.status}]. No fallback text available.`);
+          }
         } else {
-          const cleanupData = await cleanupResponse.json();
-          const cleanedText = cleanupData.choices?.[0]?.message?.content?.trim() || rawPdfText;
+          const visionData = await visionResponse.json();
+          const extractedText = visionData.choices?.[0]?.message?.content?.trim() || "";
+
+          if (!extractedText || extractedText.length < 20) {
+            throw new Error("PDF OCR returned empty result from AI vision.");
+          }
 
           // Split by page markers if present
-          const pageTexts = cleanedText.split(/\n---\s*Page\s*\d+\s*---\n/i);
+          const pageTexts = extractedText.split(/\n?---\s*Page\s*\d+\s*---\n?/i);
           if (pageTexts.length > 1) {
             pages = pageTexts.filter((t: string) => t.trim()).map((text: string, i: number) => ({
               pageNumber: i + 1,
               text: text.trim(),
-              confidence: 0.8,
+              confidence: 0.85,
             }));
           } else {
             pages = [{
               pageNumber: 1,
-              text: cleanedText,
-              confidence: 0.8,
+              text: extractedText,
+              confidence: 0.85,
             }];
           }
+          console.log(`[process-document] Native PDF vision extracted ${pages.length} page(s), ${extractedText.length} chars`);
         }
       }
     } else if (isImage) {
