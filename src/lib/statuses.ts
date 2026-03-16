@@ -293,3 +293,13 @@ export function isIntakeComplete(status: string): boolean {
 export function isDocumentReady(status: string): boolean {
   return status === "complete" || status === "extracted";
 }
+
+/** Get the extraction workflow for a document type */
+export function getWorkflowRoute(docType: string): ExtractionWorkflow {
+  return WORKFLOW_ROUTING[docType as DocumentType] ?? "general_review";
+}
+
+/** Get document type label with safe fallback */
+export function getDocumentTypeLabel(docType: string): string {
+  return DOCUMENT_TYPE_LABEL[docType as DocumentType] ?? docType.replace(/_/g, " ");
+}

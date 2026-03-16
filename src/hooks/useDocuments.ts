@@ -15,11 +15,13 @@ export interface DocumentRow {
   page_count: number | null;
   document_status: string;
   document_type: string;
+  predicted_type: string | null;
   pipeline_stage: string;
   intake_status: string;
   file_hash: string | null;
   extracted_text: string | null;
   uploaded_by: string;
+  source_module: string;
   extracted_at: string | null;
   created_at: string;
   updated_at: string;
