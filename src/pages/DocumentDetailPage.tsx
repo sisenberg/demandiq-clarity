@@ -9,6 +9,7 @@ import { hasPermission } from "@/lib/permissions";
 import { useTriggerProcessing } from "@/hooks/useJobs";
 import { useCreateIntakeJob, useRetryIntakeJob } from "@/hooks/useIntakeJobs";
 import ProcessingPipeline from "@/components/case/ProcessingPipeline";
+import DocumentProcessingStatePanel from "@/components/case/DocumentProcessingStatePanel";
 import JobsPanel from "@/components/case/JobsPanel";
 import DocumentTypeTag from "@/components/case/DocumentTypeTag";
 import { INTAKE_STATUS_LABEL, INTAKE_JOB_TYPE_LABEL, FACT_TYPE_LABEL } from "@/types/intake";
