@@ -17,12 +17,12 @@ const corsHeaders = {
  */
 
 const EXTRACTION_ROUTES: Record<string, string[]> = {
-  demand_letter: ["extract-demand"],
+  demand_letter: ["extract-demand", "extract-specials"],
   medical_bill: ["extract-specials"],
   itemized_statement: ["extract-specials"],
   billing_record: ["extract-specials"],
-  medical_record: ["extract-treatment-timeline", "extract-injuries"],
-  narrative_report: ["extract-treatment-timeline", "extract-injuries"],
+  medical_record: ["extract-treatment-timeline", "extract-injuries", "extract-specials"],
+  narrative_report: ["extract-treatment-timeline", "extract-injuries", "extract-specials"],
   imaging_report: ["extract-injuries"],
   wage_loss_document: ["extract-specials"],
 };
