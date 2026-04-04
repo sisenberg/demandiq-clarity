@@ -51,7 +51,7 @@ const VALID_TRANSITIONS: Record<ProcessingState, ProcessingState[]> = {
   indexed: ["extraction_ready", "failed"],
   extraction_ready: [],
   // From failed, allow restart to queued (reprocess)
-  failed: ["queued", "uploaded"],
+  failed: ["queued", "upload_received"],
 };
 
 export function isValidTransition(from: ProcessingState, to: ProcessingState): boolean {
