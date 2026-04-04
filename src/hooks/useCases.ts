@@ -53,12 +53,9 @@ export function useCase(caseId: string | undefined) {
 
 export interface CreateCaseInput {
   claim_number: string;
-  external_reference: string;
   claimant: string;
-  insured: string;
   date_of_loss: string;
   jurisdiction_state: string;
-  priority: "low" | "normal" | "high" | "urgent";
   assigned_to?: string | null;
 }
 
