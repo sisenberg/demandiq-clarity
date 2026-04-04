@@ -358,6 +358,7 @@ const VARIANT_ACCENT: Record<string, string> = {
 
 // ─── Main Component ──────────────────────────────────
 const ClaimAssessmentTab = () => {
+  const { hasData } = useCasePackage();
   const [expandedSections, setExpandedSections] = useState<Set<string>>(
     new Set(["injury-assessment", "causation-support", "causation-challenges", "strengths", "weaknesses"])
   );
