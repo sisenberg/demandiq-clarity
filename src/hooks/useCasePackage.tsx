@@ -56,7 +56,7 @@ const EMPTY_DEMAND_IQ: DemandIQOutput = {
   provider_summary: [],
   demand_package: [],
   demand_summary: EMPTY_DEMAND_SUMMARY,
-  review_status: ReviewStatus.Pending,
+  review_status: ReviewStatus.Draft,
   last_edited_by: "",
   last_edited_at: "",
 };
