@@ -3,6 +3,7 @@ import { useCasePackage } from "@/hooks/useCasePackage";
 import { useSourceDrawer } from "./SourceDrawer";
 import { CitationBadge, EvidenceStatement, type CitationSource } from "./EvidenceCitation";
 import { getBillingSummary, getTreatmentStats } from "@/data/mock/casePackage";
+import CaseEmptyUploadCTA from "./CaseEmptyUploadCTA";
 import type { CaseRow } from "@/hooks/useCases";
 import type { DocumentRow } from "@/hooks/useDocuments";
 import { isDocumentReady } from "@/lib/statuses";
