@@ -178,12 +178,12 @@ export function useUploadDocuments() {
             triggerReason: "initial",
           });
 
-          // Log initial state transition
+          // Log initial state transition (use "upload_received" to match pipeline_stage enum)
           await transitionDocumentState({
             documentId: data.id,
             tenantId,
             fromStatus: null,
-            toStatus: "uploaded",
+            toStatus: "upload_received" as any,
             triggeredBy: user.id,
             processingRunId: run.id,
           });

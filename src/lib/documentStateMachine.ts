@@ -12,7 +12,7 @@ import { supabase } from "@/integrations/supabase/client";
 // ═══════════════════════════════════════════════════════
 
 export const PROCESSING_STATES = [
-  "uploaded",
+  "upload_received",
   "validated",
   "queued",
   "processing",
