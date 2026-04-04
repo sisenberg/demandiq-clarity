@@ -149,8 +149,9 @@ export function computeSimplifiedPipeline(input: IntakeWorkflowInput): Simplifie
 
   const hasUploads = input.totalDocuments > 0;
   const ocrDone = hasUploads && input.ocrCompleteCount >= input.totalDocuments;
+  const hasExtractions = input.specialsCount > 0 || input.treatmentCount > 0 || input.injuryCount > 0;
+  const demandRecordReady = input.hasDemand && hasExtractions && !input.hasBlockers;
   const allVerified = input.demandVerified && input.specialsVerified && input.treatmentVerified && input.injuryVerified;
-  const demandRecordReady = allVerified && !input.hasBlockers;
 
   return [
     { step: "documents_uploaded", label: "Documents Uploaded", status: s(hasUploads), detail: hasUploads ? `${input.totalDocuments} files` : undefined },
@@ -159,7 +160,7 @@ export function computeSimplifiedPipeline(input: IntakeWorkflowInput): Simplifie
     { step: "bills_extracted", label: "Bills Extracted", status: s(input.specialsCount > 0), detail: input.specialsCount > 0 ? `${input.specialsCount} records` : undefined },
     { step: "treatment_timeline_built", label: "Treatment Timeline Built", status: s(input.treatmentCount > 0), detail: input.treatmentCount > 0 ? `${input.treatmentCount} events` : undefined },
     { step: "injuries_extracted", label: "Injuries Extracted", status: s(input.injuryCount > 0), detail: input.injuryCount > 0 ? `${input.injuryCount} records` : undefined },
-    { step: "demand_record_created", label: "Demand Record Created", status: s(demandRecordReady, input.hasDemand && !demandRecordReady), detail: demandRecordReady ? "Verified" : undefined },
-    { step: "ready_for_evaluateiq", label: "Ready for EvaluateIQ", status: s(input.packageStatus === "published_to_evaluateiq") },
+    { step: "demand_record_created", label: "Demand Record Created", status: s(demandRecordReady, input.hasDemand && !demandRecordReady), detail: demandRecordReady ? "Complete" : undefined },
+    { step: "ready_for_evaluateiq", label: "Ready for EvaluateIQ", status: s(input.packageStatus === "published_to_evaluateiq", allVerified && !input.hasBlockers && input.packageStatus !== "published_to_evaluateiq") },
   ];
 }
