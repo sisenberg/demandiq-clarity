@@ -92,15 +92,14 @@ Deno.serve(async (req: Request) => {
         .map((j: any) => j.job_type)
     );
 
-    // 3. Invoke extraction functions sequentially
+    // 3. Invoke extraction functions IN PARALLEL to avoid timeout
     const results: Array<{ fn: string; status: string; data?: any; error?: string }> = [];
 
-    for (const fn of extractionFunctions) {
+    const extractionPromises = extractionFunctions.map(async (fn) => {
       const jobType = JOB_TYPE_MAP[fn];
       if (jobType && completedJobTypes.has(jobType)) {
         console.log(`[orchestrate-intake] Skipping ${fn} — already completed`);
-        results.push({ fn, status: "skipped" });
-        continue;
+        return { fn, status: "skipped" } as const;
       }
 
       // Update job status to running
@@ -128,7 +127,6 @@ Deno.serve(async (req: Request) => {
           const errText = await fnResponse.text();
           console.error(`[orchestrate-intake] ${fn} failed:`, fnResponse.status, errText);
 
-          // Mark job as failed
           if (jobType) {
             await supabase
               .from("intake_jobs")
@@ -142,13 +140,12 @@ Deno.serve(async (req: Request) => {
               .in("status", ["queued", "running"]);
           }
 
-          results.push({ fn, status: "failed", error: `${fnResponse.status}` });
-          continue;
+          return { fn, status: "failed", error: `${fnResponse.status}` };
         }
 
         const fnData = await fnResponse.json();
         console.log(`[orchestrate-intake] ${fn} succeeded:`, JSON.stringify(fnData).slice(0, 200));
-        results.push({ fn, status: "success", data: fnData });
+        return { fn, status: "success", data: fnData };
       } catch (err) {
         const errMsg = err instanceof Error ? err.message : "Unknown error";
         console.error(`[orchestrate-intake] ${fn} exception:`, errMsg);
@@ -166,9 +163,11 @@ Deno.serve(async (req: Request) => {
             .in("status", ["queued", "running"]);
         }
 
-        results.push({ fn, status: "error", error: errMsg });
+        return { fn, status: "error", error: errMsg };
       }
-    }
+    });
+
+    results.push(...await Promise.all(extractionPromises));
 
     // 4. After demand extraction: auto-activate first demand + sync case fields
     if (docType === "demand_letter") {
