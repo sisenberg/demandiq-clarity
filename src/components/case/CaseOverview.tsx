@@ -95,9 +95,9 @@ interface CaseOverviewProps {
 }
 
 const CaseOverview = ({ caseData, documents, onNavigate }: CaseOverviewProps) => {
-  const { pkg } = useCasePackage();
-  const billing = getBillingSummary(pkg);
-  const stats = getTreatmentStats(pkg);
+  const { pkg, hasData } = useCasePackage();
+  const billing = hasData ? getBillingSummary(pkg) : { totalBilled: 0, totalAdjusted: 0, totalPaid: 0 };
+  const stats = hasData ? getTreatmentStats(pkg) : { providers: 0, totalVisits: 0, ptSessions: 0, injections: 0 };
   const [selectedTimelineEvent, setSelectedTimelineEvent] = useState<string | null>(null);
 
   const completeDocs = documents.filter(
