@@ -3,6 +3,7 @@ import { useCasePackage } from "@/hooks/useCasePackage";
 import { useSourceDrawer } from "./SourceDrawer";
 import { CitationBadge, EvidenceStatement, type CitationSource } from "./EvidenceCitation";
 import { getBillingSummary, getTreatmentStats } from "@/data/mock/casePackage";
+import CaseEmptyUploadCTA from "./CaseEmptyUploadCTA";
 import type { CaseRow } from "@/hooks/useCases";
 import type { DocumentRow } from "@/hooks/useDocuments";
 import { isDocumentReady } from "@/lib/statuses";
@@ -94,9 +95,9 @@ interface CaseOverviewProps {
 }
 
 const CaseOverview = ({ caseData, documents, onNavigate }: CaseOverviewProps) => {
-  const { pkg } = useCasePackage();
-  const billing = getBillingSummary(pkg);
-  const stats = getTreatmentStats(pkg);
+  const { pkg, hasData } = useCasePackage();
+  const billing = hasData ? getBillingSummary(pkg) : { totalBilled: 0, totalAdjusted: 0, totalPaid: 0 };
+  const stats = hasData ? getTreatmentStats(pkg) : { providers: 0, totalVisits: 0, ptSessions: 0, injections: 0 };
   const [selectedTimelineEvent, setSelectedTimelineEvent] = useState<string | null>(null);
 
   const completeDocs = documents.filter(
@@ -109,6 +110,11 @@ const CaseOverview = ({ caseData, documents, onNavigate }: CaseOverviewProps) =>
     <div className="flex gap-5">
       {/* ═══ LEFT COLUMN — Main content ═══ */}
       <div className="flex-1 min-w-0 flex flex-col gap-4">
+        {/* ── Upload CTA when no documents ── */}
+        {documents.length === 0 && (
+          <CaseEmptyUploadCTA caseId={caseData.id} />
+        )}
+
         {/* ── Row 0: Intake Workflow Dashboard ── */}
         <IntakeWorkflowDashboard caseId={caseData.id} documents={documents} onNavigate={onNavigate} />
 
@@ -169,88 +175,107 @@ const CaseOverview = ({ caseData, documents, onNavigate }: CaseOverviewProps) =>
         {/* ── Evidence Citation Summary ── */}
         <CitationSummaryPanel caseId={caseData.id} />
 
-        {/* ── Row 1: Case Snapshot + Key Metrics ── */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
-          {/* Case / Claimant Summary */}
-          <div className="lg:col-span-2 card-elevated p-4">
-            <div className="flex items-start gap-3 mb-3">
-              <div className="h-9 w-9 rounded-xl bg-primary/10 flex items-center justify-center shrink-0">
-                <User className="h-4.5 w-4.5 text-primary" />
+        {/* ── Mock-data-powered sections (demo cases only) ── */}
+        {hasData && (
+          <>
+            {/* ── Row 1: Case Snapshot + Key Metrics ── */}
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+              {/* Case / Claimant Summary */}
+              <div className="lg:col-span-2 card-elevated p-4">
+                <div className="flex items-start gap-3 mb-3">
+                  <div className="h-9 w-9 rounded-xl bg-primary/10 flex items-center justify-center shrink-0">
+                    <User className="h-4.5 w-4.5 text-primary" />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <h2 className="text-sm font-semibold text-foreground">{claimant?.full_name ?? caseData.claimant}</h2>
+                    <p className="text-[11px] text-muted-foreground mt-0.5">
+                      {claimant?.notes ?? ""} · {caseData.jurisdiction_state}
+                    </p>
+                  </div>
+                  <span className="status-badge-processing text-[9px]">{caseData.case_status.replace(/_/g, " ")}</span>
+                </div>
+
+                {/* Narrative summary */}
+                <div className="text-[12px] text-foreground leading-relaxed space-y-1.5">
+                  <p>
+                    <EvidenceStatement
+                      text={`On ${formatDate(caseData.date_of_loss)}, claimant was involved in a rear-end MVA at ~35 mph when defendant ran a red light on I-95.`}
+                      citations={refsToCS(pkg.evidence_refs.filter((r) => r.linked_entity_type === "timeline_event").slice(0, 2))}
+                    />
+                  </p>
+                  <p>
+                    <EvidenceStatement
+                      text={`${pkg.injuries.length} injuries documented including ${pkg.injuries[0]?.body_part?.toLowerCase()} herniation (${pkg.injuries[0]?.diagnosis_code}). Emergency treatment at ${pkg.providers.find((p) => p.specialty === "Emergency Medicine")?.facility_name ?? "hospital"} on DOI.`}
+                      citations={refsToCS(pkg.injuries[0]?.evidence_refs.slice(0, 1) ?? [])}
+                    />
+                  </p>
+                </div>
+
+                {/* Quick facts row */}
+                <div className="flex flex-wrap gap-x-5 gap-y-1.5 mt-3 pt-3 border-t border-border">
+                  <MiniStat label="DOI" value={formatDate(caseData.date_of_loss)} />
+                  <MiniStat label="Claim #" value={maskClaimNumber(caseData.claim_number)} mono />
+                  <MiniStat label="Jurisdiction" value={caseData.jurisdiction_state} />
+                  <MiniStat label="Defendant" value={caseData.defendant} />
+                </div>
               </div>
-              <div className="flex-1 min-w-0">
-                <h2 className="text-sm font-semibold text-foreground">{claimant?.full_name ?? caseData.claimant}</h2>
-                <p className="text-[11px] text-muted-foreground mt-0.5">
-                  {claimant?.notes ?? ""} · {caseData.jurisdiction_state}
-                </p>
+
+              {/* Key metrics card */}
+              <div className="card-elevated p-4 flex flex-col gap-3">
+                <h3 className="section-label">Case Metrics</h3>
+                <div className="flex flex-col gap-2.5 flex-1">
+                  <MetricRow icon={FileText} label="Documents" value={`${completeDocs}/${documents.length}`} sub="processed" />
+                  <MetricRow icon={Stethoscope} label="Providers" value={`${stats.providers}`} sub={`${stats.totalVisits} visits`} />
+                  <MetricRow icon={DollarSign} label="Billed" value={`$${billing.totalBilled.toLocaleString()}`} sub={`adj. $${billing.totalAdjusted.toLocaleString()}`} />
+                  <MetricRow icon={Activity} label="Injuries" value={`${pkg.injuries.length}`} sub={`${pkg.injuries.filter(i => i.severity === "severe" || i.severity === "catastrophic").length} severe`} />
+                  <MetricRow icon={Shield} label="Demand" value={`$${pkg.demand_summary.demand_amount.toLocaleString()}`} sub="transmitted" />
+                </div>
               </div>
-              <span className="status-badge-processing text-[9px]">{caseData.case_status.replace(/_/g, " ")}</span>
             </div>
 
-            {/* Narrative summary */}
-            <div className="text-[12px] text-foreground leading-relaxed space-y-1.5">
-              <p>
-                <EvidenceStatement
-                  text={`On ${formatDate(caseData.date_of_loss)}, claimant was involved in a rear-end MVA at ~35 mph when defendant ran a red light on I-95.`}
-                  citations={refsToCS(pkg.evidence_refs.filter((r) => r.linked_entity_type === "timeline_event").slice(0, 2))}
-                />
-              </p>
-              <p>
-                <EvidenceStatement
-                  text={`${pkg.injuries.length} injuries documented including ${pkg.injuries[0]?.body_part?.toLowerCase()} herniation (${pkg.injuries[0]?.diagnosis_code}). Emergency treatment at ${pkg.providers.find((p) => p.specialty === "Emergency Medicine")?.facility_name ?? "hospital"} on DOI.`}
-                  citations={refsToCS(pkg.injuries[0]?.evidence_refs.slice(0, 1) ?? [])}
-                />
-              </p>
+            {/* ── Row 2: Accident Facts ── */}
+            <AccidentFactsSection pkg={pkg} caseData={caseData} />
+
+            {/* ── Row 3: Injuries by Body Region + Treatment Summary ── */}
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+              <InjuryRegionMap pkg={pkg} />
+              <TreatmentSummaryCard pkg={pkg} stats={stats} billing={billing} />
             </div>
 
-            {/* Quick facts row */}
-            <div className="flex flex-wrap gap-x-5 gap-y-1.5 mt-3 pt-3 border-t border-border">
+            {/* ── Row 4: Red Flags + Functional Impact ── */}
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+              <RedFlagsCard pkg={pkg} />
+              <FunctionalImpactCard />
+            </div>
+
+            {/* ── Row 5: Top Evidence-Linked Facts ── */}
+            <TopEvidenceFactsCard pkg={pkg} />
+          </>
+        )}
+
+        {/* ── Case summary for real cases (non-demo) ── */}
+        {!hasData && documents.length > 0 && (
+          <div className="card-elevated p-4">
+            <div className="flex flex-wrap gap-x-5 gap-y-1.5">
               <MiniStat label="DOI" value={formatDate(caseData.date_of_loss)} />
               <MiniStat label="Claim #" value={maskClaimNumber(caseData.claim_number)} mono />
               <MiniStat label="Jurisdiction" value={caseData.jurisdiction_state} />
-              <MiniStat label="Defendant" value={caseData.defendant} />
+              <MiniStat label="Documents" value={`${completeDocs}/${documents.length}`} />
             </div>
           </div>
-
-          {/* Key metrics card */}
-          <div className="card-elevated p-4 flex flex-col gap-3">
-            <h3 className="section-label">Case Metrics</h3>
-            <div className="flex flex-col gap-2.5 flex-1">
-              <MetricRow icon={FileText} label="Documents" value={`${completeDocs}/${documents.length}`} sub="processed" />
-              <MetricRow icon={Stethoscope} label="Providers" value={`${stats.providers}`} sub={`${stats.totalVisits} visits`} />
-              <MetricRow icon={DollarSign} label="Billed" value={`$${billing.totalBilled.toLocaleString()}`} sub={`adj. $${billing.totalAdjusted.toLocaleString()}`} />
-              <MetricRow icon={Activity} label="Injuries" value={`${pkg.injuries.length}`} sub={`${pkg.injuries.filter(i => i.severity === "severe" || i.severity === "catastrophic").length} severe`} />
-              <MetricRow icon={Shield} label="Demand" value={`$${pkg.demand_summary.demand_amount.toLocaleString()}`} sub="transmitted" />
-            </div>
-          </div>
-        </div>
-
-        {/* ── Row 2: Accident Facts ── */}
-        <AccidentFactsSection pkg={pkg} caseData={caseData} />
-
-        {/* ── Row 3: Injuries by Body Region + Treatment Summary ── */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-          <InjuryRegionMap pkg={pkg} />
-          <TreatmentSummaryCard pkg={pkg} stats={stats} billing={billing} />
-        </div>
-
-        {/* ── Row 4: Red Flags + Functional Impact ── */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-          <RedFlagsCard pkg={pkg} />
-          <FunctionalImpactCard />
-        </div>
-
-        {/* ── Row 5: Top Evidence-Linked Facts ── */}
-        <TopEvidenceFactsCard pkg={pkg} />
+        )}
       </div>
 
-      {/* ═══ RIGHT COLUMN — Chronology Rail ═══ */}
-      <div className="hidden xl:flex w-72 shrink-0">
-        <ChronologyRail
-          events={pkg.timeline_events}
-          selectedId={selectedTimelineEvent}
-          onSelect={setSelectedTimelineEvent}
-        />
-      </div>
+      {/* ═══ RIGHT COLUMN — Chronology Rail (demo only) ═══ */}
+      {hasData && (
+        <div className="hidden xl:flex w-72 shrink-0">
+          <ChronologyRail
+            events={pkg.timeline_events}
+            selectedId={selectedTimelineEvent}
+            onSelect={setSelectedTimelineEvent}
+          />
+        </div>
+      )}
     </div>
   );
 };

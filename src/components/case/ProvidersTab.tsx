@@ -124,7 +124,7 @@ function enrichProviders(
 
 // ─── Main Component ──────────────────────────────────
 const ProvidersTab = () => {
-  const { pkg } = useCasePackage();
+  const { pkg, hasData } = useCasePackage();
   const { openSource } = useSourceDrawer();
 
   const enriched = useMemo(
@@ -171,6 +171,18 @@ const ProvidersTab = () => {
   const totalBilled = enriched.reduce((s, e) => s + e.totalBilled, 0);
   const totalPaid = enriched.reduce((s, e) => s + e.totalPaid, 0);
   const totalVisits = enriched.reduce((s, e) => s + e.provider.total_visits, 0);
+
+  if (!hasData) {
+    return (
+      <div className="flex flex-col items-center justify-center py-16 px-6 text-center">
+        <div className="h-11 w-11 rounded-xl bg-accent/60 flex items-center justify-center mb-3.5">
+          <Stethoscope className="h-5 w-5 text-muted-foreground/50" />
+        </div>
+        <h3 className="text-[13px] font-semibold text-foreground mb-1">No providers found</h3>
+        <p className="text-[11px] text-muted-foreground max-w-[260px] leading-relaxed">Providers will appear here after documents are processed and treatment data is extracted.</p>
+      </div>
+    );
+  }
 
   // ─── Detail Panel ───
   if (selected) {

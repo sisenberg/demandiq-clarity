@@ -44,7 +44,6 @@ import DraftChronologyPanel from "@/components/case/DraftChronologyPanel";
 import HorizontalTimeline from "@/components/case/HorizontalTimeline";
 import CaseNotesPanel from "@/components/case/CaseNotesPanel";
 import AnalysisCard from "@/components/case/AnalysisCard";
-import type { AnalysisSection } from "@/components/case/AnalysisCard";
 import { SourceDrawerProvider, SourceDrawer } from "@/components/case/SourceDrawer";
 import ModuleCompletionStatusPanel from "@/components/case/ModuleCompletionStatusPanel";
 import CompleteDemandDialog from "@/components/case/CompleteDemandDialog";
@@ -61,44 +60,7 @@ import {
 } from "lucide-react";
 
 
-// ─── ReviewerIQ Preview ─────────────────────────────
-const MEDICAL_REVIEW_SECTIONS: AnalysisSection[] = [
-  {
-    title: "Treatment Reasonableness",
-    items: [
-      { label: "ER Visit — Mercy General", value: "Reasonable", detail: "Appropriate given mechanism; cervical strain, shoulder contusion, radiating pain warranted imaging.", severity: "info" },
-      { label: "PT Frequency (3x/week)", value: "Reasonable", detail: "Consistent with cervical disc herniation treatment guidelines.", severity: "info" },
-      { label: "ESI #2 at 8 weeks post-#1", value: "Flagged", detail: "Second injection at 8-week interval within guidelines but may be questioned.", severity: "warning" },
-      { label: "PT Non-Completion (24/36)", value: "Issue", detail: "Only 67% of prescribed sessions completed. Defense will argue non-compliance.", severity: "alert" },
-    ],
-  },
-  {
-    title: "Body-Part Grouping",
-    items: [
-      { label: "Cervical Spine (C5-C6)", value: "Primary", detail: "Herniation confirmed by MRI. Driving majority of treatment and damages.", severity: "alert" },
-      { label: "Right Shoulder", value: "Resolved", detail: "Contusion and strain resolved after 6 weeks PT.", severity: "info" },
-      { label: "Lumbar Spine (L4-L5)", value: "Disputed", detail: "Pre-existing degenerative changes noted. Causation may be challenged.", severity: "warning" },
-      { label: "Right Knee", value: "Secondary", detail: "Meniscus tear confirmed. Conservative treatment ongoing.", severity: "warning" },
-    ],
-  },
-  {
-    title: "Provider Highlights",
-    items: [
-      { label: "Dr. Sarah Chen — Orthopedics", detail: "Primary treating physician. 6 visits. Consistent documentation.", severity: "info" },
-      { label: "Dr. Raj Patel — Pain Management", detail: "ESI provider. 3 visits. Follow-up documentation could be stronger.", severity: "info" },
-      { label: "Dr. William Roberts — IME", detail: "Defense examiner. Disputes surgical necessity. Key rebuttal target.", severity: "alert" },
-    ],
-  },
-  {
-    title: "Billing Review Items",
-    items: [
-      { label: "MRI Cervical (72141)", value: "$3,200", detail: "Billed at $3,200 vs. Medicare rate ~$380. Expect significant reduction.", severity: "warning" },
-      { label: "ESI (64483) x2", value: "$12,400", detail: "Two injections at $6,200 each. Within range but on high end.", severity: "warning" },
-      { label: "PT Sessions (97110)", value: "$9,600", detail: "24 sessions at $400/session. Reasonable per-session rate.", severity: "info" },
-      { label: "Total Reduction Risk", value: "~29%", detail: "Expected reduction from billed ($87,450) to adjusted (~$62,200).", severity: "alert" },
-    ],
-  },
-];
+
 
 const CaseDetailPage = () => {
   const { caseId } = useParams<{ caseId: string }>();
