@@ -21,12 +21,9 @@ const CreateCaseDialog = ({ open, onClose }: CreateCaseDialogProps) => {
   const createCase = useCreateCase();
   const [form, setForm] = useState({
     claim_number: "",
-    external_reference: "",
     claimant: "",
-    insured: "",
     date_of_loss: "",
     jurisdiction_state: "",
-    priority: "normal" as "low" | "normal" | "high" | "urgent",
   });
   const [createdCaseId, setCreatedCaseId] = useState<string | null>(null);
 
