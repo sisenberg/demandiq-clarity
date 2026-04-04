@@ -12,7 +12,7 @@ import { supabase } from "@/integrations/supabase/client";
 // ═══════════════════════════════════════════════════════
 
 export const PROCESSING_STATES = [
-  "uploaded",
+  "upload_received",
   "validated",
   "queued",
   "processing",
@@ -26,7 +26,7 @@ export const PROCESSING_STATES = [
 export type ProcessingState = (typeof PROCESSING_STATES)[number];
 
 export const PROCESSING_STATE_LABEL: Record<ProcessingState, string> = {
-  uploaded: "Uploaded",
+  upload_received: "Uploaded",
   validated: "Validated",
   queued: "Queued",
   processing: "Processing",
@@ -42,7 +42,7 @@ export const PROCESSING_STATE_LABEL: Record<ProcessingState, string> = {
 // ═══════════════════════════════════════════════════════
 
 const VALID_TRANSITIONS: Record<ProcessingState, ProcessingState[]> = {
-  uploaded: ["validated", "failed"],
+  upload_received: ["validated", "failed"],
   validated: ["queued", "failed"],
   queued: ["processing", "failed"],
   processing: ["parsed", "failed"],
@@ -51,7 +51,7 @@ const VALID_TRANSITIONS: Record<ProcessingState, ProcessingState[]> = {
   indexed: ["extraction_ready", "failed"],
   extraction_ready: [],
   // From failed, allow restart to queued (reprocess)
-  failed: ["queued", "uploaded"],
+  failed: ["queued", "upload_received"],
 };
 
 export function isValidTransition(from: ProcessingState, to: ProcessingState): boolean {
