@@ -528,6 +528,27 @@ async function maybeAutoAssemblePackage(
         console.warn("[orchestrate-intake] Auto-publish parse error (non-fatal):", pubErr);
       }
     }
+
+    // Auto-generate chronology from all parsed documents (best-effort)
+    try {
+      console.log("[orchestrate-intake] Triggering chronology generation for case:", caseId);
+      const chronResp = await fetch(`${supabaseUrl}/functions/v1/generate-chronology`, {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${serviceRoleKey}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ case_id: caseId }),
+      });
+      if (chronResp.ok) {
+        const chronData = await chronResp.json();
+        console.log("[orchestrate-intake] Chronology generated:", chronData.events_generated, "events");
+      } else {
+        console.warn("[orchestrate-intake] Chronology generation failed:", chronResp.status);
+      }
+    } catch (chronErr) {
+      console.warn("[orchestrate-intake] Chronology generation error (non-fatal):", chronErr);
+    }
   } catch (e) {
     console.warn("[orchestrate-intake] Auto-assemble error (non-fatal):", e);
   }
