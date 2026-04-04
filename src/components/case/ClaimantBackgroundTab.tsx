@@ -172,6 +172,9 @@ const SECTIONS: BackgroundSection[] = [
 // ─── Main Component ──────────────────────────────────
 const ClaimantBackgroundTab = () => {
   const { hasData } = useCasePackage();
+  const [expandedSections, setExpandedSections] = useState<Set<string>>(
+    new Set(SECTIONS.map((s) => s.id))
+  );
 
   if (!hasData) {
     return (
@@ -184,10 +187,6 @@ const ClaimantBackgroundTab = () => {
       </div>
     );
   }
-
-  const [expandedSections, setExpandedSections] = useState<Set<string>>(
-    new Set(SECTIONS.map((s) => s.id))
-  );
 
   const toggleSection = (id: string) => {
     setExpandedSections((prev) => {
