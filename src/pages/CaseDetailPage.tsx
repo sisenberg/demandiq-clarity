@@ -44,7 +44,6 @@ import DraftChronologyPanel from "@/components/case/DraftChronologyPanel";
 import HorizontalTimeline from "@/components/case/HorizontalTimeline";
 import CaseNotesPanel from "@/components/case/CaseNotesPanel";
 import AnalysisCard from "@/components/case/AnalysisCard";
-import type { AnalysisSection } from "@/components/case/AnalysisCard";
 import { SourceDrawerProvider, SourceDrawer } from "@/components/case/SourceDrawer";
 import ModuleCompletionStatusPanel from "@/components/case/ModuleCompletionStatusPanel";
 import CompleteDemandDialog from "@/components/case/CompleteDemandDialog";
