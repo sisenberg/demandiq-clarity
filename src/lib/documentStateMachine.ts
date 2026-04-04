@@ -42,7 +42,7 @@ export const PROCESSING_STATE_LABEL: Record<ProcessingState, string> = {
 // ═══════════════════════════════════════════════════════
 
 const VALID_TRANSITIONS: Record<ProcessingState, ProcessingState[]> = {
-  uploaded: ["validated", "failed"],
+  upload_received: ["validated", "failed"],
   validated: ["queued", "failed"],
   queued: ["processing", "failed"],
   processing: ["parsed", "failed"],
