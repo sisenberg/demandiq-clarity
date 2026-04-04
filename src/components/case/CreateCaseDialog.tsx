@@ -78,27 +78,15 @@ const CreateCaseDialog = ({ open, onClose }: CreateCaseDialogProps) => {
           </button>
         </div>
         <form onSubmit={handleSubmit} className="px-6 py-5 flex flex-col gap-4">
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <label className={labelClass}>Claim Number</label>
-              <input className={inputClass} placeholder="e.g. CLM-2024-00123" value={form.claim_number} onChange={(e) => set("claim_number", e.target.value)} />
-            </div>
-            <div>
-              <label className={labelClass}>External Reference</label>
-              <input className={inputClass} placeholder="Optional reference ID" value={form.external_reference} onChange={(e) => set("external_reference", e.target.value)} />
-            </div>
+          <div>
+            <label className={labelClass}>Claim Number</label>
+            <input className={inputClass} placeholder="e.g. CLM-2024-00123" value={form.claim_number} onChange={(e) => set("claim_number", e.target.value)} />
+          </div>
+          <div>
+            <label className={labelClass}>Claimant Name *</label>
+            <input className={inputClass} required placeholder="Full name of the claimant" value={form.claimant} onChange={(e) => set("claimant", e.target.value)} />
           </div>
           <div className="grid grid-cols-2 gap-4">
-            <div>
-              <label className={labelClass}>Claimant Name *</label>
-              <input className={inputClass} required placeholder="Full name of the claimant" value={form.claimant} onChange={(e) => set("claimant", e.target.value)} />
-            </div>
-            <div>
-              <label className={labelClass}>Insured Name *</label>
-              <input className={inputClass} required placeholder="Name of insured party" value={form.insured} onChange={(e) => set("insured", e.target.value)} />
-            </div>
-          </div>
-          <div className="grid grid-cols-3 gap-4">
             <div>
               <label className={labelClass}>Date of Loss</label>
               <input type="date" className={inputClass} value={form.date_of_loss} onChange={(e) => set("date_of_loss", e.target.value)} />
@@ -108,15 +96,6 @@ const CreateCaseDialog = ({ open, onClose }: CreateCaseDialogProps) => {
               <select className={inputClass} value={form.jurisdiction_state} onChange={(e) => set("jurisdiction_state", e.target.value)}>
                 <option value="">Select state</option>
                 {US_STATES.map((s) => <option key={s} value={s}>{s}</option>)}
-              </select>
-            </div>
-            <div>
-              <label className={labelClass}>Priority</label>
-              <select className={inputClass} value={form.priority} onChange={(e) => set("priority", e.target.value as any)}>
-                <option value="low">Low</option>
-                <option value="normal">Normal</option>
-                <option value="high">High</option>
-                <option value="urgent">Urgent</option>
               </select>
             </div>
           </div>

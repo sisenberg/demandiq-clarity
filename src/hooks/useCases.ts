@@ -66,19 +66,15 @@ export function useCreateCase() {
   return useMutation({
     mutationFn: async (input: CreateCaseInput) => {
       if (!tenantId || !user) throw new Error("Not authenticated");
-      const title = `${input.claimant} v. ${input.insured}`;
+      const title = input.claimant || "Untitled Case";
       const { data, error } = await (supabase.from("cases") as any)
         .insert({
           tenant_id: tenantId,
           title,
           claim_number: input.claim_number,
-          external_reference: input.external_reference,
           claimant: input.claimant,
-          insured: input.insured,
-          defendant: input.insured,
           date_of_loss: input.date_of_loss || null,
           jurisdiction_state: input.jurisdiction_state,
-          priority: input.priority,
           assigned_to: input.assigned_to || null,
           created_by: user.id,
           case_status: "draft",
