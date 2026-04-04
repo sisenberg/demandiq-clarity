@@ -89,19 +89,6 @@ const STATUS_STYLE: Record<string, { icon: React.ElementType; class: string }> =
 // ─── Main Component ──────────────────────────────────
 const BillingView = () => {
   const { pkg, hasData } = useCasePackage();
-
-  if (!hasData) {
-    return (
-      <div className="flex flex-col items-center justify-center py-16 px-6 text-center">
-        <div className="h-11 w-11 rounded-xl bg-accent/60 flex items-center justify-center mb-3.5">
-          <DollarSign className="h-5 w-5 text-muted-foreground/50" />
-        </div>
-        <h3 className="text-[13px] font-semibold text-foreground mb-1">No billing data available</h3>
-        <p className="text-[11px] text-muted-foreground max-w-[260px] leading-relaxed">Billing line items will appear here after medical bills and billing records are processed.</p>
-      </div>
-    );
-  }
-
   const bills = pkg.billing_lines;
   const providers = pkg.providers;
 
@@ -117,6 +104,18 @@ const BillingView = () => {
 
   // Flag bills
   const flaggedBills = useMemo(() => flagBills(bills), [bills]);
+
+  if (!hasData) {
+    return (
+      <div className="flex flex-col items-center justify-center py-16 px-6 text-center">
+        <div className="h-11 w-11 rounded-xl bg-accent/60 flex items-center justify-center mb-3.5">
+          <DollarSign className="h-5 w-5 text-muted-foreground/50" />
+        </div>
+        <h3 className="text-[13px] font-semibold text-foreground mb-1">No billing data available</h3>
+        <p className="text-[11px] text-muted-foreground max-w-[260px] leading-relaxed">Billing line items will appear here after medical bills and billing records are processed.</p>
+      </div>
+    );
+  }
 
   // Filter
   const filtered = useMemo(() => {
