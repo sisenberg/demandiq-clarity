@@ -362,6 +362,7 @@ const ClaimAssessmentTab = () => {
   const [expandedSections, setExpandedSections] = useState<Set<string>>(
     new Set(["injury-assessment", "causation-support", "causation-challenges", "strengths", "weaknesses"])
   );
+  const [ladderExpanded, setLadderExpanded] = useState(true);
 
   if (!hasData) {
     return (
@@ -374,8 +375,6 @@ const ClaimAssessmentTab = () => {
       </div>
     );
   }
-
-  const [ladderExpanded, setLadderExpanded] = useState(true);
 
   const toggleSection = (id: string) => {
     setExpandedSections((prev) => {
