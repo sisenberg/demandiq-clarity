@@ -2,6 +2,7 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useCreateCase } from "@/hooks/useCases";
 import { X } from "lucide-react";
+import UploadDemandDialog from "./UploadDemandDialog";
 
 const US_STATES = [
   "AL","AK","AZ","AR","CA","CO","CT","DE","FL","GA","HI","ID","IL","IN","IA",
@@ -27,21 +28,48 @@ const CreateCaseDialog = ({ open, onClose }: CreateCaseDialogProps) => {
     jurisdiction_state: "",
     priority: "normal" as "low" | "normal" | "high" | "urgent",
   });
+  const [createdCaseId, setCreatedCaseId] = useState<string | null>(null);
 
-  if (!open) return null;
+  if (!open && !createdCaseId) return null;
 
   const set = (key: string, value: string) => setForm((prev) => ({ ...prev, [key]: value }));
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     const result = await createCase.mutateAsync(form);
+    setCreatedCaseId(result.id);
+  };
+
+  const handleUploadComplete = () => {
+    const caseId = createdCaseId;
+    setCreatedCaseId(null);
     onClose();
-    navigate(`/cases/${result.id}`);
+    navigate(`/cases/${caseId}`);
+  };
+
+  const handleSkipUpload = () => {
+    const caseId = createdCaseId;
+    setCreatedCaseId(null);
+    onClose();
+    navigate(`/cases/${caseId}`);
   };
 
   const inputClass = "w-full px-3.5 py-2.5 text-sm border border-input rounded-lg bg-card text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring/40 focus:border-primary transition-colors";
   const labelClass = "block text-xs font-medium text-foreground mb-1.5";
 
+  // Step 2: Upload dialog
+  if (createdCaseId) {
+    return (
+      <UploadDemandDialog
+        open
+        caseId={createdCaseId}
+        onClose={handleSkipUpload}
+        onComplete={handleUploadComplete}
+      />
+    );
+  }
+
+  // Step 1: Case creation form
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center">
       <div className="absolute inset-0 bg-foreground/30 backdrop-blur-sm" onClick={onClose} />
@@ -56,21 +84,21 @@ const CreateCaseDialog = ({ open, onClose }: CreateCaseDialogProps) => {
           <div className="grid grid-cols-2 gap-4">
             <div>
               <label className={labelClass}>Claim Number</label>
-              <input className={inputClass} placeholder="CLM-2024-001" value={form.claim_number} onChange={(e) => set("claim_number", e.target.value)} />
+              <input className={inputClass} placeholder="e.g. CLM-2024-00123" value={form.claim_number} onChange={(e) => set("claim_number", e.target.value)} />
             </div>
             <div>
               <label className={labelClass}>External Reference</label>
-              <input className={inputClass} placeholder="EXT-REF-001" value={form.external_reference} onChange={(e) => set("external_reference", e.target.value)} />
+              <input className={inputClass} placeholder="Optional reference ID" value={form.external_reference} onChange={(e) => set("external_reference", e.target.value)} />
             </div>
           </div>
           <div className="grid grid-cols-2 gap-4">
             <div>
               <label className={labelClass}>Claimant Name *</label>
-              <input className={inputClass} required placeholder="Jane Doe" value={form.claimant} onChange={(e) => set("claimant", e.target.value)} />
+              <input className={inputClass} required placeholder="Full name of the claimant" value={form.claimant} onChange={(e) => set("claimant", e.target.value)} />
             </div>
             <div>
               <label className={labelClass}>Insured Name *</label>
-              <input className={inputClass} required placeholder="Acme Corp" value={form.insured} onChange={(e) => set("insured", e.target.value)} />
+              <input className={inputClass} required placeholder="Name of insured party" value={form.insured} onChange={(e) => set("insured", e.target.value)} />
             </div>
           </div>
           <div className="grid grid-cols-3 gap-4">
