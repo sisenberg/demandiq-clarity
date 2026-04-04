@@ -105,20 +105,9 @@ const BillingView = () => {
   // Flag bills
   const flaggedBills = useMemo(() => flagBills(bills), [bills]);
 
-  if (!hasData) {
-    return (
-      <div className="flex flex-col items-center justify-center py-16 px-6 text-center">
-        <div className="h-11 w-11 rounded-xl bg-accent/60 flex items-center justify-center mb-3.5">
-          <DollarSign className="h-5 w-5 text-muted-foreground/50" />
-        </div>
-        <h3 className="text-[13px] font-semibold text-foreground mb-1">No billing data available</h3>
-        <p className="text-[11px] text-muted-foreground max-w-[260px] leading-relaxed">Billing line items will appear here after medical bills and billing records are processed.</p>
-      </div>
-    );
-  }
-
   // Filter
   const filtered = useMemo(() => {
+    if (!hasData) return [];
     let items = flaggedBills;
     if (search.trim()) {
       const q = search.toLowerCase();
@@ -134,7 +123,7 @@ const BillingView = () => {
     if (dateFrom) items = items.filter((b) => (b.service_date ?? "") >= dateFrom);
     if (dateTo) items = items.filter((b) => (b.service_date ?? "") <= dateTo);
     return items;
-  }, [flaggedBills, search, providerFilter, dateFrom, dateTo]);
+  }, [hasData, flaggedBills, search, providerFilter, dateFrom, dateTo]);
 
   // Sort
   const sorted = useMemo(() => {
@@ -159,6 +148,18 @@ const BillingView = () => {
     });
     return map;
   }, [sorted, viewMode]);
+
+  if (!hasData) {
+    return (
+      <div className="flex flex-col items-center justify-center py-16 px-6 text-center">
+        <div className="h-11 w-11 rounded-xl bg-accent/60 flex items-center justify-center mb-3.5">
+          <DollarSign className="h-5 w-5 text-muted-foreground/50" />
+        </div>
+        <h3 className="text-[13px] font-semibold text-foreground mb-1">No billing data available</h3>
+        <p className="text-[11px] text-muted-foreground max-w-[260px] leading-relaxed">Billing line items will appear here after medical bills and billing records are processed.</p>
+      </div>
+    );
+  }
 
   // Summary stats
   const totalBilled = filtered.reduce((s, b) => s + b.billed_amount, 0);
