@@ -26,7 +26,7 @@ export const PROCESSING_STATES = [
 export type ProcessingState = (typeof PROCESSING_STATES)[number];
 
 export const PROCESSING_STATE_LABEL: Record<ProcessingState, string> = {
-  uploaded: "Uploaded",
+  upload_received: "Uploaded",
   validated: "Validated",
   queued: "Queued",
   processing: "Processing",
