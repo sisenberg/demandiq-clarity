@@ -255,16 +255,9 @@ const CaseOverview = ({ caseData, documents, onNavigate }: CaseOverviewProps) =>
           </>
         )}
 
-        {/* ── Case summary for real cases (non-demo) ── */}
+        {/* ── Case Snapshot for real cases (non-demo) ── */}
         {!hasData && documents.length > 0 && (
-          <div className="card-elevated p-4">
-            <div className="flex flex-wrap gap-x-5 gap-y-1.5">
-              <MiniStat label="DOI" value={formatDate(caseData.date_of_loss)} />
-              <MiniStat label="Claim #" value={maskClaimNumber(caseData.claim_number)} mono />
-              <MiniStat label="Jurisdiction" value={caseData.jurisdiction_state} />
-              <MiniStat label="Documents" value={`${completeDocs}/${documents.length}`} />
-            </div>
-          </div>
+          <RealCaseSnapshot caseData={caseData} documents={documents} intakePkg={intakePkg} completeDocs={completeDocs} />
         )}
       </div>
 
