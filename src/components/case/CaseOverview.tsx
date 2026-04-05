@@ -1,6 +1,8 @@
 import { useState } from "react";
 import { useCasePackage } from "@/hooks/useCasePackage";
 import { useIntakeEvaluationPackage } from "@/hooks/useIntakeEvaluationPackage";
+import { useIntakeValidation } from "@/hooks/useIntakeValidation";
+import { useIntakeWorkflow } from "@/hooks/useIntakeWorkflow";
 import { useSourceDrawer } from "./SourceDrawer";
 import { CitationBadge, EvidenceStatement, type CitationSource } from "./EvidenceCitation";
 import { getBillingSummary, getTreatmentStats } from "@/data/mock/casePackage";
@@ -10,25 +12,8 @@ import type { DocumentRow } from "@/hooks/useDocuments";
 import { isDocumentReady } from "@/lib/statuses";
 import type { EvidenceReference, TimelineEvent } from "@/types";
 import { maskClaimNumber } from "@/lib/phi-utils";
-import IntakeReadinessPanel from "./IntakeReadinessPanel";
-import IntakeWorkflowDashboard from "./IntakeWorkflowDashboard";
-import DemandSummaryPanel from "./DemandSummaryPanel";
-import DemandChronologyPanel from "./DemandChronologyPanel";
-import PartyNormalizationPanel from "./PartyNormalizationPanel";
-import SpecialsReviewTable from "./SpecialsReviewTable";
-import TreatmentTimelineView from "./TreatmentTimelineView";
-import InjuryReviewPanel from "./InjuryReviewPanel";
-import IntakeEvaluatePublishPanel from "./IntakeEvaluatePublishPanel";
-import IntakeQualityPanel from "./IntakeQualityPanel";
-import IntakeProvenancePanel from "./IntakeProvenancePanel";
-import CitationSummaryPanel from "./CitationSummaryPanel";
 import {
   User,
-  Car,
-  Activity,
-  Stethoscope,
-  AlertTriangle,
-  TrendingDown,
   FileText,
   DollarSign,
   Clock,
@@ -36,8 +21,24 @@ import {
   ChevronRight,
   BookOpen,
   Shield,
-  Zap,
+  Stethoscope,
+  AlertTriangle,
+  Activity,
+  Search,
+  Download,
+  ClipboardCheck,
+  ArrowRight,
   Heart,
+  Brain,
+  Bone,
+  Eye,
+  Zap,
+  Scale,
+  CircleDot,
+  CheckCircle2,
+  XCircle,
+  Info,
+  Settings,
 } from "lucide-react";
 
 // ─── Helpers ──────────────────────────────────────────
@@ -50,20 +51,27 @@ function refsToCS(refs: EvidenceReference[]): CitationSource[] {
   }));
 }
 
-const SEVERITY_DOT: Record<string, string> = {
-  minor: "bg-[hsl(var(--status-review))]",
-  moderate: "bg-[hsl(var(--status-attention))]",
-  severe: "bg-destructive",
-  catastrophic: "bg-destructive",
-  fatal: "bg-destructive",
-};
+function formatDate(d: string | null): string {
+  if (!d) return "—";
+  return new Date(d + "T00:00:00").toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
+}
 
-const SEVERITY_LABEL: Record<string, string> = {
-  minor: "status-badge-review",
-  moderate: "status-badge-attention",
-  severe: "status-badge-failed",
-  catastrophic: "status-badge-failed",
-  fatal: "status-badge-failed",
+function formatShortDate(dateStr: string): string {
+  const d = new Date(dateStr + "T00:00:00");
+  return d.toLocaleDateString("en-US", { month: "short", day: "numeric" });
+}
+
+const CATEGORY_ICON: Record<string, React.ElementType> = {
+  Accident: Zap,
+  "First Treatment": Stethoscope,
+  Treatment: Stethoscope,
+  Imaging: Eye,
+  Injection: CircleDot,
+  IME: ClipboardCheck,
+  Demand: FileText,
+  Surgery: Activity,
+  Legal: Scale,
+  Administrative: Settings,
 };
 
 const CATEGORY_DOT: Record<string, string> = {
@@ -79,13 +87,36 @@ const CATEGORY_DOT: Record<string, string> = {
   Administrative: "bg-muted-foreground",
 };
 
-const FLAG_ICON_MAP: Record<string, string> = {
-  pre_existing_condition: "⚠",
-  treatment_gap: "⏱",
-  incomplete_compliance: "📉",
-  documentation_missing: "📄",
-  causation_risk: "🔗",
-  inconsistency: "⚡",
+// ─── Body region mapping ─────────────────────────────
+function mapInjuryToBodySystem(bodyPart: string, bodyRegion?: string): string {
+  const bp = ((bodyPart || "") + " " + (bodyRegion || "")).toLowerCase();
+  if (bp.includes("cervic") || bp.includes("neck")) return "Cervical";
+  if (bp.includes("thorac") || bp.includes("upper back") || bp.includes("mid back")) return "Thoracic";
+  if (bp.includes("lumbar") || bp.includes("lower back") || bp.includes("sacr")) return "Lumbar";
+  if (bp.includes("shoulder") || bp.includes("elbow") || bp.includes("wrist") || bp.includes("hand") || bp.includes("arm")) return "Upper Extremity";
+  if (bp.includes("hip") || bp.includes("knee") || bp.includes("ankle") || bp.includes("foot") || bp.includes("leg")) return "Lower Extremity";
+  if (bp.includes("neuro") || bp.includes("brain") || bp.includes("head") || bp.includes("concuss") || bp.includes("radiculop")) return "Neurologic";
+  if (bp.includes("function") || bp.includes("sleep") || bp.includes("mood") || bp.includes("anxiety") || bp.includes("ptsd")) return "Functional / Psychological";
+  return "Other";
+}
+
+const BODY_SYSTEM_ICON: Record<string, React.ElementType> = {
+  Cervical: Bone,
+  Thoracic: Bone,
+  Lumbar: Bone,
+  "Upper Extremity": Activity,
+  "Lower Extremity": Activity,
+  Neurologic: Brain,
+  "Functional / Psychological": Heart,
+  Other: CircleDot,
+};
+
+const SEVERITY_BADGE: Record<string, string> = {
+  minor: "status-badge-review",
+  moderate: "status-badge-attention",
+  severe: "status-badge-failed",
+  catastrophic: "status-badge-failed",
+  fatal: "status-badge-failed",
 };
 
 // ─── Main Component ──────────────────────────────────
@@ -98,215 +129,417 @@ interface CaseOverviewProps {
 const CaseOverview = ({ caseData, documents, onNavigate }: CaseOverviewProps) => {
   const { pkg, hasData } = useCasePackage();
   const { data: intakePkg } = useIntakeEvaluationPackage(caseData.id);
+  const { validation } = useIntakeValidation(caseData.id);
+  const workflow = useIntakeWorkflow(caseData.id, documents);
+  const [pipelineOpen, setPipelineOpen] = useState(false);
+
   const billing = hasData ? getBillingSummary(pkg) : { totalBilled: 0, totalAdjusted: 0, totalPaid: 0 };
   const stats = hasData ? getTreatmentStats(pkg) : { providers: 0, totalVisits: 0, ptSessions: 0, injections: 0 };
-  const [selectedTimelineEvent, setSelectedTimelineEvent] = useState<string | null>(null);
 
-  const completeDocs = documents.filter(
-    (d) => isDocumentReady(d.document_status)
-  ).length;
+  const completeDocs = documents.filter((d) => isDocumentReady(d.document_status)).length;
 
-  const claimant = pkg.parties.find((p) => p.party_role === "claimant");
+  // Resolve data from either mock pkg or real intakePkg
+  const specials = intakePkg?.specials_summary as any;
+  const totalBilled = hasData ? billing.totalBilled : (specials?.total_billed ?? 0);
+  const billCount = specials?.bill_count ?? 0;
+  const providerCount = hasData ? stats.providers : (specials?.provider_count ?? intakePkg?.provider_list?.length ?? 0);
+  const injuryCount = hasData ? pkg.injuries.length : (intakePkg?.injury_summary?.length ?? 0);
+  const treatmentSummary = intakePkg?.treatment_summary as any;
+  const treatmentCount = hasData ? stats.totalVisits : (treatmentSummary?.treatment_count ?? 0);
+  const representedStatus = intakePkg?.represented_status ?? "";
+  const attorneyName = intakePkg?.attorney_name ?? "";
+  const lawFirm = intakePkg?.law_firm ?? "";
+  const demandAmount = hasData ? pkg.demand_summary?.demand_amount : intakePkg?.demand_amount;
+  const claimantName = intakePkg?.claimant_name ?? caseData.claimant;
+
+  // Determine primary status
+  const primaryStatus = determinePrimaryStatus(workflow.state, validation, intakePkg?.package_status);
+
+  // Compute next action
+  const nextAction = computeNextAction(workflow.state, validation, documents, completeDocs, intakePkg?.package_status);
+
+  // Injury data: use mock or real
+  const injuries: any[] = hasData
+    ? pkg.injuries
+    : (intakePkg?.injury_summary ?? []).map((inj: any, i: number) => ({
+        id: inj.id ?? `inj-${i}`,
+        body_part: inj.body_part ?? inj.label ?? "Unknown",
+        body_region: inj.body_region ?? "",
+        diagnosis_code: inj.diagnosis_code ?? inj.icd10 ?? "",
+        diagnosis_description: inj.diagnosis_description ?? inj.description ?? "",
+        severity: inj.severity ?? "moderate",
+        is_pre_existing: inj.is_pre_existing ?? false,
+        evidence_refs: inj.evidence_refs ?? [],
+        first_date: inj.first_date ?? null,
+        last_date: inj.last_date ?? null,
+        provider: inj.provider ?? null,
+      }));
+
+  // Timeline events
+  const timelineEvents: TimelineEvent[] = hasData ? pkg.timeline_events : [];
+
+  // Issue flags
+  const issueFlags = hasData ? pkg.issue_flags : [];
+
+  // Group injuries by body system
+  const findingsBySystem = groupFindingsBySystem(injuries);
+
+  // No documents → empty state
+  if (documents.length === 0) {
+    return <CaseEmptyUploadCTA caseId={caseData.id} />;
+  }
 
   return (
     <div className="flex gap-5">
-      {/* ═══ LEFT COLUMN — Main content ═══ */}
+      {/* ═══ MAIN CONTENT ═══ */}
       <div className="flex-1 min-w-0 flex flex-col gap-4">
-        {/* ── Upload CTA when no documents ── */}
-        {documents.length === 0 && (
-          <CaseEmptyUploadCTA caseId={caseData.id} />
-        )}
 
-        {/* ── Row 0: Intake Workflow Dashboard ── */}
-        <IntakeWorkflowDashboard caseId={caseData.id} documents={documents} onNavigate={onNavigate} />
-
-        {/* ── Row 0b: Intake Readiness (legacy detail) ── */}
-        <IntakeReadinessPanel documents={documents} caseId={caseData.id} onNavigate={onNavigate} />
-
-        {/* ── Demand Summary ── */}
-        <DemandSummaryPanel
-          caseId={caseData.id}
-          tenantId={caseData.tenant_id}
-          demandDocumentId={documents.find((d) => d.document_type === "demand_letter")?.id}
+        {/* ═══ 1. CLAIM HEADER ═══ */}
+        <ClaimHeader
+          claimantName={claimantName}
+          claimNumber={caseData.claim_number}
+          doi={caseData.date_of_loss}
+          jurisdiction={caseData.jurisdiction_state}
+          attorneyName={attorneyName}
+          lawFirm={lawFirm}
+          primaryStatus={primaryStatus}
+          onNavigate={onNavigate}
         />
 
-        {/* ── Demand Chronology ── */}
-        <DemandChronologyPanel caseId={caseData.id} />
+        {/* ═══ 2. TOP ROW — 3 Cards ═══ */}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+          {/* A. Claim Summary */}
+          <ClaimSummaryCard
+            caseData={caseData}
+            claimantName={claimantName}
+            injuries={injuries}
+            totalBilled={totalBilled}
+            providerCount={providerCount}
+            treatmentCount={treatmentCount}
+            representedStatus={representedStatus}
+            hasData={hasData}
+            pkg={pkg}
+          />
 
-        <PartyNormalizationPanel caseId={caseData.id} />
+          {/* B. Case Snapshot */}
+          <CaseSnapshotCard
+            demandAmount={demandAmount}
+            totalBilled={totalBilled}
+            providerCount={providerCount}
+            documentCount={documents.length}
+            injuryCount={injuryCount}
+            treatmentCount={treatmentCount}
+            representedStatus={representedStatus}
+            attorneyName={attorneyName}
+            completeDocs={completeDocs}
+          />
 
-        {/* ── Medical Specials ── */}
-        <SpecialsReviewTable
-          caseId={caseData.id}
-          tenantId={caseData.tenant_id}
-          billDocumentIds={documents
-            .filter((d) => ["medical_bill", "itemized_statement", "billing_record"].includes(d.document_type))
-            .map((d) => d.id)}
-        />
+          {/* C. Next Required Action */}
+          <NextActionCard action={nextAction} onNavigate={onNavigate} />
+        </div>
 
-        {/* ── Treatment Timeline ── */}
-        <TreatmentTimelineView
-          caseId={caseData.id}
-          tenantId={caseData.tenant_id}
-          medicalDocumentIds={documents
-            .filter((d) => ["medical_record", "narrative_report", "imaging_report"].includes(d.document_type))
-            .map((d) => d.id)}
-        />
+        {/* ═══ 3. FINDINGS BY BODY SYSTEM ═══ */}
+        <FindingsByBodySystem findings={findingsBySystem} hasData={hasData} />
 
-        {/* ── Injury & Diagnosis Review ── */}
-        <InjuryReviewPanel
-          caseId={caseData.id}
-          tenantId={caseData.tenant_id}
-          medicalDocumentIds={documents
-            .filter((d) => ["medical_record", "narrative_report", "imaging_report", "demand_letter"].includes(d.document_type))
-            .map((d) => d.id)}
-        />
+        {/* ═══ 4. LOWER ROW ═══ */}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+          {/* Billing Summary */}
+          <BillingSummaryCard
+            totalBilled={totalBilled}
+            totalAdjusted={hasData ? billing.totalAdjusted : 0}
+            totalPaid={hasData ? billing.totalPaid : 0}
+            billCount={billCount}
+            providerCount={providerCount}
+          />
 
-        {/* ── Intake Quality Validation ── */}
-        <IntakeQualityPanel caseId={caseData.id} />
+          {/* Documents */}
+          <DocumentsCard documents={documents} completeDocs={completeDocs} />
 
-        {/* ── EvaluateIQ Intake Package ── */}
-        <IntakeEvaluatePublishPanel
-          caseId={caseData.id}
-          tenantId={caseData.tenant_id}
-        />
-
-        {/* ── Field Provenance Audit Trail ── */}
-        <IntakeProvenancePanel caseId={caseData.id} />
-
-        {/* ── Evidence Citation Summary ── */}
-        <CitationSummaryPanel caseId={caseData.id} />
-
-        {/* ── Mock-data-powered sections (demo cases only) ── */}
-        {hasData && (
-          <>
-            {/* ── Row 1: Case Snapshot + Key Metrics ── */}
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
-              {/* Case / Claimant Summary */}
-              <div className="lg:col-span-2 card-elevated p-4">
-                <div className="flex items-start gap-3 mb-3">
-                  <div className="h-9 w-9 rounded-xl bg-primary/10 flex items-center justify-center shrink-0">
-                    <User className="h-4.5 w-4.5 text-primary" />
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <h2 className="text-sm font-semibold text-foreground">{claimant?.full_name ?? caseData.claimant}</h2>
-                    <p className="text-[11px] text-muted-foreground mt-0.5">
-                      {claimant?.notes ?? ""} · {caseData.jurisdiction_state}
-                    </p>
-                  </div>
-                  <span className="status-badge-processing text-[9px]">{caseData.case_status.replace(/_/g, " ")}</span>
-                </div>
-
-                {/* Narrative summary */}
-                <div className="text-[12px] text-foreground leading-relaxed space-y-1.5">
-                  <p>
-                    <EvidenceStatement
-                      text={`On ${formatDate(caseData.date_of_loss)}, claimant was involved in a rear-end MVA at ~35 mph when defendant ran a red light on I-95.`}
-                      citations={refsToCS(pkg.evidence_refs.filter((r) => r.linked_entity_type === "timeline_event").slice(0, 2))}
-                    />
-                  </p>
-                  <p>
-                    <EvidenceStatement
-                      text={`${pkg.injuries.length} injuries documented including ${pkg.injuries[0]?.body_part?.toLowerCase()} herniation (${pkg.injuries[0]?.diagnosis_code}). Emergency treatment at ${pkg.providers.find((p) => p.specialty === "Emergency Medicine")?.facility_name ?? "hospital"} on DOI.`}
-                      citations={refsToCS(pkg.injuries[0]?.evidence_refs.slice(0, 1) ?? [])}
-                    />
-                  </p>
-                </div>
-
-                {/* Quick facts row */}
-                <div className="flex flex-wrap gap-x-5 gap-y-1.5 mt-3 pt-3 border-t border-border">
-                  <MiniStat label="DOI" value={formatDate(caseData.date_of_loss)} />
-                  <MiniStat label="Claim #" value={maskClaimNumber(caseData.claim_number)} mono />
-                  <MiniStat label="Jurisdiction" value={caseData.jurisdiction_state} />
-                  <MiniStat label="Defendant" value={caseData.defendant} />
-                </div>
-              </div>
-
-              {/* Key metrics card */}
-              <div className="card-elevated p-4 flex flex-col gap-3">
-                <h3 className="section-label">Case Metrics</h3>
-                <div className="flex flex-col gap-2.5 flex-1">
-                  <MetricRow icon={FileText} label="Documents" value={`${completeDocs}/${documents.length}`} sub="processed" />
-                  <MetricRow icon={Stethoscope} label="Providers" value={`${stats.providers}`} sub={`${stats.totalVisits} visits`} />
-                  <MetricRow icon={DollarSign} label="Billed" value={`$${billing.totalBilled.toLocaleString()}`} sub={`adj. $${billing.totalAdjusted.toLocaleString()}`} />
-                  <MetricRow icon={Activity} label="Injuries" value={`${pkg.injuries.length}`} sub={`${pkg.injuries.filter(i => i.severity === "severe" || i.severity === "catastrophic").length} severe`} />
-                  <MetricRow icon={Shield} label="Demand" value={`$${pkg.demand_summary.demand_amount.toLocaleString()}`} sub="transmitted" />
-                </div>
-              </div>
-            </div>
-
-            {/* ── Row 2: Accident Facts ── */}
-            <AccidentFactsSection pkg={pkg} caseData={caseData} />
-
-            {/* ── Row 3: Injuries by Body Region + Treatment Summary ── */}
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-              <InjuryRegionMap pkg={pkg} />
-              <TreatmentSummaryCard pkg={pkg} stats={stats} billing={billing} />
-            </div>
-
-            {/* ── Row 4: Red Flags + Functional Impact ── */}
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-              <RedFlagsCard pkg={pkg} />
-              <FunctionalImpactCard />
-            </div>
-
-            {/* ── Row 5: Top Evidence-Linked Facts ── */}
-            <TopEvidenceFactsCard pkg={pkg} />
-          </>
-        )}
-
-        {/* ── Case Snapshot for real cases (non-demo) ── */}
-        {!hasData && documents.length > 0 && (
-          <RealCaseSnapshot caseData={caseData} documents={documents} intakePkg={intakePkg} completeDocs={completeDocs} />
-        )}
-      </div>
-
-      {/* ═══ RIGHT COLUMN — Chronology Rail (demo only) ═══ */}
-      {hasData && (
-        <div className="hidden xl:flex w-72 shrink-0">
-          <ChronologyRail
-            events={pkg.timeline_events}
-            selectedId={selectedTimelineEvent}
-            onSelect={setSelectedTimelineEvent}
+          {/* Review Flags */}
+          <ReviewFlagsCard
+            validation={validation}
+            issueFlags={issueFlags}
+            hasData={hasData}
+            pkg={hasData ? pkg : null}
           />
         </div>
-      )}
+
+        {/* ═══ 5. PROCESSING DETAILS (collapsed) ═══ */}
+        <div className="card-elevated overflow-hidden">
+          <button
+            onClick={() => setPipelineOpen(!pipelineOpen)}
+            className="w-full px-4 py-3 flex items-center gap-2 hover:bg-accent/30 transition-colors"
+          >
+            <Settings className="h-3.5 w-3.5 text-muted-foreground" />
+            <span className="text-xs font-semibold text-muted-foreground">Processing Details</span>
+            <span className="text-[10px] text-muted-foreground ml-auto">
+              {pipelineOpen ? "Hide" : "Show"} pipeline status
+            </span>
+            {pipelineOpen ? (
+              <ChevronDown className="h-3.5 w-3.5 text-muted-foreground" />
+            ) : (
+              <ChevronRight className="h-3.5 w-3.5 text-muted-foreground" />
+            )}
+          </button>
+          {pipelineOpen && (
+            <div className="border-t border-border p-4">
+              <PipelineDetails
+                workflow={workflow}
+                documents={documents}
+                completeDocs={completeDocs}
+                intakePkg={intakePkg}
+              />
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* ═══ RIGHT STICKY CHRONOLOGY RAIL ═══ */}
+      <div className="hidden xl:flex w-72 shrink-0">
+        <ChronologyRail
+          events={timelineEvents}
+          hasData={hasData}
+          caseData={caseData}
+          intakePkg={intakePkg}
+        />
+      </div>
     </div>
   );
 };
 
-// ─── Accident Facts ──────────────────────────────────
-function AccidentFactsSection({ pkg, caseData }: { pkg: any; caseData: CaseRow }) {
-  const accidentRefs = pkg.evidence_refs.filter((r: EvidenceReference) => r.linked_entity_id === "te-001");
+// ═════════════════════════════════════════════════════
+// 1. CLAIM HEADER
+// ═════════════════════════════════════════════════════
+function ClaimHeader({
+  claimantName,
+  claimNumber,
+  doi,
+  jurisdiction,
+  attorneyName,
+  lawFirm,
+  primaryStatus,
+  onNavigate,
+}: {
+  claimantName: string;
+  claimNumber: string;
+  doi: string | null;
+  jurisdiction: string;
+  attorneyName: string;
+  lawFirm: string;
+  primaryStatus: { label: string; className: string };
+  onNavigate?: (section: string) => void;
+}) {
+  return (
+    <div className="card-elevated px-5 py-3.5">
+      <div className="flex items-center justify-between gap-4">
+        <div className="flex items-center gap-4 min-w-0 flex-1">
+          <div className="h-10 w-10 rounded-xl bg-primary/10 flex items-center justify-center shrink-0">
+            <User className="h-5 w-5 text-primary" />
+          </div>
+          <div className="min-w-0">
+            <div className="flex items-center gap-2.5">
+              <h2 className="text-[15px] font-semibold text-foreground truncate">{claimantName || "Claimant"}</h2>
+              <span className={primaryStatus.className}>{primaryStatus.label}</span>
+            </div>
+            <div className="flex items-center gap-3 mt-1 flex-wrap">
+              {claimNumber && <MetaChip label={`Claim: ${maskClaimNumber(claimNumber)}`} />}
+              {doi && <MetaChip label={`DOI: ${formatDate(doi)}`} />}
+              {jurisdiction && <MetaChip label={jurisdiction} />}
+              {attorneyName && <MetaChip label={`Atty: ${attorneyName}${lawFirm ? ` · ${lawFirm}` : ""}`} />}
+            </div>
+          </div>
+        </div>
+        <div className="flex items-center gap-2 shrink-0">
+          <HeaderButton icon={Search} label="Find Evidence" onClick={() => onNavigate?.("documents")} />
+          <HeaderButton icon={Download} label="Export" onClick={() => {}} />
+          <HeaderButton icon={ClipboardCheck} label="Intake Review" primary onClick={() => onNavigate?.("intake-review")} />
+        </div>
+      </div>
+    </div>
+  );
+}
 
-  const facts = [
-    { label: "Date of Loss", value: formatDate(caseData.date_of_loss) },
-    { label: "Mechanism", value: "Rear-end MVA, ~35 mph" },
-    { label: "Location", value: "I-95 intersection, Sacramento, CA" },
-    { label: "At-Fault", value: `${caseData.defendant} — ran red signal` },
-    { label: "Witness", value: "Kevin Donovan — pedestrian bystander" },
-    { label: "Police Report", value: "#PR-2024-8812" },
+function MetaChip({ label }: { label: string }) {
+  return (
+    <span className="text-[10px] text-muted-foreground font-medium">{label}</span>
+  );
+}
+
+function HeaderButton({ icon: Icon, label, primary, onClick }: { icon: React.ElementType; label: string; primary?: boolean; onClick: () => void }) {
+  return (
+    <button
+      onClick={onClick}
+      className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[11px] font-medium transition-colors ${
+        primary
+          ? "bg-primary text-primary-foreground hover:bg-primary/90"
+          : "bg-accent text-foreground hover:bg-accent/80"
+      }`}
+    >
+      <Icon className="h-3 w-3" />
+      {label}
+    </button>
+  );
+}
+
+// ═════════════════════════════════════════════════════
+// 2A. CLAIM SUMMARY
+// ═════════════════════════════════════════════════════
+function ClaimSummaryCard({
+  caseData,
+  claimantName,
+  injuries,
+  totalBilled,
+  providerCount,
+  treatmentCount,
+  representedStatus,
+  hasData,
+  pkg,
+}: {
+  caseData: CaseRow;
+  claimantName: string;
+  injuries: any[];
+  totalBilled: number;
+  providerCount: number;
+  treatmentCount: number;
+  representedStatus: string;
+  hasData: boolean;
+  pkg: any;
+}) {
+  const bullets = generateClaimBullets(caseData, claimantName, injuries, totalBilled, providerCount, treatmentCount, representedStatus);
+  const summaryRefs = hasData ? pkg.evidence_refs?.filter((r: EvidenceReference) => r.linked_entity_type === "timeline_event").slice(0, 2) : [];
+
+  return (
+    <div className="card-elevated overflow-hidden flex flex-col">
+      <div className="px-4 py-3 border-b border-border flex items-center gap-2">
+        <BookOpen className="h-3.5 w-3.5 text-primary" />
+        <h3 className="text-xs font-semibold text-foreground">Claim Summary</h3>
+      </div>
+      <div className="px-4 py-3 flex-1">
+        <ul className="space-y-1.5">
+          {bullets.map((b, i) => (
+            <li key={i} className="flex items-start gap-2">
+              <span className="h-1.5 w-1.5 rounded-full bg-primary mt-1.5 shrink-0" />
+              <span className="text-[11px] text-foreground leading-relaxed">
+                {hasData && summaryRefs.length > 0 && i === 0 ? (
+                  <EvidenceStatement text={b} citations={refsToCS(summaryRefs)} />
+                ) : (
+                  b
+                )}
+              </span>
+            </li>
+          ))}
+        </ul>
+      </div>
+    </div>
+  );
+}
+
+function generateClaimBullets(
+  caseData: CaseRow,
+  claimantName: string,
+  injuries: any[],
+  totalBilled: number,
+  providerCount: number,
+  treatmentCount: number,
+  representedStatus: string,
+): string[] {
+  const bullets: string[] = [];
+
+  // Mechanism
+  bullets.push(
+    `${claimantName} involved in motor vehicle collision on ${formatDate(caseData.date_of_loss)}.`
+  );
+
+  // Key injuries
+  if (injuries.length > 0) {
+    const topInjuries = injuries.slice(0, 3).map((i) => i.body_part?.toLowerCase()).filter(Boolean);
+    bullets.push(
+      `${injuries.length} documented injuries including ${topInjuries.join(", ") || "multiple regions"}.`
+    );
+  }
+
+  // Treatment pattern
+  if (treatmentCount > 0) {
+    bullets.push(
+      `${treatmentCount} treatment events across ${providerCount} provider${providerCount !== 1 ? "s" : ""}.`
+    );
+  }
+
+  // Diagnostics
+  const diagCodes = injuries.filter((i) => i.diagnosis_code).slice(0, 3).map((i) => i.diagnosis_code);
+  if (diagCodes.length > 0) {
+    bullets.push(`Key diagnoses: ${diagCodes.join(", ")}.`);
+  }
+
+  // Financials
+  if (totalBilled > 0) {
+    bullets.push(`Total medical specials: $${totalBilled.toLocaleString()}.`);
+  }
+
+  // Representation
+  if (representedStatus) {
+    bullets.push(
+      representedStatus === "represented"
+        ? "Claimant is represented by counsel."
+        : `Claimant status: ${representedStatus}.`
+    );
+  }
+
+  // Complications
+  const preExisting = injuries.filter((i) => i.is_pre_existing);
+  if (preExisting.length > 0) {
+    bullets.push(`${preExisting.length} possible pre-existing condition${preExisting.length > 1 ? "s" : ""} flagged.`);
+  }
+
+  return bullets.slice(0, 8);
+}
+
+// ═════════════════════════════════════════════════════
+// 2B. CASE SNAPSHOT
+// ═════════════════════════════════════════════════════
+function CaseSnapshotCard({
+  demandAmount,
+  totalBilled,
+  providerCount,
+  documentCount,
+  injuryCount,
+  treatmentCount,
+  representedStatus,
+  attorneyName,
+  completeDocs,
+}: {
+  demandAmount: number | null | undefined;
+  totalBilled: number;
+  providerCount: number;
+  documentCount: number;
+  injuryCount: number;
+  treatmentCount: number;
+  representedStatus: string;
+  attorneyName: string;
+  completeDocs: number;
+}) {
+  const rows = [
+    { label: "Demand Amount", value: demandAmount ? `$${demandAmount.toLocaleString()}` : "Policy Limits" },
+    { label: "Total Billed", value: totalBilled > 0 ? `$${totalBilled.toLocaleString()}` : "—" },
+    { label: "Providers", value: `${providerCount}` },
+    { label: "Documents", value: `${completeDocs} / ${documentCount} processed` },
+    { label: "Injury Regions", value: `${injuryCount}` },
+    { label: "Treatment Events", value: `${treatmentCount}` },
+    { label: "Representation", value: representedStatus === "represented" ? `Represented${attorneyName ? ` (${attorneyName})` : ""}` : representedStatus || "Unknown" },
   ];
 
   return (
-    <div className="card-elevated overflow-hidden">
+    <div className="card-elevated overflow-hidden flex flex-col">
       <div className="px-4 py-3 border-b border-border flex items-center gap-2">
-        <Car className="h-3.5 w-3.5 text-primary" />
-        <h3 className="text-xs font-semibold text-foreground">Accident Facts</h3>
-        {accidentRefs.length > 0 && (
-          <div className="flex items-center gap-1 ml-auto">
-            {refsToCS(accidentRefs).slice(0, 2).map((c, i) => (
-              <CitationBadge key={i} source={c} />
-            ))}
-          </div>
-        )}
+        <Shield className="h-3.5 w-3.5 text-primary" />
+        <h3 className="text-xs font-semibold text-foreground">Case Snapshot</h3>
       </div>
-      <div className="p-4">
-        <div className="grid grid-cols-2 sm:grid-cols-3 gap-x-6 gap-y-2.5">
-          {facts.map((f) => (
-            <div key={f.label}>
-              <span className="text-[9px] font-semibold text-muted-foreground uppercase tracking-widest">{f.label}</span>
-              <p className="text-[12px] text-foreground font-medium mt-0.5">{f.value}</p>
+      <div className="px-4 py-3 flex-1">
+        <div className="flex flex-col gap-2">
+          {rows.map((r) => (
+            <div key={r.label} className="flex items-center justify-between gap-2">
+              <span className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">{r.label}</span>
+              <span className="text-[12px] font-semibold text-foreground text-right">{r.value}</span>
             </div>
           ))}
         </div>
@@ -315,244 +548,237 @@ function AccidentFactsSection({ pkg, caseData }: { pkg: any; caseData: CaseRow }
   );
 }
 
-// ─── Injury Region Map (Modern) ──────────────────────
-function InjuryRegionMap({ pkg }: { pkg: any }) {
-  const [selectedId, setSelectedId] = useState<string | null>(null);
-  const { openSource } = useSourceDrawer();
-  const selectedInjury = pkg.injuries.find((i: any) => i.id === selectedId);
+// ═════════════════════════════════════════════════════
+// 2C. NEXT REQUIRED ACTION
+// ═════════════════════════════════════════════════════
+interface NextActionInfo {
+  state: string;
+  description: string;
+  blockers: string[];
+  ctaLabel: string;
+  ctaTarget: string;
+  severity: "info" | "warning" | "success" | "error";
+}
 
-  // Body region definitions with relative positions for a modern schematic
-  const BODY_REGIONS = [
-    { id: "head", label: "Head / Skull", x: 50, y: 8, w: 16, h: 12 },
-    { id: "neck", label: "Cervical Spine", x: 50, y: 18, w: 10, h: 6 },
-    { id: "shoulder-l", label: "L. Shoulder", x: 30, y: 23, w: 12, h: 8 },
-    { id: "shoulder-r", label: "R. Shoulder", x: 70, y: 23, w: 12, h: 8 },
-    { id: "upper-back", label: "Thoracic Spine", x: 50, y: 28, w: 18, h: 10 },
-    { id: "lower-back", label: "Lumbar Spine", x: 50, y: 40, w: 18, h: 10 },
-    { id: "hip-l", label: "L. Hip", x: 38, y: 52, w: 10, h: 8 },
-    { id: "hip-r", label: "R. Hip", x: 62, y: 52, w: 10, h: 8 },
-    { id: "knee-l", label: "L. Knee", x: 40, y: 68, w: 8, h: 8 },
-    { id: "knee-r", label: "R. Knee", x: 60, y: 68, w: 8, h: 8 },
-    { id: "ankle-l", label: "L. Ankle", x: 40, y: 84, w: 8, h: 6 },
-    { id: "ankle-r", label: "R. Ankle", x: 60, y: 84, w: 8, h: 6 },
-  ];
+function computeNextAction(
+  workflowState: string,
+  validation: any,
+  documents: DocumentRow[],
+  completeDocs: number,
+  packageStatus?: string | null,
+): NextActionInfo {
+  const processing = documents.filter((d) => d.document_status === "queued" || d.document_status === "ocr_in_progress");
+  const failed = documents.filter((d) => d.document_status === "failed");
 
-  // Map injuries to body regions
-  const injuryByRegion: Record<string, typeof pkg.injuries> = {};
-  pkg.injuries.forEach((inj: any) => {
-    const regionKey = mapInjuryToRegion(inj.body_part, inj.body_region);
-    if (!injuryByRegion[regionKey]) injuryByRegion[regionKey] = [];
-    injuryByRegion[regionKey].push(inj);
+  if (processing.length > 0) {
+    return {
+      state: "Processing Documents",
+      description: `${processing.length} document${processing.length > 1 ? "s" : ""} still being processed. Results will appear automatically.`,
+      blockers: [],
+      ctaLabel: "View Documents",
+      ctaTarget: "documents",
+      severity: "info",
+    };
+  }
+
+  if (failed.length > 0) {
+    return {
+      state: "Resolve Failed Documents",
+      description: `${failed.length} document${failed.length > 1 ? "s" : ""} failed processing and may be missing from the record.`,
+      blockers: failed.slice(0, 3).map((d) => d.file_name),
+      ctaLabel: "View Documents",
+      ctaTarget: "documents",
+      severity: "error",
+    };
+  }
+
+  if (validation.blockers.length > 0) {
+    return {
+      state: "Needs Intake Review",
+      description: "Required fields are missing or unverified. Complete intake review to proceed.",
+      blockers: validation.blockers.slice(0, 3).map((b: any) => b.message ?? b),
+      ctaLabel: "Open Intake Review",
+      ctaTarget: "intake-review",
+      severity: "warning",
+    };
+  }
+
+  if (packageStatus === "ready_for_review") {
+    return {
+      state: "Finalize Intake Review",
+      description: "Extracted data is assembled and ready for human verification.",
+      blockers: validation.warnings.slice(0, 3).map((w: any) => w.message ?? w),
+      ctaLabel: "Open Intake Review",
+      ctaTarget: "intake-review",
+      severity: "warning",
+    };
+  }
+
+  if (packageStatus === "published_to_evaluateiq") {
+    return {
+      state: "Ready for EvaluateIQ",
+      description: "Intake package published. Claim is ready for valuation.",
+      blockers: [],
+      ctaLabel: "Open EvaluateIQ",
+      ctaTarget: "evaluate",
+      severity: "success",
+    };
+  }
+
+  return {
+    state: "Review Pending",
+    description: "Upload documents and complete intake to proceed.",
+    blockers: [],
+    ctaLabel: "Upload Documents",
+    ctaTarget: "documents",
+    severity: "info",
+  };
+}
+
+function NextActionCard({ action, onNavigate }: { action: NextActionInfo; onNavigate?: (section: string) => void }) {
+  const severityStyles: Record<string, { bg: string; border: string; icon: React.ElementType; iconColor: string }> = {
+    info: { bg: "bg-primary/5", border: "border-primary/20", icon: Info, iconColor: "text-primary" },
+    warning: { bg: "bg-[hsl(var(--status-attention))]/5", border: "border-[hsl(var(--status-attention))]/20", icon: AlertTriangle, iconColor: "text-[hsl(var(--status-attention))]" },
+    success: { bg: "bg-[hsl(var(--status-approved))]/5", border: "border-[hsl(var(--status-approved))]/20", icon: CheckCircle2, iconColor: "text-[hsl(var(--status-approved))]" },
+    error: { bg: "bg-destructive/5", border: "border-destructive/20", icon: XCircle, iconColor: "text-destructive" },
+  };
+  const s = severityStyles[action.severity];
+  const IconComp = s.icon;
+
+  return (
+    <div className={`card-elevated overflow-hidden flex flex-col border ${s.border}`}>
+      <div className={`px-4 py-3 border-b ${s.border} flex items-center gap-2 ${s.bg}`}>
+        <IconComp className={`h-3.5 w-3.5 ${s.iconColor}`} />
+        <h3 className="text-xs font-semibold text-foreground">Next Action</h3>
+      </div>
+      <div className="px-4 py-3 flex flex-col flex-1 justify-between gap-3">
+        <div>
+          <p className="text-sm font-semibold text-foreground">{action.state}</p>
+          <p className="text-[11px] text-muted-foreground leading-relaxed mt-1">{action.description}</p>
+
+          {action.blockers.length > 0 && (
+            <div className="mt-2.5 flex flex-col gap-1">
+              {action.blockers.map((b, i) => (
+                <div key={i} className="flex items-start gap-1.5">
+                  <XCircle className="h-3 w-3 text-destructive shrink-0 mt-0.5" />
+                  <span className="text-[10px] text-foreground">{b}</span>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+
+        <button
+          onClick={() => onNavigate?.(action.ctaTarget)}
+          className="w-full flex items-center justify-center gap-2 px-4 py-2 rounded-lg bg-primary text-primary-foreground text-[12px] font-semibold hover:bg-primary/90 transition-colors"
+        >
+          {action.ctaLabel}
+          <ArrowRight className="h-3.5 w-3.5" />
+        </button>
+      </div>
+    </div>
+  );
+}
+
+// ═════════════════════════════════════════════════════
+// 3A. FINDINGS BY BODY SYSTEM
+// ═════════════════════════════════════════════════════
+interface BodySystemGroup {
+  system: string;
+  findings: any[];
+}
+
+function groupFindingsBySystem(injuries: any[]): BodySystemGroup[] {
+  const groups: Record<string, any[]> = {};
+  injuries.forEach((inj) => {
+    const system = mapInjuryToBodySystem(inj.body_part, inj.body_region);
+    if (!groups[system]) groups[system] = [];
+    groups[system].push(inj);
   });
+
+  const order = ["Cervical", "Thoracic", "Lumbar", "Upper Extremity", "Lower Extremity", "Neurologic", "Functional / Psychological", "Other"];
+  return order
+    .filter((s) => groups[s])
+    .map((s) => ({ system: s, findings: groups[s] }));
+}
+
+function FindingsByBodySystem({ findings, hasData }: { findings: BodySystemGroup[]; hasData: boolean }) {
+  const { openSource } = useSourceDrawer();
+  const [expandedSystem, setExpandedSystem] = useState<string | null>(findings[0]?.system ?? null);
+
+  if (findings.length === 0) {
+    return (
+      <div className="card-elevated px-4 py-8 text-center">
+        <Activity className="h-5 w-5 text-muted-foreground mx-auto mb-2" />
+        <p className="text-xs text-muted-foreground">No injury findings extracted yet.</p>
+      </div>
+    );
+  }
 
   return (
     <div className="card-elevated overflow-hidden">
       <div className="px-4 py-3 border-b border-border flex items-center gap-2">
         <Activity className="h-3.5 w-3.5 text-primary" />
-        <h3 className="text-xs font-semibold text-foreground">Findings by Body Region</h3>
+        <h3 className="text-xs font-semibold text-foreground">Findings by Body System</h3>
         <span className="text-[10px] font-medium bg-accent text-muted-foreground px-2 py-0.5 rounded-full ml-auto">
-          {pkg.injuries.length}
+          {findings.reduce((n, g) => n + g.findings.length, 0)} total
         </span>
       </div>
 
-      <div className="flex">
-        {/* Schematic body map */}
-        <div className="flex-1 p-4 flex items-center justify-center min-h-[320px]">
-          <svg viewBox="0 0 100 100" className="w-full max-w-[180px]">
-            {/* Body outline — clean modern lines */}
-            <ellipse cx="50" cy="8" rx="5.5" ry="6.5" fill="none" stroke="hsl(var(--border))" strokeWidth="0.6" />
-            <line x1="50" y1="14.5" x2="50" y2="17" stroke="hsl(var(--border))" strokeWidth="0.6" />
-            {/* Torso */}
-            <rect x="40" y="17" width="20" height="34" rx="3" fill="none" stroke="hsl(var(--border))" strokeWidth="0.5" />
-            {/* Arms */}
-            <path d="M40 19 L30 24 L27 40 L30 42" fill="none" stroke="hsl(var(--border))" strokeWidth="0.4" />
-            <path d="M60 19 L70 24 L73 40 L70 42" fill="none" stroke="hsl(var(--border))" strokeWidth="0.4" />
-            {/* Legs */}
-            <path d="M43 51 L41 70 L39 88 L43 90" fill="none" stroke="hsl(var(--border))" strokeWidth="0.4" />
-            <path d="M57 51 L59 70 L61 88 L57 90" fill="none" stroke="hsl(var(--border))" strokeWidth="0.4" />
-
-            {/* Active injury regions */}
-            {BODY_REGIONS.map((region) => {
-              const injuries = injuryByRegion[region.id] || [];
-              if (injuries.length === 0) return null;
-              const maxSeverity = getMaxSeverity(injuries);
-              const isSelected = injuries.some((i: any) => i.id === selectedId);
-
-              return (
-                <g key={region.id}>
-                  {/* Pulsing highlight */}
-                  <rect
-                    x={region.x - region.w / 2}
-                    y={region.y - region.h / 2}
-                    width={region.w}
-                    height={region.h}
-                    rx="2"
-                    fill={getSeverityFill(maxSeverity)}
-                    stroke={getSeverityStroke(maxSeverity)}
-                    strokeWidth={isSelected ? "1" : "0.5"}
-                    className="cursor-pointer transition-all"
-                    opacity={isSelected ? 0.5 : 0.25}
-                    onClick={() => setSelectedId(isSelected ? null : injuries[0].id)}
-                  >
-                    {!isSelected && (
-                      <animate attributeName="opacity" values="0.15;0.3;0.15" dur="3s" repeatCount="indefinite" />
-                    )}
-                  </rect>
-                  {/* Injury count badge */}
-                  <circle
-                    cx={region.x + region.w / 2 - 1}
-                    cy={region.y - region.h / 2 + 1}
-                    r="2.5"
-                    fill={getSeverityStroke(maxSeverity)}
-                    className="cursor-pointer"
-                    onClick={() => setSelectedId(isSelected ? null : injuries[0].id)}
-                  />
-                  <text
-                    x={region.x + region.w / 2 - 1}
-                    y={region.y - region.h / 2 + 1.8}
-                    textAnchor="middle"
-                    fill="white"
-                    fontSize="2.5"
-                    fontWeight="600"
-                    className="pointer-events-none"
-                  >
-                    {injuries.length}
-                  </text>
-                </g>
-              );
-            })}
-          </svg>
-        </div>
-
-        {/* Injury list */}
-        <div className="w-52 border-l border-border overflow-y-auto max-h-[320px]">
-          {selectedInjury ? (
-            <div className="p-3">
-              <button onClick={() => setSelectedId(null)} className="text-[10px] text-primary font-medium mb-2 hover:underline">
-                ← All injuries
+      <div className="divide-y divide-border">
+        {findings.map((group) => {
+          const isExpanded = expandedSystem === group.system;
+          const SystemIcon = BODY_SYSTEM_ICON[group.system] ?? CircleDot;
+          return (
+            <div key={group.system}>
+              <button
+                onClick={() => setExpandedSystem(isExpanded ? null : group.system)}
+                className="w-full px-4 py-2.5 flex items-center gap-2.5 hover:bg-accent/30 transition-colors"
+              >
+                <SystemIcon className="h-3.5 w-3.5 text-primary" />
+                <span className="text-[12px] font-semibold text-foreground flex-1 text-left">{group.system}</span>
+                <span className="text-[10px] font-medium text-muted-foreground bg-accent px-1.5 py-0.5 rounded-full">{group.findings.length}</span>
+                {isExpanded ? <ChevronDown className="h-3 w-3 text-muted-foreground" /> : <ChevronRight className="h-3 w-3 text-muted-foreground" />}
               </button>
-              <span className={SEVERITY_LABEL[selectedInjury.severity]}>{selectedInjury.severity}</span>
-              <h4 className="text-[12px] font-semibold text-foreground mt-2">{selectedInjury.body_part}</h4>
-              <p className="text-[11px] text-foreground leading-relaxed mt-1">{selectedInjury.diagnosis_description}</p>
-              <div className="flex flex-col gap-1.5 mt-3">
-                <span className="text-[9px] font-semibold text-muted-foreground uppercase tracking-widest">ICD-10</span>
-                <code className="text-[10px] font-mono text-foreground bg-accent px-1.5 py-0.5 rounded w-fit">{selectedInjury.diagnosis_code}</code>
-              </div>
-              {selectedInjury.is_pre_existing && (
-                <span className="status-badge-attention text-[9px] mt-2 inline-block">Possible Pre-Existing</span>
-              )}
-              {selectedInjury.evidence_refs?.length > 0 && (
-                <div className="mt-3 pt-2 border-t border-border flex flex-wrap gap-1">
-                  {refsToCS(selectedInjury.evidence_refs).map((c: CitationSource, i: number) => (
-                    <CitationBadge key={i} source={c} />
+
+              {isExpanded && (
+                <div className="border-t border-border/50">
+                  {/* Table header */}
+                  <div className="grid grid-cols-[1fr_100px_80px_80px_70px_60px_40px] gap-2 px-4 py-1.5 bg-accent/30 text-[9px] font-semibold text-muted-foreground uppercase tracking-wider">
+                    <span>Finding</span>
+                    <span>Diagnosis</span>
+                    <span>First Date</span>
+                    <span>Last Date</span>
+                    <span>Severity</span>
+                    <span>Evidence</span>
+                    <span></span>
+                  </div>
+                  {group.findings.map((f: any) => (
+                    <div
+                      key={f.id}
+                      className="grid grid-cols-[1fr_100px_80px_80px_70px_60px_40px] gap-2 px-4 py-2 hover:bg-accent/20 transition-colors items-center cursor-pointer"
+                      onClick={() => {
+                        if (f.evidence_refs?.length > 0) {
+                          const ref = f.evidence_refs[0];
+                          openSource({ docName: ref.doc_name, page: ref.page_label, excerpt: ref.quoted_text, relevance: ref.relevance });
+                        }
+                      }}
+                    >
+                      <span className="text-[11px] font-medium text-foreground truncate">{f.body_part}</span>
+                      <code className="text-[10px] font-mono text-muted-foreground">{f.diagnosis_code || "—"}</code>
+                      <span className="text-[10px] text-muted-foreground">{f.first_date ? formatShortDate(f.first_date) : "—"}</span>
+                      <span className="text-[10px] text-muted-foreground">{f.last_date ? formatShortDate(f.last_date) : "—"}</span>
+                      <span className={`${SEVERITY_BADGE[f.severity] ?? "status-badge-review"} text-[9px]`}>{f.severity}</span>
+                      <span className="text-[10px] text-muted-foreground">{f.evidence_refs?.length ?? 0}</span>
+                      <div>
+                        {f.is_pre_existing && (
+                          <AlertTriangle className="h-3 w-3 text-[hsl(var(--status-attention))]" />
+                        )}
+                      </div>
+                    </div>
                   ))}
                 </div>
               )}
-            </div>
-          ) : (
-            <div className="p-2">
-              {pkg.injuries.map((inj: any) => (
-                <button
-                  key={inj.id}
-                  onClick={() => setSelectedId(inj.id)}
-                  className="w-full text-left px-2.5 py-2 rounded-lg hover:bg-accent/60 transition-colors flex items-start gap-2"
-                >
-                  <span className={`h-2 w-2 rounded-full mt-1 shrink-0 ${SEVERITY_DOT[inj.severity]}`} />
-                  <div className="min-w-0">
-                    <p className="text-[11px] font-medium text-foreground truncate">{inj.body_part}</p>
-                    <p className="text-[10px] text-muted-foreground">{inj.diagnosis_code}</p>
-                  </div>
-                </button>
-              ))}
-            </div>
-          )}
-        </div>
-      </div>
-    </div>
-  );
-}
-
-// ─── Treatment Summary Card ──────────────────────────
-function TreatmentSummaryCard({ pkg, stats, billing }: { pkg: any; stats: any; billing: any }) {
-  return (
-    <div className="card-elevated overflow-hidden">
-      <div className="px-4 py-3 border-b border-border flex items-center gap-2">
-        <Stethoscope className="h-3.5 w-3.5 text-primary" />
-        <h3 className="text-xs font-semibold text-foreground">Treatment Summary</h3>
-      </div>
-      <div className="p-4">
-        <div className="grid grid-cols-2 gap-2.5">
-          <StatBlock label="Total Visits" value={stats.totalVisits.toString()} />
-          <StatBlock label="PT Sessions" value={`${stats.ptSessions} / 36`} warn={stats.ptSessions < 36} />
-          <StatBlock label="Injections" value={stats.injections.toString()} />
-          <StatBlock label="Providers" value={stats.providers.toString()} />
-          <StatBlock label="Total Billed" value={`$${billing.totalBilled.toLocaleString()}`} />
-          <StatBlock label="Adjusted" value={`$${billing.totalAdjusted.toLocaleString()}`} />
-        </div>
-
-        {/* Treatment types */}
-        <div className="mt-3 pt-3 border-t border-border">
-          <span className="section-label">Treatment Types</span>
-          <div className="flex flex-wrap gap-1.5 mt-2">
-            {pkg.treatments
-              .map((t: any) => t.treatment_type.replace(/_/g, " "))
-              .filter((v: string, i: number, a: string[]) => a.indexOf(v) === i)
-              .map((type: string) => (
-                <span
-                  key={type}
-                  className="text-[10px] font-medium px-2 py-0.5 rounded-md bg-accent text-muted-foreground capitalize"
-                >
-                  {type}
-                </span>
-              ))}
-          </div>
-        </div>
-
-        {/* Provider list */}
-        <div className="mt-3 pt-3 border-t border-border">
-          <span className="section-label">Key Providers</span>
-          <div className="flex flex-col gap-1.5 mt-2">
-            {pkg.providers.slice(0, 3).map((p: any) => (
-              <div key={p.id} className="flex items-center gap-2">
-                <span className="h-1.5 w-1.5 rounded-full bg-primary shrink-0" />
-                <span className="text-[11px] text-foreground font-medium truncate">{p.name}</span>
-                <span className="text-[10px] text-muted-foreground ml-auto">{p.specialty}</span>
-              </div>
-            ))}
-          </div>
-        </div>
-      </div>
-    </div>
-  );
-}
-
-// ─── Red Flags Card ──────────────────────────────────
-function RedFlagsCard({ pkg }: { pkg: any }) {
-  return (
-    <div className="card-elevated overflow-hidden">
-      <div className="px-4 py-3 border-b border-border flex items-center gap-2">
-        <AlertTriangle className="h-3.5 w-3.5 text-destructive" />
-        <h3 className="text-xs font-semibold text-foreground">Red Flags & Review Points</h3>
-        <span className="text-[10px] font-semibold bg-destructive/10 text-destructive px-2 py-0.5 rounded-full ml-auto">
-          {pkg.issue_flags.length}
-        </span>
-      </div>
-      <div className="divide-y divide-border">
-        {pkg.issue_flags.map((flag: any) => {
-          const flagRefs = pkg.evidence_refs.filter((r: EvidenceReference) => r.linked_entity_id === flag.id);
-          return (
-            <div key={flag.id} className="px-4 py-3 hover:bg-accent/20 transition-colors">
-              <div className="flex items-start gap-2.5">
-                <span className="text-sm mt-0.5">{FLAG_ICON_MAP[flag.flag_type] ?? "⚠"}</span>
-                <div className="flex-1 min-w-0">
-                  <p className="text-[11px] font-semibold text-foreground">
-                    {flag.flag_type.replace(/_/g, " ").replace(/\b\w/g, (c: string) => c.toUpperCase())}
-                  </p>
-                  <p className="text-[11px] text-muted-foreground leading-relaxed mt-0.5">
-                    <EvidenceStatement text={flag.description} citations={refsToCS(flagRefs)} />
-                  </p>
-                </div>
-              </div>
             </div>
           );
         })}
@@ -561,101 +787,19 @@ function RedFlagsCard({ pkg }: { pkg: any }) {
   );
 }
 
-// ─── Functional Impact Card ──────────────────────────
-function FunctionalImpactCard() {
-  const impacts = [
-    { area: "Work Capacity", status: "Impaired", detail: "Unable to perform warehouse logistics duties. Light duty only per Dr. Chen.", level: 75 },
-    { area: "Daily Activities", status: "Limited", detail: "Difficulty with overhead reaching, prolonged sitting, driving > 30 min.", level: 60 },
-    { area: "Sleep Quality", status: "Disrupted", detail: "Reports waking 2-3x nightly due to cervical pain. On muscle relaxants.", level: 50 },
-    { area: "Recreation", status: "Suspended", detail: "Cannot participate in gym activities, hiking, or recreational sports.", level: 85 },
-  ];
-
-  return (
-    <div className="card-elevated overflow-hidden">
-      <div className="px-4 py-3 border-b border-border flex items-center gap-2">
-        <Heart className="h-3.5 w-3.5 text-primary" />
-        <h3 className="text-xs font-semibold text-foreground">Functional Impact</h3>
-      </div>
-      <div className="p-4 flex flex-col gap-3">
-        {impacts.map((imp) => (
-          <div key={imp.area}>
-            <div className="flex items-center justify-between mb-1">
-              <span className="text-[11px] font-medium text-foreground">{imp.area}</span>
-              <span className="text-[10px] font-semibold text-muted-foreground">{imp.status}</span>
-            </div>
-            <div className="h-1.5 w-full bg-accent rounded-full overflow-hidden mb-1">
-              <div
-                className="h-full rounded-full transition-all bg-gradient-to-r from-primary to-destructive"
-                style={{ width: `${imp.level}%` }}
-              />
-            </div>
-            <p className="text-[10px] text-muted-foreground leading-relaxed">{imp.detail}</p>
-          </div>
-        ))}
-      </div>
-    </div>
-  );
-}
-
-// ─── Top Evidence-Linked Facts ───────────────────────
-function TopEvidenceFactsCard({ pkg }: { pkg: any }) {
-  const { openSource } = useSourceDrawer();
-
-  // Get the most impactful evidence refs
-  const topRefs = pkg.evidence_refs
-    .filter((r: EvidenceReference) => r.quoted_text && r.confidence >= 0.85)
-    .slice(0, 6);
-
-  const RELEVANCE_CHIP: Record<string, string> = {
-    direct: "bg-primary/10 text-primary border-primary/20",
-    corroborating: "bg-[hsl(var(--status-approved-bg))] text-[hsl(var(--status-approved-foreground))] border-[hsl(var(--status-approved)/0.2)]",
-    contradicting: "bg-[hsl(var(--status-failed-bg))] text-[hsl(var(--status-failed-foreground))] border-[hsl(var(--status-failed)/0.2)]",
-    contextual: "bg-accent text-muted-foreground border-border",
-  };
-
-  return (
-    <div className="card-elevated overflow-hidden">
-      <div className="px-4 py-3 border-b border-border flex items-center gap-2">
-        <BookOpen className="h-3.5 w-3.5 text-primary" />
-        <h3 className="text-xs font-semibold text-foreground">Top Evidence-Linked Facts</h3>
-        <span className="text-[10px] font-medium bg-accent text-muted-foreground px-2 py-0.5 rounded-full ml-auto">
-          {topRefs.length} key
-        </span>
-      </div>
-      <div className="divide-y divide-border">
-        {topRefs.map((ref: EvidenceReference) => (
-          <div
-            key={ref.id}
-            onClick={() => openSource({ docName: ref.doc_name, page: ref.page_label, excerpt: ref.quoted_text, relevance: ref.relevance as any })}
-            className="px-4 py-3 hover:bg-accent/20 transition-colors cursor-pointer group"
-          >
-            <div className="flex items-center gap-2 mb-1.5">
-              <span className={`text-[9px] font-semibold uppercase tracking-wider px-1.5 py-0.5 rounded border ${RELEVANCE_CHIP[ref.relevance] ?? RELEVANCE_CHIP.direct}`}>
-                {ref.relevance}
-              </span>
-              <span className="text-[10px] font-semibold text-primary bg-primary/5 px-1.5 py-0.5 rounded">{ref.page_label}</span>
-              <span className="text-[11px] font-medium text-foreground truncate flex-1">{ref.doc_name}</span>
-              <Zap className="h-3 w-3 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity" />
-            </div>
-            <blockquote className="text-[11px] text-foreground leading-relaxed pl-3 border-l-2 border-primary/20 evidence-text">
-              "{ref.quoted_text}"
-            </blockquote>
-          </div>
-        ))}
-      </div>
-    </div>
-  );
-}
-
-// ─── Chronology Rail (Right Side) ────────────────────
+// ═════════════════════════════════════════════════════
+// 3B. CHRONOLOGY RAIL (Right sticky)
+// ═════════════════════════════════════════════════════
 function ChronologyRail({
   events,
-  selectedId,
-  onSelect,
+  hasData,
+  caseData,
+  intakePkg,
 }: {
   events: TimelineEvent[];
-  selectedId: string | null;
-  onSelect: (id: string | null) => void;
+  hasData: boolean;
+  caseData: CaseRow;
+  intakePkg: any;
 }) {
   const { openSource } = useSourceDrawer();
   const [expandedIds, setExpandedIds] = useState<Set<string>>(new Set());
@@ -668,8 +812,24 @@ function ChronologyRail({
     });
   };
 
+  // If no timeline events, show a placeholder
+  if (!hasData || events.length === 0) {
+    return (
+      <div className="card-elevated flex flex-col sticky top-5 max-h-[calc(100vh-140px)] w-full">
+        <div className="px-3.5 py-3 border-b border-border flex items-center gap-2 shrink-0">
+          <Clock className="h-3.5 w-3.5 text-primary" />
+          <h3 className="text-xs font-semibold text-foreground">Chronology</h3>
+        </div>
+        <div className="flex-1 p-4 flex flex-col items-center justify-center text-center">
+          <Clock className="h-6 w-6 text-muted-foreground mb-2" />
+          <p className="text-[11px] text-muted-foreground">Chronology events will appear here once documents are fully processed.</p>
+        </div>
+      </div>
+    );
+  }
+
   return (
-    <div className="card-elevated flex flex-col h-fit sticky top-5 max-h-[calc(100vh-140px)]">
+    <div className="card-elevated flex flex-col h-fit sticky top-5 max-h-[calc(100vh-140px)] w-full">
       <div className="px-3.5 py-3 border-b border-border flex items-center gap-2 shrink-0">
         <Clock className="h-3.5 w-3.5 text-primary" />
         <h3 className="text-xs font-semibold text-foreground">Chronology</h3>
@@ -680,37 +840,24 @@ function ChronologyRail({
 
       <div className="flex-1 overflow-y-auto p-3">
         <div className="relative">
-          {/* Vertical line */}
           <div className="absolute left-[5px] top-2 bottom-2 w-px bg-border" />
-
           {events.map((evt) => {
             const isExpanded = expandedIds.has(evt.id);
-            const isSelected = selectedId === evt.id;
             const dot = CATEGORY_DOT[evt.category] ?? "bg-muted-foreground";
+            const EvtIcon = CATEGORY_ICON[evt.category] ?? CircleDot;
 
             return (
               <div key={evt.id} className="relative pl-5 pb-3">
-                {/* Dot */}
-                <div
-                  className={`absolute left-0 top-1.5 h-[11px] w-[11px] rounded-full border-2 border-card ${dot} ${
-                    isSelected ? "ring-2 ring-primary/30 scale-125" : ""
-                  } transition-all cursor-pointer`}
-                  onClick={() => onSelect(isSelected ? null : evt.id)}
-                />
+                <div className={`absolute left-0 top-1.5 h-[11px] w-[11px] rounded-full border-2 border-card ${dot} transition-all`} />
 
                 <button
                   onClick={() => toggleExpand(evt.id)}
-                  className={`w-full text-left rounded-md px-2 py-1.5 transition-all ${
-                    isSelected ? "bg-primary/5" : "hover:bg-accent/50"
-                  }`}
+                  className="w-full text-left rounded-md px-2 py-1.5 transition-all hover:bg-accent/50"
                 >
                   <div className="flex items-center gap-1.5">
                     <span className="text-[10px] font-semibold text-foreground tabular-nums">{formatShortDate(evt.event_date)}</span>
-                    {isExpanded ? (
-                      <ChevronDown className="h-2.5 w-2.5 text-muted-foreground ml-auto" />
-                    ) : (
-                      <ChevronRight className="h-2.5 w-2.5 text-muted-foreground ml-auto" />
-                    )}
+                    <EvtIcon className="h-2.5 w-2.5 text-muted-foreground" />
+                    {isExpanded ? <ChevronDown className="h-2.5 w-2.5 text-muted-foreground ml-auto" /> : <ChevronRight className="h-2.5 w-2.5 text-muted-foreground ml-auto" />}
                   </div>
                   <p className="text-[10px] text-muted-foreground font-medium mt-0.5 truncate">{evt.label}</p>
                 </button>
@@ -745,192 +892,287 @@ function ChronologyRail({
   );
 }
 
-// ─── Real Case Snapshot (DB-driven) ──────────────────
-function RealCaseSnapshot({
-  caseData,
-  documents,
-  intakePkg,
-  completeDocs,
+// ═════════════════════════════════════════════════════
+// 4A. BILLING SUMMARY
+// ═════════════════════════════════════════════════════
+function BillingSummaryCard({
+  totalBilled,
+  totalAdjusted,
+  totalPaid,
+  billCount,
+  providerCount,
 }: {
-  caseData: CaseRow;
-  documents: DocumentRow[];
-  intakePkg: any;
-  completeDocs: number;
+  totalBilled: number;
+  totalAdjusted: number;
+  totalPaid: number;
+  billCount: number;
+  providerCount: number;
 }) {
-  const specials = intakePkg?.specials_summary as any;
-  const totalBilled = specials?.total_billed ?? 0;
-  const billCount = specials?.bill_count ?? 0;
-  const providerCount = specials?.provider_count ?? intakePkg?.provider_list?.length ?? 0;
-  const injuryCount = intakePkg?.injury_summary?.length ?? 0;
-  const treatmentSummary = intakePkg?.treatment_summary as any;
-  const treatmentCount = treatmentSummary?.treatment_count ?? 0;
-  const representedStatus = intakePkg?.represented_status ?? "";
-  const attorneyName = intakePkg?.attorney_name ?? "";
-  const lawFirm = intakePkg?.law_firm ?? "";
-  const demandAmount = intakePkg?.demand_amount;
-  const demandDeadline = intakePkg?.demand_deadline ?? "";
-  const claimantName = intakePkg?.claimant_name ?? caseData.claimant;
-
   return (
-    <div className="flex flex-col gap-4">
-      {/* Case Header Card */}
-      <div className="card-elevated overflow-hidden">
-        <div className="px-4 py-3 border-b border-border flex items-center gap-2">
-          <User className="h-3.5 w-3.5 text-primary" />
-          <h3 className="text-xs font-semibold text-foreground">Case Snapshot</h3>
-          {intakePkg?.package_status && (
-            <span className="ml-auto text-[9px] font-semibold uppercase tracking-wider text-muted-foreground bg-accent px-2 py-0.5 rounded-full">
-              {intakePkg.package_status.replace(/_/g, " ")}
-            </span>
-          )}
-        </div>
-        <div className="p-4">
-          <div className="flex items-start gap-3 mb-3">
-            <div className="h-9 w-9 rounded-xl bg-primary/10 flex items-center justify-center shrink-0">
-              <User className="h-4.5 w-4.5 text-primary" />
-            </div>
-            <div className="flex-1 min-w-0">
-              <h2 className="text-sm font-semibold text-foreground">{claimantName}</h2>
-              <p className="text-[11px] text-muted-foreground mt-0.5">
-                {representedStatus === "represented" && attorneyName
-                  ? `Represented by ${attorneyName}${lawFirm ? ` · ${lawFirm}` : ""}`
-                  : representedStatus || "Representation unknown"
-                }
-                {caseData.jurisdiction_state ? ` · ${caseData.jurisdiction_state}` : ""}
-              </p>
-            </div>
+    <div className="card-elevated overflow-hidden">
+      <div className="px-4 py-3 border-b border-border flex items-center gap-2">
+        <DollarSign className="h-3.5 w-3.5 text-primary" />
+        <h3 className="text-xs font-semibold text-foreground">Billing Summary</h3>
+      </div>
+      <div className="p-4">
+        <div className="flex flex-col gap-2">
+          <div className="flex justify-between items-center">
+            <span className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">Total Billed</span>
+            <span className="text-sm font-bold text-foreground">{totalBilled > 0 ? `$${totalBilled.toLocaleString()}` : "—"}</span>
           </div>
-
-          {intakePkg?.claimant_name && (
-            <p className="text-[12px] text-foreground leading-relaxed mb-3">
-              {caseData.date_of_loss
-                ? `Claim arising from incident on ${formatDate(caseData.date_of_loss)}.`
-                : "Date of loss pending."
-              }
-              {injuryCount > 0 && ` ${injuryCount} injuries documented.`}
-              {treatmentCount > 0 && ` ${treatmentCount} treatment events across ${providerCount} providers.`}
-              {totalBilled > 0 && ` Total medical specials: $${totalBilled.toLocaleString()}.`}
-              {demandAmount != null && ` Demand: $${demandAmount.toLocaleString()}.`}
-              {!demandAmount && demandDeadline && ` Demand for policy limits.`}
-            </p>
+          {totalAdjusted > 0 && (
+            <div className="flex justify-between items-center">
+              <span className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">Adjusted</span>
+              <span className="text-[12px] font-semibold text-foreground">${totalAdjusted.toLocaleString()}</span>
+            </div>
           )}
-
-          <div className="flex flex-wrap gap-x-5 gap-y-1.5 pt-3 border-t border-border">
-            <MiniStat label="DOI" value={formatDate(caseData.date_of_loss)} />
-            <MiniStat label="Claim #" value={maskClaimNumber(caseData.claim_number)} mono />
-            <MiniStat label="Jurisdiction" value={caseData.jurisdiction_state || "—"} />
-            {(caseData.defendant || caseData.insured) && <MiniStat label="Insured" value={caseData.defendant || caseData.insured} />}
-            {demandDeadline && <MiniStat label="Deadline" value={demandDeadline} />}
+          {totalPaid > 0 && (
+            <div className="flex justify-between items-center">
+              <span className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">Paid</span>
+              <span className="text-[12px] font-semibold text-foreground">${totalPaid.toLocaleString()}</span>
+            </div>
+          )}
+          <div className="flex justify-between items-center pt-2 border-t border-border mt-1">
+            <span className="text-[10px] text-muted-foreground">{billCount > 0 ? `${billCount} line items` : "—"}</span>
+            <span className="text-[10px] text-muted-foreground">{providerCount} provider{providerCount !== 1 ? "s" : ""}</span>
           </div>
         </div>
       </div>
+    </div>
+  );
+}
 
-      {/* Key Metrics Grid */}
-      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
-        <MetricTile icon={FileText} label="Documents" value={`${completeDocs}/${documents.length}`} sub="processed" />
-        <MetricTile icon={Stethoscope} label="Providers" value={`${providerCount}`} sub={treatmentCount > 0 ? `${treatmentCount} visits` : ""} />
-        <MetricTile icon={DollarSign} label="Total Billed" value={totalBilled > 0 ? `$${totalBilled.toLocaleString()}` : "—"} sub={billCount > 0 ? `${billCount} lines` : ""} />
-        <MetricTile icon={Heart} label="Injuries" value={injuryCount > 0 ? `${injuryCount}` : "—"} sub="" />
-        <MetricTile icon={Shield} label="Demand" value={demandAmount ? `$${demandAmount.toLocaleString()}` : demandDeadline ? "Policy Limits" : "—"} sub="" />
-        <MetricTile icon={Clock} label="Status" value={representedStatus === "represented" ? "Represented" : representedStatus || "—"} sub="" />
+// ═════════════════════════════════════════════════════
+// 4B. DOCUMENTS
+// ═════════════════════════════════════════════════════
+function DocumentsCard({ documents, completeDocs }: { documents: DocumentRow[]; completeDocs: number }) {
+  const failed = documents.filter((d) => d.document_status === "failed").length;
+  const processing = documents.filter((d) => d.document_status === "queued" || d.document_status === "ocr_in_progress").length;
+
+  return (
+    <div className="card-elevated overflow-hidden">
+      <div className="px-4 py-3 border-b border-border flex items-center gap-2">
+        <FileText className="h-3.5 w-3.5 text-primary" />
+        <h3 className="text-xs font-semibold text-foreground">Documents</h3>
+        <span className="text-[10px] font-medium bg-accent text-muted-foreground px-2 py-0.5 rounded-full ml-auto">{documents.length}</span>
+      </div>
+      <div className="p-4">
+        <div className="flex flex-col gap-2">
+          <div className="flex justify-between items-center">
+            <span className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">Processed</span>
+            <span className="text-[12px] font-semibold text-foreground">{completeDocs} / {documents.length}</span>
+          </div>
+          {processing > 0 && (
+            <div className="flex justify-between items-center">
+              <span className="text-[10px] font-semibold text-[hsl(var(--status-processing))] uppercase tracking-wider">Processing</span>
+              <span className="text-[12px] font-semibold text-foreground">{processing}</span>
+            </div>
+          )}
+          {failed > 0 && (
+            <div className="flex justify-between items-center">
+              <span className="text-[10px] font-semibold text-destructive uppercase tracking-wider">Failed</span>
+              <span className="text-[12px] font-semibold text-destructive">{failed}</span>
+            </div>
+          )}
+          {/* Document type breakdown */}
+          <div className="pt-2 border-t border-border mt-1 flex flex-wrap gap-1.5">
+            {Object.entries(
+              documents.reduce<Record<string, number>>((acc, d) => {
+                const t = d.document_type?.replace(/_/g, " ") || "unknown";
+                acc[t] = (acc[t] ?? 0) + 1;
+                return acc;
+              }, {})
+            ).map(([type, count]) => (
+              <span key={type} className="text-[9px] font-medium px-1.5 py-0.5 rounded bg-accent text-muted-foreground capitalize">
+                {type} ({count})
+              </span>
+            ))}
+          </div>
+        </div>
       </div>
     </div>
   );
 }
 
-function MetricTile({ icon: Icon, label, value, sub }: { icon: React.ElementType; label: string; value: string; sub: string }) {
-  return (
-    <div className="card-elevated px-3 py-2.5">
-      <div className="flex items-center gap-1.5 mb-0.5">
-        <Icon className="h-3 w-3 text-muted-foreground" />
-        <span className="text-[9px] font-semibold text-muted-foreground uppercase tracking-widest">{label}</span>
-      </div>
-      <p className="text-sm font-semibold text-foreground">{value}</p>
-      {sub && <p className="text-[10px] text-muted-foreground">{sub}</p>}
-    </div>
-  );
-}
+// ═════════════════════════════════════════════════════
+// 4C. REVIEW FLAGS / MISSING ITEMS
+// ═════════════════════════════════════════════════════
+function ReviewFlagsCard({
+  validation,
+  issueFlags,
+  hasData,
+  pkg,
+}: {
+  validation: any;
+  issueFlags: any[];
+  hasData: boolean;
+  pkg: any;
+}) {
+  const allFlags: { label: string; severity: "blocker" | "warning" | "flag" }[] = [];
 
-// ─── Utility Components ──────────────────────────────
-function MiniStat({ label, value, mono }: { label: string; value: string; mono?: boolean }) {
-  return (
-    <div>
-      <span className="text-[9px] font-semibold text-muted-foreground uppercase tracking-widest">{label}</span>
-      <p className={`text-[11px] font-medium text-foreground mt-0.5 ${mono ? "font-mono text-[10px]" : ""}`}>{value}</p>
-    </div>
-  );
-}
+  // From validation engine
+  (validation.blockers ?? []).forEach((b: any) => {
+    allFlags.push({ label: typeof b === "string" ? b : b.message, severity: "blocker" });
+  });
+  (validation.warnings ?? []).forEach((w: any) => {
+    allFlags.push({ label: typeof w === "string" ? w : w.message, severity: "warning" });
+  });
 
-function MetricRow({ icon: Icon, label, value, sub }: { icon: React.ElementType; label: string; value: string; sub: string }) {
-  return (
-    <div className="flex items-center gap-2.5 py-1">
-      <div className="h-7 w-7 rounded-lg bg-accent flex items-center justify-center shrink-0">
-        <Icon className="h-3.5 w-3.5 text-muted-foreground" />
-      </div>
-      <div className="flex-1 min-w-0">
-        <p className="text-[10px] text-muted-foreground">{label}</p>
-        <p className="text-[12px] font-semibold text-foreground">{value}</p>
-      </div>
-      <span className="text-[10px] text-muted-foreground">{sub}</span>
-    </div>
-  );
-}
-
-function StatBlock({ label, value, warn }: { label: string; value: string; warn?: boolean }) {
-  return (
-    <div className="rounded-lg bg-background border border-border px-3 py-2">
-      <span className="text-[9px] font-semibold text-muted-foreground uppercase tracking-widest">{label}</span>
-      <p className={`text-[12px] font-semibold mt-0.5 ${warn ? "text-[hsl(var(--status-attention-foreground))]" : "text-foreground"}`}>
-        {value}
-      </p>
-    </div>
-  );
-}
-
-// ─── Helpers ──────────────────────────────────────────
-function formatDate(d: string | null): string {
-  if (!d) return "—";
-  return new Date(d + "T00:00:00").toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
-}
-
-function formatShortDate(dateStr: string): string {
-  const d = new Date(dateStr + "T00:00:00");
-  return d.toLocaleDateString("en-US", { month: "short", day: "numeric" });
-}
-
-function mapInjuryToRegion(bodyPart: string, bodyRegion: string): string {
-  const bp = (bodyPart + " " + bodyRegion).toLowerCase();
-  if (bp.includes("cervic") || bp.includes("neck")) return "neck";
-  if (bp.includes("shoulder") && bp.includes("right")) return "shoulder-r";
-  if (bp.includes("shoulder") && bp.includes("left")) return "shoulder-l";
-  if (bp.includes("shoulder")) return "shoulder-r";
-  if (bp.includes("lumbar") || bp.includes("lower back")) return "lower-back";
-  if (bp.includes("thorac") || bp.includes("upper back")) return "upper-back";
-  if (bp.includes("knee") && bp.includes("right")) return "knee-r";
-  if (bp.includes("knee") && bp.includes("left")) return "knee-l";
-  if (bp.includes("knee")) return "knee-r";
-  if (bp.includes("hip")) return "hip-r";
-  if (bp.includes("ankle")) return "ankle-r";
-  if (bp.includes("head") || bp.includes("skull")) return "head";
-  return "upper-back";
-}
-
-function getSeverityFill(severity: string): string {
-  if (severity === "severe" || severity === "catastrophic" || severity === "fatal") return "hsl(0, 84%, 60%)";
-  if (severity === "moderate") return "hsl(25, 95%, 53%)";
-  return "hsl(38, 92%, 50%)";
-}
-
-function getSeverityStroke(severity: string): string {
-  return getSeverityFill(severity);
-}
-
-function getMaxSeverity(injuries: any[]): string {
-  const order = ["fatal", "catastrophic", "severe", "moderate", "minor"];
-  for (const s of order) {
-    if (injuries.some((i) => i.severity === s)) return s;
+  // From mock issue flags
+  if (hasData) {
+    issueFlags.forEach((f: any) => {
+      allFlags.push({
+        label: `${f.flag_type.replace(/_/g, " ").replace(/\b\w/g, (c: string) => c.toUpperCase())}: ${f.description}`,
+        severity: "flag",
+      });
+    });
   }
-  return "minor";
+
+  const severityIcon: Record<string, { icon: React.ElementType; color: string }> = {
+    blocker: { icon: XCircle, color: "text-destructive" },
+    warning: { icon: AlertTriangle, color: "text-[hsl(var(--status-attention))]" },
+    flag: { icon: Info, color: "text-primary" },
+  };
+
+  return (
+    <div className="card-elevated overflow-hidden">
+      <div className="px-4 py-3 border-b border-border flex items-center gap-2">
+        <AlertTriangle className="h-3.5 w-3.5 text-destructive" />
+        <h3 className="text-xs font-semibold text-foreground">Review Flags</h3>
+        {allFlags.length > 0 && (
+          <span className="text-[10px] font-semibold bg-destructive/10 text-destructive px-2 py-0.5 rounded-full ml-auto">
+            {allFlags.length}
+          </span>
+        )}
+      </div>
+      <div className="max-h-[240px] overflow-y-auto">
+        {allFlags.length === 0 ? (
+          <div className="p-4 text-center">
+            <CheckCircle2 className="h-5 w-5 text-[hsl(var(--status-approved))] mx-auto mb-1.5" />
+            <p className="text-[11px] text-muted-foreground">No review flags identified.</p>
+          </div>
+        ) : (
+          <div className="divide-y divide-border">
+            {allFlags.map((f, i) => {
+              const { icon: FlagIcon, color } = severityIcon[f.severity];
+              return (
+                <div key={i} className="px-4 py-2.5 flex items-start gap-2">
+                  <FlagIcon className={`h-3 w-3 ${color} shrink-0 mt-0.5`} />
+                  <span className="text-[11px] text-foreground leading-relaxed">{f.label}</span>
+                </div>
+              );
+            })}
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+// ═════════════════════════════════════════════════════
+// 5. PROCESSING DETAILS (collapsed accordion)
+// ═════════════════════════════════════════════════════
+function PipelineDetails({
+  workflow,
+  documents,
+  completeDocs,
+  intakePkg,
+}: {
+  workflow: any;
+  documents: DocumentRow[];
+  completeDocs: number;
+  intakePkg: any;
+}) {
+  return (
+    <div className="flex flex-col gap-3">
+      {/* Pipeline steps */}
+      <div>
+        <span className="text-[9px] font-semibold text-muted-foreground uppercase tracking-widest">Pipeline Steps</span>
+        <div className="mt-2 flex flex-col gap-1.5">
+          {workflow.simplifiedSteps.map((step: any) => (
+            <div key={step.label} className="flex items-center gap-2.5">
+              {step.status === "complete" && <CheckCircle2 className="h-3 w-3 text-[hsl(var(--status-approved))]" />}
+              {step.status === "active" && <Clock className="h-3 w-3 text-primary animate-pulse" />}
+              {step.status === "blocked" && <XCircle className="h-3 w-3 text-destructive" />}
+              {step.status === "pending" && <CircleDot className="h-3 w-3 text-muted-foreground" />}
+              <span className="text-[11px] text-foreground">{step.label}</span>
+              <span className={`text-[9px] font-medium ml-auto ${
+                step.status === "complete" ? "text-[hsl(var(--status-approved))]" :
+                step.status === "active" ? "text-primary" :
+                step.status === "blocked" ? "text-destructive" : "text-muted-foreground"
+              }`}>
+                {step.status}
+              </span>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* OCR summary */}
+      <div className="pt-3 border-t border-border">
+        <span className="text-[9px] font-semibold text-muted-foreground uppercase tracking-widest">OCR & Extraction</span>
+        <div className="mt-2 grid grid-cols-3 gap-3">
+          <div>
+            <p className="text-[10px] text-muted-foreground">Documents</p>
+            <p className="text-[12px] font-semibold text-foreground">{completeDocs}/{documents.length}</p>
+          </div>
+          <div>
+            <p className="text-[10px] text-muted-foreground">Package Status</p>
+            <p className="text-[12px] font-semibold text-foreground">{intakePkg?.package_status?.replace(/_/g, " ") ?? "—"}</p>
+          </div>
+          <div>
+            <p className="text-[10px] text-muted-foreground">Version</p>
+            <p className="text-[12px] font-semibold text-foreground">v{intakePkg?.version ?? "—"}</p>
+          </div>
+        </div>
+      </div>
+
+      {/* Assembled metadata */}
+      {intakePkg?.assembled_at && (
+        <div className="pt-3 border-t border-border">
+          <span className="text-[9px] font-semibold text-muted-foreground uppercase tracking-widest">Assembly</span>
+          <div className="mt-1.5 flex gap-4">
+            <div>
+              <p className="text-[10px] text-muted-foreground">Assembled</p>
+              <p className="text-[11px] text-foreground">{new Date(intakePkg.assembled_at).toLocaleString()}</p>
+            </div>
+            {intakePkg.published_at && (
+              <div>
+                <p className="text-[10px] text-muted-foreground">Published</p>
+                <p className="text-[11px] text-foreground">{new Date(intakePkg.published_at).toLocaleString()}</p>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ═════════════════════════════════════════════════════
+// STATUS HELPERS
+// ═════════════════════════════════════════════════════
+function determinePrimaryStatus(
+  workflowState: string,
+  validation: any,
+  packageStatus?: string | null,
+): { label: string; className: string } {
+  if (packageStatus === "published_to_evaluateiq") {
+    return { label: "Ready for Valuation", className: "status-badge-approved" };
+  }
+  if (packageStatus === "ready_for_review") {
+    return { label: "Intake Review", className: "status-badge-processing" };
+  }
+  if (validation.blockers?.length > 0) {
+    return { label: "Action Required", className: "status-badge-attention" };
+  }
+  if (workflowState === "processing") {
+    return { label: "Processing", className: "status-badge-processing" };
+  }
+  if (workflowState === "extracting") {
+    return { label: "Extracting", className: "status-badge-processing" };
+  }
+  return { label: "In Progress", className: "status-badge-draft" };
 }
 
 export default CaseOverview;
