@@ -772,7 +772,7 @@ function FindingsByBodySystem({ findings, hasData }: { findings: BodySystemGroup
                       <span className="text-[10px] text-muted-foreground">{f.evidence_refs?.length ?? 0}</span>
                       <div>
                         {f.is_pre_existing && (
-                          <AlertTriangle className="h-3 w-3 text-[hsl(var(--status-attention))]" title="Possible pre-existing" />
+                          <AlertTriangle className="h-3 w-3 text-[hsl(var(--status-attention))]" />
                         )}
                       </div>
                     </div>
