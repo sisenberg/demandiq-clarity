@@ -745,6 +745,112 @@ function ChronologyRail({
   );
 }
 
+// ─── Real Case Snapshot (DB-driven) ──────────────────
+function RealCaseSnapshot({
+  caseData,
+  documents,
+  intakePkg,
+  completeDocs,
+}: {
+  caseData: CaseRow;
+  documents: DocumentRow[];
+  intakePkg: any;
+  completeDocs: number;
+}) {
+  const specials = intakePkg?.specials_summary as any;
+  const totalBilled = specials?.total_billed ?? 0;
+  const billCount = specials?.bill_count ?? 0;
+  const providerCount = specials?.provider_count ?? intakePkg?.provider_list?.length ?? 0;
+  const injuryCount = intakePkg?.injury_summary?.length ?? 0;
+  const treatmentSummary = intakePkg?.treatment_summary as any;
+  const treatmentCount = treatmentSummary?.treatment_count ?? 0;
+  const representedStatus = intakePkg?.represented_status ?? "";
+  const attorneyName = intakePkg?.attorney_name ?? "";
+  const lawFirm = intakePkg?.law_firm ?? "";
+  const demandAmount = intakePkg?.demand_amount;
+  const demandDeadline = intakePkg?.demand_deadline ?? "";
+  const claimantName = intakePkg?.claimant_name ?? caseData.claimant;
+
+  return (
+    <div className="flex flex-col gap-4">
+      {/* Case Header Card */}
+      <div className="card-elevated overflow-hidden">
+        <div className="px-4 py-3 border-b border-border flex items-center gap-2">
+          <User className="h-3.5 w-3.5 text-primary" />
+          <h3 className="text-xs font-semibold text-foreground">Case Snapshot</h3>
+          {intakePkg?.package_status && (
+            <span className="ml-auto text-[9px] font-semibold uppercase tracking-wider text-muted-foreground bg-accent px-2 py-0.5 rounded-full">
+              {intakePkg.package_status.replace(/_/g, " ")}
+            </span>
+          )}
+        </div>
+        <div className="p-4">
+          <div className="flex items-start gap-3 mb-3">
+            <div className="h-9 w-9 rounded-xl bg-primary/10 flex items-center justify-center shrink-0">
+              <User className="h-4.5 w-4.5 text-primary" />
+            </div>
+            <div className="flex-1 min-w-0">
+              <h2 className="text-sm font-semibold text-foreground">{claimantName}</h2>
+              <p className="text-[11px] text-muted-foreground mt-0.5">
+                {representedStatus === "represented" && attorneyName
+                  ? `Represented by ${attorneyName}${lawFirm ? ` · ${lawFirm}` : ""}`
+                  : representedStatus || "Representation unknown"
+                }
+                {caseData.jurisdiction_state ? ` · ${caseData.jurisdiction_state}` : ""}
+              </p>
+            </div>
+          </div>
+
+          {intakePkg?.claimant_name && (
+            <p className="text-[12px] text-foreground leading-relaxed mb-3">
+              {caseData.date_of_loss
+                ? `Claim arising from incident on ${formatDate(caseData.date_of_loss)}.`
+                : "Date of loss pending."
+              }
+              {injuryCount > 0 && ` ${injuryCount} injuries documented.`}
+              {treatmentCount > 0 && ` ${treatmentCount} treatment events across ${providerCount} providers.`}
+              {totalBilled > 0 && ` Total medical specials: $${totalBilled.toLocaleString()}.`}
+              {demandAmount != null && ` Demand: $${demandAmount.toLocaleString()}.`}
+              {!demandAmount && demandDeadline && ` Demand for policy limits.`}
+            </p>
+          )}
+
+          <div className="flex flex-wrap gap-x-5 gap-y-1.5 pt-3 border-t border-border">
+            <MiniStat label="DOI" value={formatDate(caseData.date_of_loss)} />
+            <MiniStat label="Claim #" value={maskClaimNumber(caseData.claim_number)} mono />
+            <MiniStat label="Jurisdiction" value={caseData.jurisdiction_state || "—"} />
+            {(caseData.defendant || caseData.insured) && <MiniStat label="Insured" value={caseData.defendant || caseData.insured} />}
+            {demandDeadline && <MiniStat label="Deadline" value={demandDeadline} />}
+          </div>
+        </div>
+      </div>
+
+      {/* Key Metrics Grid */}
+      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
+        <MetricTile icon={FileText} label="Documents" value={`${completeDocs}/${documents.length}`} sub="processed" />
+        <MetricTile icon={Stethoscope} label="Providers" value={`${providerCount}`} sub={treatmentCount > 0 ? `${treatmentCount} visits` : ""} />
+        <MetricTile icon={DollarSign} label="Total Billed" value={totalBilled > 0 ? `$${totalBilled.toLocaleString()}` : "—"} sub={billCount > 0 ? `${billCount} lines` : ""} />
+        <MetricTile icon={Heart} label="Injuries" value={injuryCount > 0 ? `${injuryCount}` : "—"} sub="" />
+        <MetricTile icon={Shield} label="Demand" value={demandAmount ? `$${demandAmount.toLocaleString()}` : demandDeadline ? "Policy Limits" : "—"} sub="" />
+        <MetricTile icon={Clock} label="Status" value={representedStatus === "represented" ? "Represented" : representedStatus || "—"} sub="" />
+      </div>
+    </div>
+  );
+}
+
+function MetricTile({ icon: Icon, label, value, sub }: { icon: React.ElementType; label: string; value: string; sub: string }) {
+  return (
+    <div className="card-elevated px-3 py-2.5">
+      <div className="flex items-center gap-1.5 mb-0.5">
+        <Icon className="h-3 w-3 text-muted-foreground" />
+        <span className="text-[9px] font-semibold text-muted-foreground uppercase tracking-widest">{label}</span>
+      </div>
+      <p className="text-sm font-semibold text-foreground">{value}</p>
+      {sub && <p className="text-[10px] text-muted-foreground">{sub}</p>}
+    </div>
+  );
+}
+
 // ─── Utility Components ──────────────────────────────
 function MiniStat({ label, value, mono }: { label: string; value: string; mono?: boolean }) {
   return (
