@@ -46,15 +46,17 @@ function generateBullets(
   );
 
   if (injuries.length > 0) {
-    const top = injuries.slice(0, 3).map((i) => i.body_part?.toLowerCase()).filter(Boolean);
-    bullets.push(`${injuries.length} documented injuries including ${top.join(", ") || "multiple regions"}.`);
+    // Deduplicate injury names for summary
+    const uniqueParts = [...new Set(injuries.map((i) => i.body_part?.toLowerCase()).filter(Boolean))];
+    const top = uniqueParts.slice(0, 4);
+    bullets.push(`${uniqueParts.length} distinct injury regions including ${top.join(", ") || "multiple regions"}.`);
   }
 
   if (treatmentCount > 0) {
     bullets.push(`${treatmentCount} treatment events across ${providerCount} provider${providerCount !== 1 ? "s" : ""}.`);
   }
 
-  const diagCodes = injuries.filter((i) => i.diagnosis_code).slice(0, 3).map((i) => i.diagnosis_code);
+  const diagCodes = [...new Set(injuries.filter((i) => i.diagnosis_code).map((i) => i.diagnosis_code))].slice(0, 4);
   if (diagCodes.length > 0) {
     bullets.push(`Key diagnoses: ${diagCodes.join(", ")}.`);
   }
@@ -73,7 +75,7 @@ function generateBullets(
 
   const preExisting = injuries.filter((i) => i.is_pre_existing);
   if (preExisting.length > 0) {
-    bullets.push(`${preExisting.length} possible pre-existing condition${preExisting.length > 1 ? "s" : ""} flagged.`);
+    bullets.push(`${preExisting.length} possible pre-existing condition${preExisting.length > 1 ? "s" : ""} flagged for review.`);
   }
 
   return bullets.slice(0, 8);
@@ -97,15 +99,15 @@ const ClaimSummarySection = ({
 
   return (
     <section>
-      <div className="flex items-center gap-2 mb-3">
-        <FileText className="h-4 w-4 text-primary" />
-        <h2 className="text-sm font-semibold text-foreground">Patient Summary</h2>
+      <div className="flex items-center gap-1.5 mb-2.5">
+        <FileText className="h-3.5 w-3.5 text-muted-foreground" />
+        <h2 className="text-xs font-semibold text-foreground uppercase tracking-wider">Patient Summary</h2>
       </div>
-      <ul className="space-y-2 pl-1">
+      <ul className="space-y-1.5">
         {bullets.map((b, i) => (
-          <li key={i} className="flex items-start gap-2.5">
-            <span className="h-1 w-1 rounded-full bg-muted-foreground/40 mt-[7px] shrink-0" />
-            <span className="text-[13px] text-foreground/80 leading-relaxed">
+          <li key={i} className="flex items-start gap-2">
+            <span className="h-1 w-1 rounded-full bg-muted-foreground/30 mt-[6px] shrink-0" />
+            <span className="text-[12px] text-foreground/75 leading-[1.6]">
               {hasData && summaryRefs.length > 0 && i === 0 ? (
                 <EvidenceStatement text={b} citations={refsToCS(summaryRefs)} />
               ) : (
