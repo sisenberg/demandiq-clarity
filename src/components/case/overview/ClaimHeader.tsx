@@ -1,10 +1,4 @@
 import { Search } from "lucide-react";
-import { maskClaimNumber } from "@/lib/phi-utils";
-
-function formatDate(d: string | null): string {
-  if (!d) return "—";
-  return new Date(d + "T00:00:00").toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
-}
 
 interface ClaimHeaderProps {
   claimantName: string;
@@ -15,18 +9,18 @@ interface ClaimHeaderProps {
 
 const ClaimHeader = ({ claimantName, claimNumber, doi, onNavigate }: ClaimHeaderProps) => {
   return (
-    <div className="flex items-center justify-between py-1">
-      <h1 className="text-base font-semibold text-foreground tracking-tight">
-        <span className="text-muted-foreground font-medium text-sm">DEMAND</span>
-        <span className="text-muted-foreground/40 mx-2">—</span>
-        {claimantName || "Claimant"}
+    <div className="flex items-center justify-between">
+      <h1 className="text-sm font-semibold text-foreground tracking-tight">
+        <span className="text-muted-foreground font-medium text-xs uppercase tracking-wider">Demand</span>
+        <span className="text-border mx-2">—</span>
+        <span>{claimantName || "Claimant"}</span>
       </h1>
       <button
         onClick={() => onNavigate?.("documents")}
-        className="flex items-center gap-2 text-xs text-muted-foreground hover:text-foreground transition-colors"
+        className="flex items-center gap-1.5 text-[11px] text-muted-foreground hover:text-foreground transition-colors"
       >
-        <Search className="h-3.5 w-3.5" />
-        <span className="hidden sm:inline">Find Evidence for Statement</span>
+        <Search className="h-3 w-3" />
+        <span className="hidden sm:inline">Find Evidence</span>
       </button>
     </div>
   );

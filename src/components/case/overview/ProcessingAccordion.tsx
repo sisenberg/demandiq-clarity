@@ -14,54 +14,54 @@ const ProcessingAccordion = ({ workflow, documents, intakePkg }: ProcessingAccor
   const completeDocs = documents.filter((d) => isDocumentReady(d.document_status)).length;
 
   return (
-    <div className="border border-border/40 rounded-lg overflow-hidden bg-card">
+    <div className="border border-border/30 rounded-lg overflow-hidden">
       <button
         onClick={() => setOpen(!open)}
-        className="w-full px-4 py-2.5 flex items-center gap-2 hover:bg-accent/20 transition-colors"
+        className="w-full px-3.5 py-2 flex items-center gap-1.5 hover:bg-accent/10 transition-colors"
       >
-        <Settings className="h-3 w-3 text-muted-foreground/60" />
-        <span className="text-[11px] text-muted-foreground">Processing Details</span>
+        <Settings className="h-2.5 w-2.5 text-muted-foreground/40" />
+        <span className="text-[10px] text-muted-foreground/50">Processing Details</span>
         <span className="ml-auto">
-          {open ? <ChevronDown className="h-3 w-3 text-muted-foreground/40" /> : <ChevronRight className="h-3 w-3 text-muted-foreground/40" />}
+          {open ? <ChevronDown className="h-2.5 w-2.5 text-muted-foreground/30" /> : <ChevronRight className="h-2.5 w-2.5 text-muted-foreground/30" />}
         </span>
       </button>
 
       {open && (
-        <div className="border-t border-border/30 p-4 flex flex-col gap-3">
+        <div className="border-t border-border/20 px-3.5 py-3 flex flex-col gap-3">
           <div>
-            <span className="text-[9px] font-semibold text-muted-foreground uppercase tracking-widest">Pipeline Steps</span>
-            <div className="mt-2 flex flex-col gap-1.5">
+            <span className="text-[9px] font-medium text-muted-foreground/50 uppercase tracking-widest">Pipeline</span>
+            <div className="mt-1.5 flex flex-col gap-1">
               {workflow.simplifiedSteps.map((step: any) => (
-                <div key={step.label} className="flex items-center gap-2.5">
-                  {step.status === "complete" && <CheckCircle2 className="h-3 w-3 text-[hsl(var(--status-approved))]" />}
-                  {step.status === "active" && <Clock className="h-3 w-3 text-primary animate-pulse" />}
-                  {step.status === "blocked" && <XCircle className="h-3 w-3 text-destructive" />}
-                  {step.status === "pending" && <CircleDot className="h-3 w-3 text-muted-foreground" />}
-                  <span className="text-[11px] text-foreground">{step.label}</span>
-                  <span className={`text-[9px] font-medium ml-auto ${
-                    step.status === "complete" ? "text-[hsl(var(--status-approved))]" :
-                    step.status === "active" ? "text-primary" :
-                    step.status === "blocked" ? "text-destructive" : "text-muted-foreground"
+                <div key={step.label} className="flex items-center gap-2">
+                  {step.status === "complete" && <CheckCircle2 className="h-2.5 w-2.5 text-[hsl(var(--status-approved))]/70" />}
+                  {step.status === "active" && <Clock className="h-2.5 w-2.5 text-primary animate-pulse" />}
+                  {step.status === "blocked" && <XCircle className="h-2.5 w-2.5 text-destructive" />}
+                  {step.status === "pending" && <CircleDot className="h-2.5 w-2.5 text-muted-foreground/40" />}
+                  <span className="text-[10px] text-foreground/70">{step.label}</span>
+                  <span className={`text-[9px] ml-auto ${
+                    step.status === "complete" ? "text-[hsl(var(--status-approved))]/60" :
+                    step.status === "active" ? "text-primary/60" :
+                    step.status === "blocked" ? "text-destructive/60" : "text-muted-foreground/30"
                   }`}>{step.status}</span>
                 </div>
               ))}
             </div>
           </div>
 
-          <div className="pt-3 border-t border-border/30">
-            <span className="text-[9px] font-semibold text-muted-foreground uppercase tracking-widest">OCR & Extraction</span>
-            <div className="mt-2 grid grid-cols-3 gap-3">
+          <div className="pt-2 border-t border-border/15">
+            <span className="text-[9px] font-medium text-muted-foreground/50 uppercase tracking-widest">Extraction</span>
+            <div className="mt-1.5 grid grid-cols-3 gap-3">
               <div>
-                <p className="text-[10px] text-muted-foreground">Documents</p>
-                <p className="text-[12px] font-semibold text-foreground">{completeDocs}/{documents.length}</p>
+                <p className="text-[9px] text-muted-foreground/50">Documents</p>
+                <p className="text-[11px] font-medium text-foreground/70">{completeDocs}/{documents.length}</p>
               </div>
               <div>
-                <p className="text-[10px] text-muted-foreground">Package</p>
-                <p className="text-[12px] font-semibold text-foreground">{intakePkg?.package_status?.replace(/_/g, " ") ?? "—"}</p>
+                <p className="text-[9px] text-muted-foreground/50">Package</p>
+                <p className="text-[11px] font-medium text-foreground/70">{intakePkg?.package_status?.replace(/_/g, " ") ?? "—"}</p>
               </div>
               <div>
-                <p className="text-[10px] text-muted-foreground">Version</p>
-                <p className="text-[12px] font-semibold text-foreground">v{intakePkg?.version ?? "—"}</p>
+                <p className="text-[9px] text-muted-foreground/50">Version</p>
+                <p className="text-[11px] font-medium text-foreground/70">v{intakePkg?.version ?? "—"}</p>
               </div>
             </div>
           </div>

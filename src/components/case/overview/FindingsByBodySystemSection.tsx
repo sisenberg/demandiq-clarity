@@ -1,8 +1,7 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { Activity, ChevronDown, ChevronRight, Bone, Brain, Heart, CircleDot, AlertTriangle } from "lucide-react";
 import { useSourceDrawer } from "../SourceDrawer";
 
-// ─── Body region mapping ─────────────────────────────
 function mapInjuryToBodySystem(bodyPart: string, bodyRegion?: string): string {
   const bp = ((bodyPart || "") + " " + (bodyRegion || "")).toLowerCase();
   if (bp.includes("cervic") || bp.includes("neck")) return "Cervical";
@@ -16,14 +15,9 @@ function mapInjuryToBodySystem(bodyPart: string, bodyRegion?: string): string {
 }
 
 const BODY_SYSTEM_ICON: Record<string, React.ElementType> = {
-  Cervical: Bone,
-  Thoracic: Bone,
-  Lumbar: Bone,
-  "Upper Extremity": Activity,
-  "Lower Extremity": Activity,
-  Neurologic: Brain,
-  "Functional / Psychological": Heart,
-  Other: CircleDot,
+  Cervical: Bone, Thoracic: Bone, Lumbar: Bone,
+  "Upper Extremity": Activity, "Lower Extremity": Activity,
+  Neurologic: Brain, "Functional / Psychological": Heart, Other: CircleDot,
 };
 
 interface BodySystemGroup {
@@ -31,9 +25,28 @@ interface BodySystemGroup {
   findings: any[];
 }
 
+/** Deduplicate findings by body_part name within each system, keeping the richest record */
+function deduplicateFindings(injuries: any[]): any[] {
+  const seen = new Map<string, any>();
+  for (const inj of injuries) {
+    const key = (inj.body_part || "").toLowerCase().trim();
+    const existing = seen.get(key);
+    if (!existing) {
+      seen.set(key, inj);
+    } else {
+      // Keep the one with more data
+      if ((inj.diagnosis_code && !existing.diagnosis_code) || (inj.first_date && !existing.first_date)) {
+        seen.set(key, { ...existing, ...inj, evidence_refs: [...(existing.evidence_refs ?? []), ...(inj.evidence_refs ?? [])] });
+      }
+    }
+  }
+  return Array.from(seen.values());
+}
+
 function groupFindingsBySystem(injuries: any[]): BodySystemGroup[] {
+  const deduped = deduplicateFindings(injuries);
   const groups: Record<string, any[]> = {};
-  injuries.forEach((inj) => {
+  deduped.forEach((inj) => {
     const system = mapInjuryToBodySystem(inj.body_part, inj.body_region);
     if (!groups[system]) groups[system] = [];
     groups[system].push(inj);
@@ -53,51 +66,51 @@ interface FindingsByBodySystemSectionProps {
 
 const FindingsByBodySystemSection = ({ injuries }: FindingsByBodySystemSectionProps) => {
   const { openSource } = useSourceDrawer();
-  const findings = groupFindingsBySystem(injuries);
+  const findings = useMemo(() => groupFindingsBySystem(injuries), [injuries]);
   const [expandedSystem, setExpandedSystem] = useState<string | null>(findings[0]?.system ?? null);
+  const totalDeduped = findings.reduce((n, g) => n + g.findings.length, 0);
 
   if (findings.length === 0) {
     return (
-      <section className="py-8 text-center">
-        <Activity className="h-5 w-5 text-muted-foreground/40 mx-auto mb-2" />
-        <p className="text-sm text-muted-foreground">No injury findings extracted yet.</p>
+      <section className="py-6 text-center">
+        <p className="text-xs text-muted-foreground">No injury findings extracted yet.</p>
       </section>
     );
   }
 
   return (
     <section>
-      <div className="flex items-center justify-between mb-3">
-        <div className="flex items-center gap-2">
-          <Activity className="h-4 w-4 text-primary" />
-          <h2 className="text-sm font-semibold text-foreground">Findings by Body System</h2>
+      <div className="flex items-center justify-between mb-2.5">
+        <div className="flex items-center gap-1.5">
+          <Activity className="h-3.5 w-3.5 text-muted-foreground" />
+          <h2 className="text-xs font-semibold text-foreground uppercase tracking-wider">Findings by Body System</h2>
         </div>
-        <span className="text-[11px] text-muted-foreground">
-          {injuries.length} finding{injuries.length !== 1 ? "s" : ""}
+        <span className="text-[10px] text-muted-foreground">
+          {totalDeduped} unique
         </span>
       </div>
 
-      <div className="border border-border/60 rounded-lg overflow-hidden bg-card">
+      <div className="border border-border/50 rounded-lg overflow-hidden bg-card">
         {findings.map((group, gi) => {
           const isExpanded = expandedSystem === group.system;
           const SystemIcon = BODY_SYSTEM_ICON[group.system] ?? CircleDot;
 
           return (
-            <div key={group.system} className={gi > 0 ? "border-t border-border/40" : ""}>
+            <div key={group.system} className={gi > 0 ? "border-t border-border/30" : ""}>
               <button
                 onClick={() => setExpandedSystem(isExpanded ? null : group.system)}
-                className="w-full px-4 py-2.5 flex items-center gap-2.5 hover:bg-accent/30 transition-colors"
+                className="w-full px-3.5 py-2 flex items-center gap-2 hover:bg-accent/20 transition-colors"
               >
-                <SystemIcon className="h-3.5 w-3.5 text-muted-foreground" />
-                <span className="text-[13px] font-medium text-foreground flex-1 text-left">{group.system}</span>
-                <span className="text-[11px] text-muted-foreground">{group.findings.length}</span>
-                {isExpanded ? <ChevronDown className="h-3.5 w-3.5 text-muted-foreground/50" /> : <ChevronRight className="h-3.5 w-3.5 text-muted-foreground/50" />}
+                <SystemIcon className="h-3 w-3 text-muted-foreground/60" />
+                <span className="text-[12px] font-medium text-foreground flex-1 text-left">{group.system}</span>
+                <span className="text-[10px] text-muted-foreground tabular-nums">{group.findings.length}</span>
+                {isExpanded ? <ChevronDown className="h-3 w-3 text-muted-foreground/40" /> : <ChevronRight className="h-3 w-3 text-muted-foreground/40" />}
               </button>
 
               {isExpanded && (
-                <div className="border-t border-border/30">
-                  {/* Header row */}
-                  <div className="grid grid-cols-[1fr_90px_80px_40px] gap-3 px-4 py-1.5 text-[10px] font-medium text-muted-foreground uppercase tracking-wider">
+                <div className="border-t border-border/20">
+                  {/* Header */}
+                  <div className="grid grid-cols-[1fr_80px_90px_28px] gap-2 px-3.5 py-1 text-[9px] font-medium text-muted-foreground/70 uppercase tracking-wider">
                     <span>Finding</span>
                     <span>First Date</span>
                     <span>Region</span>
@@ -106,7 +119,7 @@ const FindingsByBodySystemSection = ({ injuries }: FindingsByBodySystemSectionPr
                   {group.findings.map((f: any) => (
                     <div
                       key={f.id}
-                      className="grid grid-cols-[1fr_90px_80px_40px] gap-3 px-4 py-2 hover:bg-accent/20 transition-colors items-center cursor-pointer border-t border-border/20"
+                      className="grid grid-cols-[1fr_80px_90px_28px] gap-2 px-3.5 py-1.5 hover:bg-accent/15 transition-colors items-center cursor-pointer border-t border-border/10"
                       onClick={() => {
                         if (f.evidence_refs?.length > 0) {
                           const ref = f.evidence_refs[0];
@@ -115,18 +128,18 @@ const FindingsByBodySystemSection = ({ injuries }: FindingsByBodySystemSectionPr
                       }}
                     >
                       <div className="min-w-0">
-                        <span className="text-[13px] text-foreground block truncate">{f.body_part}</span>
+                        <span className="text-[12px] text-foreground block truncate">{f.body_part}</span>
                         {f.diagnosis_code && (
-                          <span className="text-[10px] font-mono text-muted-foreground">{f.diagnosis_code}</span>
+                          <span className="text-[9px] font-mono text-muted-foreground/60">{f.diagnosis_code}</span>
                         )}
                       </div>
-                      <span className="text-[12px] text-muted-foreground tabular-nums">
+                      <span className="text-[11px] text-muted-foreground tabular-nums">
                         {f.first_date ? formatShortDate(f.first_date) : "—"}
                       </span>
-                      <span className="text-[12px] text-muted-foreground">{f.body_region || "—"}</span>
+                      <span className="text-[11px] text-muted-foreground truncate">{f.body_region || "—"}</span>
                       <div className="flex justify-end">
                         {f.is_pre_existing && (
-                          <AlertTriangle className="h-3 w-3 text-[hsl(var(--status-attention))]" />
+                          <AlertTriangle className="h-2.5 w-2.5 text-[hsl(var(--status-attention))]" />
                         )}
                       </div>
                     </div>

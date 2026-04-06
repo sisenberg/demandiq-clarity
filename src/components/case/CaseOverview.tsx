@@ -30,7 +30,6 @@ const CaseOverview = ({ caseData, documents, onNavigate }: CaseOverviewProps) =>
 
   const billing = hasData ? getBillingSummary(pkg) : { totalBilled: 0, totalAdjusted: 0, totalPaid: 0 };
   const stats = hasData ? getTreatmentStats(pkg) : { providers: 0, totalVisits: 0, ptSessions: 0, injections: 0 };
-  const completeDocs = documents.filter((d) => isDocumentReady(d.document_status)).length;
 
   const specials = intakePkg?.specials_summary as any;
   const totalBilled = hasData ? billing.totalBilled : (specials?.total_billed ?? 0);
@@ -65,10 +64,9 @@ const CaseOverview = ({ caseData, documents, onNavigate }: CaseOverviewProps) =>
   }
 
   return (
-    <div className="flex gap-8">
-      {/* ═══ MAIN CONTENT ═══ */}
-      <div className="flex-1 min-w-0 flex flex-col gap-8">
-        {/* Page header */}
+    <div className="flex gap-6">
+      {/* Main content */}
+      <div className="flex-1 min-w-0 flex flex-col gap-6">
         <ClaimHeader
           claimantName={claimantName}
           claimNumber={caseData.claim_number}
@@ -76,10 +74,6 @@ const CaseOverview = ({ caseData, documents, onNavigate }: CaseOverviewProps) =>
           onNavigate={onNavigate}
         />
 
-        {/* Divider */}
-        <hr className="border-border/40" />
-
-        {/* Patient Summary */}
         <ClaimSummarySection
           caseData={caseData}
           claimantName={claimantName}
@@ -92,17 +86,10 @@ const CaseOverview = ({ caseData, documents, onNavigate }: CaseOverviewProps) =>
           pkg={pkg}
         />
 
-        {/* Divider */}
-        <hr className="border-border/40" />
-
-        {/* Findings by Body System */}
         <FindingsByBodySystemSection injuries={injuries} />
 
-        {/* Divider */}
-        <hr className="border-border/40" />
-
-        {/* Lower summary row */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        {/* Lower row */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
           <BillingSummaryCard
             totalBilled={totalBilled}
             totalAdjusted={hasData ? billing.totalAdjusted : 0}
@@ -118,7 +105,6 @@ const CaseOverview = ({ caseData, documents, onNavigate }: CaseOverviewProps) =>
           />
         </div>
 
-        {/* Processing Details (collapsed) */}
         <ProcessingAccordion
           workflow={workflow}
           documents={documents}
@@ -126,8 +112,8 @@ const CaseOverview = ({ caseData, documents, onNavigate }: CaseOverviewProps) =>
         />
       </div>
 
-      {/* ═══ RIGHT CHRONOLOGY RAIL ═══ */}
-      <div className="hidden xl:block w-56 shrink-0">
+      {/* Right chronology rail */}
+      <div className="hidden xl:block w-48 shrink-0">
         <ChronologyRail events={timelineEvents} hasData={hasData} />
       </div>
     </div>

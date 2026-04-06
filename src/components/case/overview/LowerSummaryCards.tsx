@@ -9,7 +9,6 @@ import {
 import type { DocumentRow } from "@/hooks/useDocuments";
 import { isDocumentReady } from "@/lib/statuses";
 
-// ─── Billing ──────────────────────────────────────────
 export function BillingSummaryCard({
   totalBilled,
   totalAdjusted,
@@ -24,17 +23,17 @@ export function BillingSummaryCard({
   providerCount: number;
 }) {
   return (
-    <div className="border border-border/50 rounded-lg bg-card p-4">
-      <div className="flex items-center gap-2 mb-3">
-        <DollarSign className="h-3.5 w-3.5 text-muted-foreground" />
-        <h3 className="text-xs font-semibold text-foreground">Billing Summary</h3>
+    <div className="border border-border/40 rounded-lg p-3.5">
+      <div className="flex items-center gap-1.5 mb-2.5">
+        <DollarSign className="h-3 w-3 text-muted-foreground/60" />
+        <span className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">Billing</span>
       </div>
-      <div className="flex flex-col gap-2">
+      <div className="flex flex-col gap-1.5">
         <Row label="Total Billed" value={totalBilled > 0 ? `$${totalBilled.toLocaleString()}` : "—"} bold />
         {totalAdjusted > 0 && <Row label="Adjusted" value={`$${totalAdjusted.toLocaleString()}`} />}
         {totalPaid > 0 && <Row label="Paid" value={`$${totalPaid.toLocaleString()}`} />}
-        <div className="border-t border-border/40 pt-2 mt-1 flex justify-between text-[10px] text-muted-foreground">
-          <span>{billCount > 0 ? `${billCount} line items` : "—"}</span>
+        <div className="border-t border-border/20 pt-1.5 mt-0.5 flex justify-between text-[9px] text-muted-foreground/60">
+          <span>{billCount > 0 ? `${billCount} items` : "—"}</span>
           <span>{providerCount} provider{providerCount !== 1 ? "s" : ""}</span>
         </div>
       </div>
@@ -42,19 +41,18 @@ export function BillingSummaryCard({
   );
 }
 
-// ─── Documents ────────────────────────────────────────
 export function DocumentsCard({ documents }: { documents: DocumentRow[] }) {
   const completeDocs = documents.filter((d) => isDocumentReady(d.document_status)).length;
   const failed = documents.filter((d) => d.document_status === "failed").length;
 
   return (
-    <div className="border border-border/50 rounded-lg bg-card p-4">
-      <div className="flex items-center gap-2 mb-3">
-        <FileText className="h-3.5 w-3.5 text-muted-foreground" />
-        <h3 className="text-xs font-semibold text-foreground">Documents</h3>
-        <span className="text-[10px] text-muted-foreground ml-auto">{documents.length}</span>
+    <div className="border border-border/40 rounded-lg p-3.5">
+      <div className="flex items-center gap-1.5 mb-2.5">
+        <FileText className="h-3 w-3 text-muted-foreground/60" />
+        <span className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">Documents</span>
+        <span className="text-[9px] text-muted-foreground/50 ml-auto">{documents.length}</span>
       </div>
-      <div className="flex flex-col gap-2">
+      <div className="flex flex-col gap-1.5">
         <Row label="Processed" value={`${completeDocs} / ${documents.length}`} />
         {failed > 0 && <Row label="Failed" value={`${failed}`} alert />}
       </div>
@@ -62,7 +60,6 @@ export function DocumentsCard({ documents }: { documents: DocumentRow[] }) {
   );
 }
 
-// ─── Review Flags ─────────────────────────────────────
 export function ReviewFlagsCard({
   validation,
   issueFlags,
@@ -96,27 +93,27 @@ export function ReviewFlagsCard({
   };
 
   return (
-    <div className="border border-border/50 rounded-lg bg-card p-4">
-      <div className="flex items-center gap-2 mb-3">
-        <AlertTriangle className="h-3.5 w-3.5 text-muted-foreground" />
-        <h3 className="text-xs font-semibold text-foreground">Review Flags</h3>
+    <div className="border border-border/40 rounded-lg p-3.5">
+      <div className="flex items-center gap-1.5 mb-2.5">
+        <AlertTriangle className="h-3 w-3 text-muted-foreground/60" />
+        <span className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">Review Flags</span>
         {allFlags.length > 0 && (
-          <span className="text-[10px] text-destructive font-medium ml-auto">{allFlags.length}</span>
+          <span className="text-[9px] text-destructive/70 font-medium ml-auto">{allFlags.length}</span>
         )}
       </div>
       {allFlags.length === 0 ? (
-        <div className="flex items-center gap-2 py-2">
-          <CheckCircle2 className="h-3.5 w-3.5 text-[hsl(var(--status-approved))]" />
-          <span className="text-[12px] text-muted-foreground">No flags identified.</span>
+        <div className="flex items-center gap-1.5">
+          <CheckCircle2 className="h-3 w-3 text-[hsl(var(--status-approved))]/60" />
+          <span className="text-[11px] text-muted-foreground/60">No flags.</span>
         </div>
       ) : (
-        <div className="flex flex-col gap-1.5 max-h-[180px] overflow-y-auto">
+        <div className="flex flex-col gap-1 max-h-[140px] overflow-y-auto">
           {allFlags.map((f, i) => {
             const { icon: FlagIcon, color } = icons[f.severity];
             return (
-              <div key={i} className="flex items-start gap-2">
-                <FlagIcon className={`h-3 w-3 ${color} shrink-0 mt-0.5`} />
-                <span className="text-[12px] text-foreground/80 leading-relaxed">{f.label}</span>
+              <div key={i} className="flex items-start gap-1.5">
+                <FlagIcon className={`h-2.5 w-2.5 ${color} shrink-0 mt-[3px]`} />
+                <span className="text-[11px] text-foreground/70 leading-snug">{f.label}</span>
               </div>
             );
           })}
@@ -126,12 +123,11 @@ export function ReviewFlagsCard({
   );
 }
 
-// ─── Shared row helper ────────────────────────────────
 function Row({ label, value, bold, alert }: { label: string; value: string; bold?: boolean; alert?: boolean }) {
   return (
     <div className="flex justify-between items-center">
-      <span className="text-[11px] text-muted-foreground">{label}</span>
-      <span className={`text-[12px] ${bold ? "font-semibold" : "font-medium"} ${alert ? "text-destructive" : "text-foreground"}`}>
+      <span className="text-[10px] text-muted-foreground/60">{label}</span>
+      <span className={`text-[11px] ${bold ? "font-semibold" : "font-medium"} ${alert ? "text-destructive" : "text-foreground/80"}`}>
         {value}
       </span>
     </div>
