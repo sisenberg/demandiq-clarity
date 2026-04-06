@@ -149,8 +149,8 @@ const CaseDetailPage = () => {
 
         {/* CENTER: Main workspace */}
         <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
-          {/* Sticky workspace toolbar — tabs + actions */}
-          {(activeSection === "overview" || activeSection === "notes") && (
+          {/* Sticky workspace toolbar — tabs + actions (hidden on overview) */}
+          {activeSection === "notes" && (
             <div className="sticky-toolbar justify-between shrink-0">
               <CaseWorkspaceTabs active={activeTab} onChange={setActiveTab} />
               <CaseWorkspaceToolbar />
