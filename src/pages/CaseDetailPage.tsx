@@ -159,7 +159,7 @@ const CaseDetailPage = () => {
 
           {/* Scrollable content */}
           <div className="flex-1 overflow-y-auto">
-            <div className={`p-5 flex flex-col gap-4 ${activeSection === "overview" ? "max-w-[1400px]" : "max-w-5xl"}`}>
+            <div className={`flex flex-col gap-4 ${activeSection === "overview" ? "p-6 max-w-[1400px]" : "p-5 max-w-5xl"}`}>
               {/* ── OVERVIEW ────────────────────────── */}
               {activeSection === "overview" && (
                 <CaseOverview caseData={caseData} documents={documents} onNavigate={(s) => setActiveSection(s as CaseSection)} />
