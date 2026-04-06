@@ -66,29 +66,39 @@ const CaseNavRail = ({ active, onChange, claimant }: CaseNavRailProps) => {
 
   return (
     <div
-      className={`shrink-0 bg-card flex flex-col border-r border-border transition-all duration-200 ${
+      className={`shrink-0 flex flex-col transition-all duration-200 ${
         collapsed ? "w-12" : "w-48"
       }`}
+      style={{
+        backgroundColor: "hsl(var(--sidebar-background))",
+        color: "hsl(var(--sidebar-foreground))",
+      }}
     >
-      {/* Claimant summary card */}
+      {/* Product title */}
+      {!collapsed && (
+        <div className="px-3 pt-3 pb-1">
+          <span className="text-[10px] font-bold uppercase tracking-[0.15em]" style={{ color: "hsl(var(--sidebar-primary))" }}>
+            DemandIQ
+          </span>
+        </div>
+      )}
+
+      {/* Claimant identity block */}
       {claimant && !collapsed && (
-        <div className="px-2.5 pt-2.5 pb-1.5">
-          <div className="rounded-lg bg-accent/50 border border-border/60 p-2.5">
-            <div className="flex items-center gap-2 mb-2">
-              <div className="h-6 w-6 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">
-                <User className="h-3 w-3 text-primary" />
+        <div className="px-3 pt-2 pb-2">
+          <div className="rounded-md p-2.5" style={{ backgroundColor: "hsl(var(--sidebar-accent))" }}>
+            <div className="flex items-center gap-2 mb-1.5">
+              <div className="h-5 w-5 rounded-md flex items-center justify-center shrink-0" style={{ backgroundColor: "hsl(var(--sidebar-primary) / 0.15)" }}>
+                <User className="h-2.5 w-2.5" style={{ color: "hsl(var(--sidebar-primary))" }} />
               </div>
-              <div className="min-w-0 flex-1">
-                <p className="text-[11px] font-semibold text-foreground truncate leading-tight">
-                  {claimant.claimantName}
-                </p>
-                <p className="text-[8px] text-muted-foreground font-medium uppercase tracking-wider">Claimant</p>
-              </div>
+              <p className="text-[11px] font-semibold truncate leading-tight" style={{ color: "hsl(var(--sidebar-foreground))" }}>
+                {claimant.claimantName}
+              </p>
             </div>
-            <div className="flex flex-col gap-1">
-              <MetaRow icon={Calendar} label="DOI" value={claimant.doi} />
-              <MetaRow icon={Hash} label="Claim" value={claimant.claimNumber} mono />
-              <MetaRow icon={FileStack} label="Pages" value={claimant.pageCount.toLocaleString()} />
+            <div className="flex flex-col gap-0.5 pl-7">
+              <SidebarMeta label="DOI" value={claimant.doi} />
+              <SidebarMeta label="Claim" value={claimant.claimNumber} />
+              <SidebarMeta label="Pages" value={claimant.pageCount.toLocaleString()} />
             </div>
           </div>
         </div>
@@ -98,19 +108,21 @@ const CaseNavRail = ({ active, onChange, claimant }: CaseNavRailProps) => {
       {claimant && collapsed && (
         <div className="flex justify-center pt-3 pb-1">
           <div
-            className="h-6 w-6 rounded-lg bg-primary/10 flex items-center justify-center"
+            className="h-6 w-6 rounded-md flex items-center justify-center"
             title={claimant.claimantName}
+            style={{ backgroundColor: "hsl(var(--sidebar-accent))" }}
           >
-            <User className="h-3 w-3 text-primary" />
+            <User className="h-3 w-3" style={{ color: "hsl(var(--sidebar-primary))" }} />
           </div>
         </div>
       )}
 
       {/* Collapse toggle */}
-      <div className="flex items-center justify-end px-2 pt-2 pb-0.5">
+      <div className="flex items-center justify-end px-2 pt-1.5 pb-0.5">
         <button
           onClick={() => setCollapsed(!collapsed)}
-          className="p-1 rounded-md text-muted-foreground/30 hover:text-muted-foreground hover:bg-accent transition-all duration-100"
+          className="p-1 rounded-md transition-all duration-100 opacity-30 hover:opacity-100"
+          style={{ color: "hsl(var(--sidebar-foreground))" }}
           title={collapsed ? "Expand" : "Collapse"}
         >
           {collapsed ? <ChevronRight className="h-3 w-3" /> : <ChevronLeft className="h-3 w-3" />}
@@ -126,20 +138,29 @@ const CaseNavRail = ({ active, onChange, claimant }: CaseNavRailProps) => {
               key={item.key}
               onClick={() => onChange(item.key)}
               title={collapsed ? item.label : undefined}
-              className={`flex items-center gap-2 rounded-lg transition-all duration-100 group ${
-                collapsed ? "justify-center px-2 py-2.5" : "px-2.5 py-[7px]"
-              } ${
-                isActive
-                  ? "bg-primary/5 text-primary font-medium"
-                  : "text-muted-foreground hover:bg-accent/60 hover:text-foreground"
+              className={`flex items-center gap-2 rounded-md transition-all duration-100 ${
+                collapsed ? "justify-center px-2 py-2" : "px-2.5 py-[7px]"
               }`}
+              style={{
+                backgroundColor: isActive ? "hsl(var(--sidebar-accent))" : "transparent",
+                color: isActive ? "hsl(var(--sidebar-primary))" : "hsl(var(--sidebar-muted))",
+              }}
+              onMouseEnter={(e) => {
+                if (!isActive) {
+                  e.currentTarget.style.backgroundColor = "hsl(var(--sidebar-accent) / 0.5)";
+                  e.currentTarget.style.color = "hsl(var(--sidebar-foreground))";
+                }
+              }}
+              onMouseLeave={(e) => {
+                if (!isActive) {
+                  e.currentTarget.style.backgroundColor = "transparent";
+                  e.currentTarget.style.color = "hsl(var(--sidebar-muted))";
+                }
+              }}
             >
-              <item.icon className={`h-[14px] w-[14px] shrink-0 transition-colors ${isActive ? "text-primary" : "group-hover:text-foreground"}`} />
+              <item.icon className="h-[14px] w-[14px] shrink-0" />
               {!collapsed && (
-                <span className="text-[11px] leading-none">{item.label}</span>
-              )}
-              {isActive && !collapsed && (
-                <div className="ml-auto h-1 w-1 rounded-full bg-primary" />
+                <span className="text-[11px] leading-none font-medium">{item.label}</span>
               )}
             </button>
           );
@@ -149,12 +170,11 @@ const CaseNavRail = ({ active, onChange, claimant }: CaseNavRailProps) => {
   );
 };
 
-function MetaRow({ icon: Icon, label, value, mono }: { icon: React.ElementType; label: string; value: string; mono?: boolean }) {
+function SidebarMeta({ label, value }: { label: string; value: string }) {
   return (
-    <div className="flex items-center gap-1.5 text-[10px] text-muted-foreground">
-      <Icon className="h-2.5 w-2.5 shrink-0" />
-      <span className="font-medium">{label}</span>
-      <span className={`text-foreground ml-auto ${mono ? "font-mono text-[9px]" : ""}`}>{value}</span>
+    <div className="flex items-center gap-1.5 text-[9px]">
+      <span className="font-medium" style={{ color: "hsl(var(--sidebar-muted))" }}>{label}</span>
+      <span style={{ color: "hsl(var(--sidebar-foreground) / 0.7)" }}>{value}</span>
     </div>
   );
 }
