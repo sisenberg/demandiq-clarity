@@ -149,8 +149,8 @@ const CaseDetailPage = () => {
 
         {/* CENTER: Main workspace */}
         <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
-          {/* Sticky workspace toolbar — tabs + actions */}
-          {(activeSection === "overview" || activeSection === "notes") && (
+          {/* Sticky workspace toolbar — tabs + actions (hidden on overview) */}
+          {activeSection === "notes" && (
             <div className="sticky-toolbar justify-between shrink-0">
               <CaseWorkspaceTabs active={activeTab} onChange={setActiveTab} />
               <CaseWorkspaceToolbar />
@@ -159,7 +159,7 @@ const CaseDetailPage = () => {
 
           {/* Scrollable content */}
           <div className="flex-1 overflow-y-auto">
-            <div className={`p-5 flex flex-col gap-4 ${activeSection === "overview" ? "max-w-[1400px]" : "max-w-5xl"}`}>
+            <div className={`flex flex-col gap-4 ${activeSection === "overview" ? "p-6 max-w-[1400px]" : "p-5 max-w-5xl"}`}>
               {/* ── OVERVIEW ────────────────────────── */}
               {activeSection === "overview" && (
                 <CaseOverview caseData={caseData} documents={documents} onNavigate={(s) => setActiveSection(s as CaseSection)} />
